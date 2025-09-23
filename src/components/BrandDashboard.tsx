@@ -17,21 +17,37 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  Radar
+  Radar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  Legend
 } from 'recharts';
 import { Brain, TrendingUp, MessageSquare, Star, Target, Users, BarChart3, Eye } from 'lucide-react';
 import brandData from '@/data/data.json';
 
+const CHART_COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
+  'hsl(var(--chart-6))',
+  'hsl(var(--chart-7))',
+  'hsl(var(--chart-8))'
+];
+
 const TIER_COLORS = {
-  'Low': '#f59e0b',
-  'Medium': '#8b5cf6', 
-  'High': '#10b981'
+  'Low': 'hsl(var(--warning))',
+  'Medium': 'hsl(var(--secondary))', 
+  'High': 'hsl(var(--success))'
 };
 
 const SENTIMENT_COLORS = {
-  'Positive': '#10b981',
-  'Neutral': '#6b7280',
-  'Negative': '#ef4444'
+  'Positive': 'hsl(var(--success))',
+  'Neutral': 'hsl(var(--muted-foreground))',
+  'Negative': 'hsl(var(--destructive))'
 };
 
 const BrandDashboard = () => {
@@ -62,6 +78,21 @@ const BrandDashboard = () => {
     leaderVisibility: data.top_3_brands[0]?.visibility || 0
   }));
 
+  // Sentiment distribution for pie chart
+  const sentimentData = [
+    { name: 'Positive', value: 40, color: SENTIMENT_COLORS.Positive },
+    { name: 'Neutral', value: 45, color: SENTIMENT_COLORS.Neutral },
+    { name: 'Negative', value: 15, color: SENTIMENT_COLORS.Negative }
+  ];
+
+  // Source visibility trend data for line chart
+  const sourceTrendData = analysis.source_analysis.map((source, index) => ({
+    category: source.category.substring(0, 8),
+    citations: source.total_citations,
+    visibility: source.visibility === 'High' ? 3 : source.visibility === 'Medium' ? 2 : 1,
+    color: CHART_COLORS[index % CHART_COLORS.length]
+  }));
+
   return (
     <div className="min-h-screen bg-background p-6 space-y-8">
       {/* Header */}
@@ -81,49 +112,49 @@ const BrandDashboard = () => {
 
       {/* Key Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="metric-card">
+        <Card className="metric-card bg-gradient-to-br from-primary/10 to-primary/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">AI Visibility Score</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <Eye className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analysis.overall_insights.ai_visibility.ai_visibility_score}</div>
+            <div className="text-3xl font-bold text-primary">{analysis.overall_insights.ai_visibility.ai_visibility_score}</div>
             <Badge className={`tier-${analysis.overall_insights.ai_visibility.tier.toLowerCase()} mt-2`}>
               {analysis.overall_insights.ai_visibility.tier}
             </Badge>
           </CardContent>
         </Card>
 
-        <Card className="metric-card">
+        <Card className="metric-card bg-gradient-to-br from-secondary/10 to-secondary/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">GEO Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-5 w-5 text-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analysis.overall_insights.ai_visibility.geo_score}</div>
+            <div className="text-3xl font-bold text-secondary">{analysis.overall_insights.ai_visibility.geo_score}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {analysis.overall_insights.ai_visibility.weighted_mentions_total} × {analysis.overall_insights.ai_visibility.distinct_queries_count}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="metric-card">
+        <Card className="metric-card bg-gradient-to-br from-accent/10 to-accent/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Brand Mentions</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <MessageSquare className="h-5 w-5 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analysis.overall_insights.brand_mentions.mentions_count}</div>
+            <div className="text-3xl font-bold text-accent">{analysis.overall_insights.brand_mentions.mentions_count}</div>
             <Badge className={`tier-${analysis.overall_insights.brand_mentions.level.toLowerCase()} mt-2`}>
               {analysis.overall_insights.brand_mentions.level}
             </Badge>
           </CardContent>
         </Card>
 
-        <Card className="metric-card">
+        <Card className="metric-card bg-gradient-to-br from-success/10 to-success/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sentiment</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
+            <Star className="h-5 w-5 text-success" />
           </CardHeader>
           <CardContent>
             <Badge className={`sentiment-${analysis.overall_insights.dominant_sentiment.sentiment.toLowerCase()}`}>
@@ -146,12 +177,13 @@ const BrandDashboard = () => {
           <TabsTrigger value="recommendations">Actions</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-8">
+          {/* First Row - AI Visibility & Sentiment */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* AI Visibility Breakdown */}
             <Card className="chart-container">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-primary">
                   <Brain className="h-5 w-5" />
                   AI Visibility Breakdown
                 </CardTitle>
@@ -160,7 +192,7 @@ const BrandDashboard = () => {
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={aiVisibilityBreakdown}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis 
                       dataKey="query" 
                       angle={-45}
@@ -184,46 +216,123 @@ const BrandDashboard = () => {
                         return null;
                       }}
                     />
-                    <Bar dataKey="weighted_points_for_brand" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar 
+                      dataKey="weighted_points_for_brand" 
+                      fill="hsl(var(--primary))" 
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            {/* Brand Summary */}
-            <Card>
+            {/* Sentiment Distribution Pie Chart */}
+            <Card className="chart-container">
               <CardHeader>
-                <CardTitle>Executive Summary</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-secondary">
+                  <Star className="h-5 w-5" />
+                  Sentiment Distribution
+                </CardTitle>
+                <CardDescription>Overall brand sentiment breakdown</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={sentimentData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}%`}
+                    >
+                      {sentimentData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Second Row - Source Trends & Summary */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Source Visibility Trends */}
+            <Card className="chart-container">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-accent">
+                  <BarChart3 className="h-5 w-5" />
+                  Source Visibility Trends
+                </CardTitle>
+                <CardDescription>Citations across different source types</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={sourceTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="category" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="citations" 
+                      stroke="hsl(var(--accent))" 
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--accent))', strokeWidth: 2, r: 6 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="visibility" 
+                      stroke="hsl(var(--secondary))" 
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--secondary))', strokeWidth: 2, r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Executive Summary */}
+            <Card className="bg-gradient-to-br from-muted/30 to-background">
+              <CardHeader>
+                <CardTitle className="text-success">Executive Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {analysis.overall_insights.summary}
                 </p>
                 
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Query Coverage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {analysis.overall_insights.ai_visibility.distinct_queries_count}/6 queries
-                    </span>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Query Coverage</span>
+                      <span className="text-sm text-primary font-semibold">
+                        {analysis.overall_insights.ai_visibility.distinct_queries_count}/6 queries
+                      </span>
+                    </div>
+                    <Progress 
+                      value={(analysis.overall_insights.ai_visibility.distinct_queries_count / 6) * 100} 
+                      className="h-3"
+                    />
                   </div>
-                  <Progress 
-                    value={(analysis.overall_insights.ai_visibility.distinct_queries_count / 6) * 100} 
-                    className="h-2"
-                  />
-                </div>
 
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Source Coverage</span>
-                    <span className="text-sm text-muted-foreground">
-                      {analysis.overall_insights.brand_mentions.mentions_count}/{analysis.overall_insights.brand_mentions.total_sources_checked} sources
-                    </span>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Source Coverage</span>
+                      <span className="text-sm text-secondary font-semibold">
+                        {analysis.overall_insights.brand_mentions.mentions_count}/{analysis.overall_insights.brand_mentions.total_sources_checked} sources
+                      </span>
+                    </div>
+                    <Progress 
+                      value={(analysis.overall_insights.brand_mentions.mentions_count / analysis.overall_insights.brand_mentions.total_sources_checked) * 100} 
+                      className="h-3"
+                    />
                   </div>
-                  <Progress 
-                    value={(analysis.overall_insights.brand_mentions.mentions_count / analysis.overall_insights.brand_mentions.total_sources_checked) * 100} 
-                    className="h-2"
-                  />
                 </div>
               </CardContent>
             </Card>
@@ -241,11 +350,21 @@ const BrandDashboard = () => {
               <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={sourceAnalysisData} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis type="number" />
                     <YAxis dataKey="category" type="category" width={120} fontSize={12} />
-                    <Tooltip />
-                    <Bar dataKey="citations" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="citations" 
+                      fill="hsl(var(--primary))" 
+                      radius={[0, 4, 4, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -349,30 +468,41 @@ const BrandDashboard = () => {
               <CardDescription>Brand positioning across content platforms</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={contentImpactData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="platform" />
-                  <YAxis />
-                  <Tooltip 
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-card border rounded-lg p-3 shadow-lg">
-                            <p className="font-medium">{label}</p>
-                            <p className="text-primary">Our Position: #{payload[0].value}</p>
-                            <p className="text-muted-foreground">Our Visibility: {payload[1].value}</p>
-                            <p className="text-xs">Leader: {payload[0].payload.leader} ({payload[0].payload.leaderVisibility})</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="ourPosition" fill="hsl(var(--warning))" name="Our Position" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="ourVisibility" fill="hsl(var(--primary))" name="Our Visibility" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={contentImpactData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="platform" />
+                    <YAxis />
+                    <Tooltip 
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-card border rounded-lg p-4 shadow-lg">
+                              <p className="font-medium text-primary">{label}</p>
+                              <p className="text-warning">Our Position: #{payload[0].value}</p>
+                              <p className="text-secondary">Our Visibility: {payload[1].value}</p>
+                              <p className="text-xs text-muted-foreground">Leader: {payload[0].payload.leader} ({payload[0].payload.leaderVisibility})</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="ourPosition" 
+                      fill="hsl(var(--warning))" 
+                      name="Our Position" 
+                      radius={[4, 4, 0, 0]} 
+                    />
+                    <Bar 
+                      dataKey="ourVisibility" 
+                      fill="hsl(var(--primary))" 
+                      name="Our Visibility" 
+                      radius={[4, 4, 0, 0]} 
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>

@@ -17,27 +17,40 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 224 28% 12%;
 
-    --primary: 267 78% 67%;
+    --primary: 220 91% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 267 78% 82%;
+    --primary-glow: 220 91% 78%;
 
-    --secondary: 220 20% 95%;
-    --secondary-foreground: 224 28% 25%;
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 220 20% 95%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 212 100% 93%;
-    --accent-foreground: 267 78% 47%;
+    --accent: 15 91% 58%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 45 91% 58%;
     --warning-foreground: 0 0% 100%;
 
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
+
+    --info: 200 91% 58%;
+    --info-foreground: 0 0% 100%;
+
+    /* Chart colors - vibrant and distinct */
+    --chart-1: 220 91% 58%;  /* Blue */
+    --chart-2: 262 83% 58%;  /* Purple */
+    --chart-3: 15 91% 58%;   /* Orange */
+    --chart-4: 142 76% 36%;  /* Green */
+    --chart-5: 291 83% 58%;  /* Pink */
+    --chart-6: 45 91% 58%;   /* Yellow */
+    --chart-7: 200 91% 58%;  /* Cyan */
+    --chart-8: 340 82% 52%;  /* Red */
 
     --border: 220 20% 88%;
     --input: 220 20% 88%;
@@ -156,12 +169,11 @@ All colors MUST be HSL.
   }
   
   .metric-card {
-    @apply rounded-xl border bg-card p-6 shadow-sm transition-all duration-300;
+    @apply rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 border-l-primary;
     background: linear-gradient(135deg, hsl(var(--card)), hsl(var(--accent) / 0.3));
   }
   
   .metric-card:hover {
-    @apply shadow-lg;
     box-shadow: var(--shadow-glow);
   }
   
@@ -173,7 +185,7 @@ All colors MUST be HSL.
   }
   
   .chart-container {
-    @apply rounded-lg border bg-card p-4;
+    @apply rounded-lg border bg-card p-4 transition-all duration-300 hover:shadow-lg border border-border/50;
     background: linear-gradient(135deg, hsl(var(--card)), hsl(var(--accent) / 0.1));
   }
   
