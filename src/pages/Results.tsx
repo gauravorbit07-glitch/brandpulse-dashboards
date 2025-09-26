@@ -312,7 +312,7 @@ export default function Results() {
   return (
     <div className="min-h-screen">
       <BrandDashboard 
-        analyticsData={analytics}
+        analyticsData={analytics?.analysis}
         brandName={analytics?.brand_name || websiteName}
         brandWebsite={analytics?.brand_website || resultsData.website}
         reportDate={currentAnalytics?.updated_at || currentAnalytics?.created_at}

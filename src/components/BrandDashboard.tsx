@@ -115,16 +115,16 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
   };
 
   // Prepare source analysis chart data
-  const sourceChartData = analysisData.analysis.source_analysis.map((source: any) => ({
+  const sourceChartData = (analysisData?.source_analysis || []).map((source: any) => ({
     name: source.category.replace(' Platforms', '').replace(' Pages', ''),
-    citations: source.total_citations,
+    citations: source.total_citations?.Value || source.total_citations || 0,
     visibility: source.visibility
   }));
 
   // Prepare content impact pie chart data
-  const contentImpactData = Object.entries(analysisData.analysis.content_impact).map(([key, value]: [string, any], index) => ({
+  const contentImpactData = Object.entries(analysisData?.content_impact || {}).map(([key, value]: [string, any], index) => ({
     name: key.replace(' Platforms', '').replace(' Pages', ''),
-    value: value.our_brand_position?.visibility || 0,
+    value: value.our_brand_position?.visibility?.Value || value.our_brand_position?.visibility || 0,
     color: COLORS[index % COLORS.length]
   }));
 
@@ -152,8 +152,8 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
                       Brand Intelligence
                     </Badge>
                     <span>Sentiment:</span>
-                    <Badge className={getSentimentBadge(analysisData.analysis.overall_insights.dominant_sentiment.sentiment)}>
-                      {analysisData.analysis.overall_insights.dominant_sentiment.sentiment}
+                    <Badge className={getSentimentBadge(analysisData?.overall_insights?.dominant_sentiment?.sentiment || 'Neutral')}>
+                      {analysisData?.overall_insights?.dominant_sentiment?.sentiment || 'Neutral'}
                     </Badge>
                   </div>
                 </div>
@@ -165,9 +165,9 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
                 <span className="text-sm">Completed</span>
               </div>
               <p className="text-lg font-semibold">{formatDate(reportDate)}</p>
-              <p className="text-xs text-indigo-200 mt-1">
-                Analysis ID: {analysisData.id.slice(-20)}
-              </p>
+                <p className="text-xs text-indigo-200 mt-1">
+                  Analysis ID: {(analyticsData?.id || 'N/A').toString().slice(-20)}
+                </p>
             </div>
           </div>
         </div>
@@ -181,7 +181,7 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
           </CardHeader>
           <CardContent className="p-6">
             <p className="text-gray-600 leading-relaxed">
-              {analysisData.analysis.overall_insights.summary}
+              {analysisData?.overall_insights?.summary || 'Analysis summary not available'}
             </p>
           </CardContent>
         </Card>
@@ -200,12 +200,12 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
                     <Eye className="w-5 h-5 text-blue-600" />
                     <span className="font-medium text-gray-700">AI Visibility Score</span>
                   </div>
-                  <Badge className={getTierBadge(analysisData.analysis.overall_insights.ai_visibility.tier)}>
-                    {analysisData.analysis.overall_insights.ai_visibility.tier}
+                  <Badge className={getTierBadge(analysisData?.overall_insights?.ai_visibility?.tier || 'Low')}>
+                    {analysisData?.overall_insights?.ai_visibility?.tier || 'Low'}
                   </Badge>
                 </div>
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {analysisData.analysis.overall_insights.ai_visibility.ai_visibility_score}
+                  {analysisData?.overall_insights?.ai_visibility?.ai_visibility_score?.Value || analysisData?.overall_insights?.ai_visibility?.ai_visibility_score || 0}
                 </div>
                 <p className="text-sm text-gray-600">
                   Based on market performance. Dominant
@@ -221,12 +221,12 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
                     <ThumbsUp className="w-5 h-5 text-emerald-600" />
                     <span className="font-medium text-gray-700">Sentiment Score</span>
                   </div>
-                  <Badge className={getSentimentBadge(analysisData.analysis.overall_insights.dominant_sentiment.sentiment)}>
-                    {analysisData.analysis.overall_insights.dominant_sentiment.sentiment}
+                  <Badge className={getSentimentBadge(analysisData?.overall_insights?.dominant_sentiment?.sentiment || 'Neutral')}>
+                    {analysisData?.overall_insights?.dominant_sentiment?.sentiment || 'Neutral'}
                   </Badge>
                 </div>
                 <div className="text-3xl font-bold text-emerald-600 mb-2">
-                  {analysisData.analysis.overall_insights.dominant_sentiment.sentiment}
+                  {analysisData?.overall_insights?.dominant_sentiment?.sentiment || 'Neutral'}
                 </div>
                 <p className="text-sm text-gray-600">
                   Based on privacy sentiment analysis
@@ -242,15 +242,15 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
                     <MessageSquare className="w-5 h-5 text-purple-600" />
                     <span className="font-medium text-gray-700">Total Brand Mentions</span>
                   </div>
-                  <Badge className={getTierBadge(analysisData.analysis.overall_insights.brand_mentions.level)}>
-                    {analysisData.analysis.overall_insights.brand_mentions.level}
+                  <Badge className={getTierBadge(analysisData?.overall_insights?.brand_mentions?.level || 'Low')}>
+                    {analysisData?.overall_insights?.brand_mentions?.level || 'Low'}
                   </Badge>
                 </div>
                 <div className="text-3xl font-bold text-purple-600 mb-2">
-                  {analysisData.analysis.overall_insights.brand_mentions.mentions_count}
+                  {analysisData?.overall_insights?.brand_mentions?.mentions_count?.Value || analysisData?.overall_insights?.brand_mentions?.mentions_count || 0}
                 </div>
                 <p className="text-sm text-gray-600">
-                  Total mentions across sources: {analysisData.analysis.overall_insights.brand_mentions.total_sources_checked}
+                  Total mentions across sources: {analysisData?.overall_insights?.brand_mentions?.total_sources_checked?.Value || analysisData?.overall_insights?.brand_mentions?.total_sources_checked || 0}
                 </p>
               </CardContent>
             </Card>
@@ -266,7 +266,7 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
           <CardContent className="p-6">
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <p className="text-gray-700 leading-relaxed">
-                {analysisData.analysis.overall_insights.dominant_sentiment.statement}
+                {analysisData?.overall_insights?.dominant_sentiment?.statement || 'Sentiment analysis not available'}
               </p>
             </div>
           </CardContent>
@@ -325,19 +325,19 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
                       </tr>
                     </thead>
                     <tbody>
-                      {analysisData.analysis.source_analysis.map((source: any, index: number) => (
+                      {(analysisData?.source_analysis || []).map((source: any, index: number) => (
                         <tr key={index} className="border-b border-gray-100">
                           <td className="py-3">
                             <div className="font-medium text-gray-800">{source.category}</div>
                           </td>
                           <td className="py-3">
                             <div className="text-sm text-gray-600">
-                              {source.examples?.slice(0, 2).join(', ')}
+                              {(source.sources || source.examples)?.slice(0, 2).join(', ')}
                               {source.examples?.length > 2 && <span className="text-gray-400"> +{source.examples.length - 2} more</span>}
                             </div>
                           </td>
                           <td className="py-3 text-center">
-                            <span className="font-semibold text-gray-800">{source.total_citations}</span>
+                            <span className="font-semibold text-gray-800">{source.total_citations?.Value || source.total_citations || 0}</span>
                           </td>
                           <td className="py-3 text-center">
                             <Badge className={getTierBadge(source.visibility)}>
@@ -378,7 +378,7 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
                       </tr>
                     </thead>
                     <tbody>
-                      {analysisData.analysis.competitor_analysis.table_2_brand_profiles.map((brand: any, index: number) => (
+                      {(analysisData?.competitor_analysis?.table_2_brand_profiles || []).map((brand: any, index: number) => (
                         <tr key={index} className="border-b border-gray-100">
                           <td className="py-3">
                             <div className="font-medium text-gray-800">{brand.brand_name}</div>
@@ -428,7 +428,7 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysisData.analysis.competitor_analysis.table_2_brand_profiles.slice(0, 4).map((brand: any, index: number) => (
+                  {(analysisData?.competitor_analysis?.table_2_brand_profiles || []).slice(0, 4).map((brand: any, index: number) => (
                     <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold ${
                         index === 0 ? 'bg-purple-500' : 
@@ -593,7 +593,7 @@ const BrandDashboard: React.FC<BrandDashboardProps> = ({
           <p className="text-gray-600 mb-6">Actionable insights to improve AI platform visibility and performance</p>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {analysisData.analysis.recommendations.map((rec: any, index: number) => (
+            {(analysisData?.recommendations || []).map((rec: any, index: number) => (
               <Card key={index} className={`border-l-4 shadow-lg ${
                 rec.category.includes('High') ? 'border-l-red-500' :
                 rec.category.includes('Medium') || rec.effort === 'Medium (3 dev days + 1 tech writer day)' ? 'border-l-amber-500' :
