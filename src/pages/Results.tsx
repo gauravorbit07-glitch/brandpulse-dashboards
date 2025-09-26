@@ -2,21 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  Calendar,
-  Search,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Globe,
-  Users,
-  BarChart3,
-  Target,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import BrandDashboard from "@/components/BrandDashboard";
+import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { getProductAnalytics } from "@/apiHelpers";
 
@@ -165,63 +152,6 @@ export default function Results() {
   const pollingRef = useRef<{ productTimer?: number }>({});
   const mountedRef = useRef(true);
 
-  const getColorClass = (
-    text?: string,
-    type: "priority" | "importance" = "priority"
-  ) => {
-    if (!text) return "";
-    const lower = text.toLowerCase();
-
-    const baseClasses = type === "priority" ? "font-semibold" : "font-medium";
-
-    if (lower.includes("high"))
-      return `${baseClasses} text-white bg-destructive border-destructive`;
-    if (lower.includes("medium"))
-      return `${baseClasses} text-background bg-warning border-warning`;
-    if (lower.includes("low"))
-      return `${baseClasses} text-white bg-success border-success`;
-
-    return `${baseClasses} text-muted-foreground bg-muted border-muted`;
-  };
-
-  const getTierColor = (tier?: string) => {
-    const tierLower = (tier || "").toLowerCase();
-    switch (tierLower) {
-      case "high":
-        return "text-success";
-      case "medium":
-        return "text-warning";
-      case "low":
-        return "text-destructive";
-      default:
-        return "text-muted-foreground";
-    }
-  };
-
-  const getSentimentColor = (sentiment?: string) => {
-    const sentimentLower = (sentiment || "").toLowerCase();
-    switch (sentimentLower) {
-      case "positive":
-        return "text-success";
-      case "negative":
-        return "text-destructive";
-      case "neutral":
-      default:
-        return "text-muted-foreground";
-    }
-  };
-
-  const formatDate = (iso?: string) => {
-    const d = iso ? new Date(iso) : new Date();
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const getCleanDomainName = (url?: string) => {
     if (!url) return "";
     try {
@@ -352,10 +282,6 @@ export default function Results() {
 
   const overallStatus = currentAnalytics?.status || "pending";
   const analytics = currentAnalytics?.analytics;
-  const overallInsights = analytics?.analysis?.overall_insights;
-  const aiVisibility = overallInsights?.ai_visibility;
-  const brandMentions = overallInsights?.brand_mentions;
-  const dominantSentiment = overallInsights?.dominant_sentiment;
   
   const websiteName = getCleanDomainName(
     analytics?.brand_name || 
@@ -363,281 +289,34 @@ export default function Results() {
     resultsData.product.name
   );
 
+  // If analysis is not completed, show loading state
+  if (overallStatus !== "completed") {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-20">
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <Search className="w-16 h-16 mx-auto text-muted-foreground mb-4 animate-spin" />
+              <h2 className="text-2xl font-bold mb-2">Analysis in progress</h2>
+              <p className="text-muted-foreground">
+                We are gathering and analyzing AI answers — this usually takes a few seconds to a couple of minutes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show the professional dashboard
   return (
-    <Layout>
-      <div className="min-h-screen">
-        {/* Header */}
-        <div className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-hero flex items-center justify-center text-white font-bold">
-                  {websiteName?.charAt(0)?.toUpperCase() || "C"}
-                </div>
-                <div>
-                  <h1 className="font-semibold text-lg">
-                    {analytics?.brand_name || websiteName || "Unknown Website"}
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Analysis completed on {formatDate(currentAnalytics?.updated_at || currentAnalytics?.date)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm">
-                <div className="flex items-center space-x-2">
-                  <Search className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Keywords analyzed:</span>
-                  <span className="font-semibold">
-                    {resultsData.search_keywords?.length ?? 0}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Status:</span>
-                  <span className="font-semibold">{overallStatus}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main */}
-        <div className="container mx-auto px-4 py-8">
-          {/* Show banner when analyzing */}
-          {overallStatus !== "completed" && (
-            <div className="mb-6 p-4 rounded-md bg-warning/10 border border-warning/20 text-sm">
-              <div className="flex items-center gap-3">
-                <Search className="w-5 h-5 animate-spin text-muted-foreground" />
-                <div>
-                  <div className="font-semibold">Analysis in progress</div>
-                  <div className="text-xs text-muted-foreground">
-                    We are gathering and analyzing AI answers — this usually takes a few seconds to a couple of minutes.
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Summary Section */}
-          {overallInsights?.summary && (
-            <div className="mb-6 animate-in fade-in-50 zoom-in-95 duration-300">
-              <Card className="card-gradient border-0">
-                <CardHeader>
-                  <CardTitle className="text-xl">Analysis Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {overallInsights.summary}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* AI Sentiment */}
-          {dominantSentiment?.statement && (
-            <div className="mb-6 animate-in fade-in-50 zoom-in-95 duration-300 delay-100">
-              <Card className="card-gradient border-0">
-                <CardHeader>
-                  <CardTitle className="text-xl">AI Sentiment</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Overall Sentiment:</span>
-                    <Badge className={`${getSentimentColor(dominantSentiment.sentiment)} bg-background border`}>
-                      {dominantSentiment.sentiment?.toUpperCase() || "NEUTRAL"}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {dominantSentiment.statement}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Overall Insights */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            {aiVisibility && (
-              <Card className="card-gradient border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <BarChart3 className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">AI Visibility</span>
-                    </div>
-                    <Badge className={`${getTierColor(aiVisibility.tier)} bg-background border`}>
-                      {aiVisibility.tier?.toUpperCase() || "UNKNOWN"}
-                    </Badge>
-                  </div>
-                  <div className="text-lg font-semibold mb-2">
-                    {aiVisibility.ai_visibility_score?.Value || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Score: {aiVisibility.weighted_mentions_total?.Value || 0} × {aiVisibility.distinct_queries_count?.Value || 0}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {brandMentions && (
-              <Card className="card-gradient border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">Brand Mentions</span>
-                    </div>
-                    <Badge className={`${getTierColor(brandMentions.level)} bg-background border`}>
-                      {brandMentions.level?.toUpperCase() || "UNKNOWN"}
-                    </Badge>
-                  </div>
-                  <div className="text-lg font-semibold mb-2">
-                    {brandMentions.mentions_count?.Value || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    From {brandMentions.total_sources_checked?.Value || 0} sources
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card className="card-gradient border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Globe className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">Brand Name</span>
-                  </div>
-                </div>
-                <div className="text-lg font-semibold mb-2">
-                  {analytics?.brand_name || "Unknown"}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Primary brand identity
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="card-gradient border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Target className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">Analysis Type</span>
-                  </div>
-                </div>
-                <div className="text-lg font-semibold mb-2">
-                  {analytics?.type?.replace('_', ' ')?.toUpperCase() || "Intelligence"}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Report category
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Source Analysis */}
-          {analytics?.analysis?.source_analysis && (
-            <Card className="card-gradient border-0 mb-8">
-              <CardHeader>
-                <CardTitle className="text-xl">Source Analysis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {analytics.analysis.source_analysis.map((source, i) => (
-                    <div key={i} className="p-4 rounded-lg bg-accent/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{source.category}</h4>
-                        <Badge className={`${getTierColor(source.visibility)} bg-background border`}>
-                          {source.visibility?.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground mb-2">
-                        {source.total_citations?.Value || 0} citations
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {source.sources?.slice(0, 3).join(", ")}
-                        {source.sources?.length > 3 && ` +${source.sources.length - 3} more`}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Competitor Analysis */}
-          {analytics?.analysis?.competitor_analysis?.dimensions && (
-            <Card className="card-gradient border-0 mb-8">
-              <CardHeader>
-                <CardTitle className="text-xl">Competitor Analysis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analytics.analysis.competitor_analysis.dimensions.map((dimension, i) => (
-                    <div key={i} className="p-4 rounded-lg bg-accent/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{dimension.dimension}</h4>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">
-                            Position #{dimension.our_brand_position?.Value || "N/A"}
-                          </Badge>
-                          <Badge className={`${getSentimentColor(dimension.our_brand_sentiment)} bg-background border`}>
-                            {dimension.our_brand_sentiment?.toUpperCase()}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground mb-2">
-                        Top competitors: {dimension.top_3_competitors?.join(", ")}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {dimension.evidence_snippet}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Recommendations */}
-          {analytics?.analysis?.recommendations && (
-            <Card className="card-gradient border-0">
-              <CardHeader>
-                <CardTitle className="text-xl">Recommendations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analytics.analysis.recommendations.map((recommendation, i) => (
-                    <div key={i} className="p-4 rounded-lg bg-accent/50">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Badge variant="outline" className="font-semibold">
-                          {recommendation.category}
-                        </Badge>
-                        <Badge className={getColorClass(recommendation.effort)} variant="outline">
-                          {recommendation.effort} effort
-                        </Badge>
-                      </div>
-                      <div className="mb-2">
-                        <p className="text-sm font-medium mb-1">{recommendation.action}</p>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          <span className="font-medium">Timeline:</span> {recommendation.timeframe}
-                        </p>
-                      </div>
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p><span className="font-medium">Rationale:</span> {recommendation.rationale}</p>
-                        <p><span className="font-medium">Expected Impact:</span> {recommendation.expected_impact}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-    </Layout>
+    <div className="min-h-screen">
+      <BrandDashboard 
+        analyticsData={analytics}
+        brandName={analytics?.brand_name || websiteName}
+        brandWebsite={analytics?.brand_website || resultsData.website}
+        reportDate={currentAnalytics?.updated_at || currentAnalytics?.created_at}
+      />
+    </div>
   );
 }
