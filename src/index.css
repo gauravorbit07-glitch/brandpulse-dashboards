@@ -2,158 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* GeoRankers AI Search Visibility Tool Design System
+All colors MUST be HSL. Inspired by GeoRankers branding with blue gradients.
 */
 
 @layer base {
   :root {
-    --background: 220 24% 97%;
-    --foreground: 224 28% 12%;
+    /* Base colors - clean whites and grays */
+    --background: 0 0% 100%;
+    --foreground: 224 15% 15%;
 
+    /* Card system */
     --card: 0 0% 100%;
-    --card-foreground: 224 28% 12%;
+    --card-foreground: 224 15% 15%;
 
+    /* Popover system */
     --popover: 0 0% 100%;
-    --popover-foreground: 224 28% 12%;
+    --popover-foreground: 224 15% 15%;
 
-    --primary: 220 91% 58%;
+    /* Primary - GeoRankers blue theme */
+    --primary: 210 100% 63%; /* Bright blue from GeoRankers */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 220 91% 78%;
+    --primary-glow: 210 100% 68%;
 
-    --secondary: 262 83% 58%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary - light blue variations */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 210 100% 45%;
 
-    --muted: 220 20% 95%;
-    --muted-foreground: 220 10% 46%;
+    /* Muted system */
+    --muted: 210 25% 95%;
+    --muted-foreground: 210 10% 50%;
 
-    --accent: 15 91% 58%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - complementary highlights */
+    --accent: 210 25% 95%;
+    --accent-foreground: 210 100% 45%;
 
+    /* Success and error states */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 45 91% 58%;
-    --warning-foreground: 0 0% 100%;
+    /* Border and input system */
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 210 100% 63%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    /* Yellow accent for highlights */
+    --warning: 45 93% 58%;
+    --warning-foreground: 0 0% 0%;
 
-    --info: 200 91% 58%;
-    --info-foreground: 0 0% 100%;
-
-    /* Chart colors - vibrant and distinct */
-    --chart-1: 220 91% 58%;  /* Blue */
-    --chart-2: 262 83% 58%;  /* Purple */
-    --chart-3: 15 91% 58%;   /* Orange */
-    --chart-4: 142 76% 36%;  /* Green */
-    --chart-5: 291 83% 58%;  /* Pink */
-    --chart-6: 45 91% 58%;   /* Yellow */
-    --chart-7: 200 91% 58%;  /* Cyan */
-    --chart-8: 340 82% 52%;  /* Red */
-
-    --border: 220 20% 88%;
-    --input: 220 20% 88%;
-    --ring: 267 78% 67%;
-
+    /* Design tokens */
     --radius: 0.75rem;
 
-    /* Brand Intelligence Theme */
-    --brand-primary: 267 78% 67%;
-    --brand-secondary: 212 100% 85%;
-    --brand-accent: 267 35% 90%;
-    --brand-neutral: 220 10% 95%;
-    
-    /* Gradient System */
+    /* Gradients - Beautiful blue gradients matching GeoRankers */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-subtle: linear-gradient(135deg, hsl(var(--background)), hsl(var(--accent)));
-    --gradient-chart: linear-gradient(180deg, hsl(var(--primary) / 0.8), hsl(var(--primary) / 0.2)));
-    
-    /* Shadow System */
-    --shadow-sm: 0 1px 2px 0 hsl(var(--primary) / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(var(--primary) / 0.1), 0 2px 4px -1px hsl(var(--primary) / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(var(--primary) / 0.1), 0 4px 6px -2px hsl(var(--primary) / 0.05);
-    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.1), 0 8px 25px -5px hsl(var(--primary) / 0.15);
-    
+    --gradient-hero: linear-gradient(135deg, hsl(210 100% 63%) 0%, hsl(220 100% 68%) 50%, hsl(240 100% 73%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(210 25% 97%) 0%, hsl(0 0% 100%) 100%);
+    --gradient-bg: linear-gradient(180deg, hsl(210 25% 98%) 0%, hsl(0 0% 100%) 100%);
+
+    /* Shadows with brand colors */
+    --shadow-card: 0 4px 20px -4px hsl(210 100% 63% / 0.1);
+    --shadow-elevated: 0 10px 40px -8px hsl(210 100% 63% / 0.15);
+    --shadow-glow: 0 0 30px hsl(210 100% 68% / 0.3);
+
     /* Animations */
-    --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
+    /* Sidebar system for navigation */
     --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-foreground: 210 15% 25%;
+    --sidebar-primary: 210 100% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 25% 95%;
+    --sidebar-accent-foreground: 210 100% 45%;
+    --sidebar-border: 210 20% 90%;
+    --sidebar-ring: 210 100% 63%;
   }
 
   .dark {
-    --background: 224 28% 8%;
-    --foreground: 220 20% 95%;
+    /* Dark mode with blue accents */
+    --background: 224 20% 8%;
+    --foreground: 210 20% 95%;
 
-    --card: 224 28% 10%;
-    --card-foreground: 220 20% 95%;
+    --card: 224 20% 10%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 224 28% 10%;
-    --popover-foreground: 220 20% 95%;
+    --popover: 224 20% 10%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 267 78% 72%;
-    --primary-foreground: 224 28% 8%;
-    --primary-glow: 267 78% 85%;
+    --primary: 210 100% 68%;
+    --primary-foreground: 224 20% 8%;
+    --primary-glow: 210 100% 73%;
 
-    --secondary: 224 28% 15%;
-    --secondary-foreground: 220 20% 85%;
+    --secondary: 224 20% 15%;
+    --secondary-foreground: 210 20% 95%;
 
-    --muted: 224 28% 15%;
-    --muted-foreground: 220 10% 65%;
+    --muted: 224 20% 15%;
+    --muted-foreground: 210 10% 65%;
 
-    --accent: 224 28% 15%;
-    --accent-foreground: 267 78% 72%;
+    --accent: 224 20% 15%;
+    --accent-foreground: 210 20% 95%;
 
+    --success: 142 76% 40%;
+    --success-foreground: 0 0% 100%;
     --destructive: 0 84% 65%;
-    --destructive-foreground: 224 28% 8%;
+    --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 55%;
-    --warning-foreground: 224 28% 8%;
+    --border: 224 20% 18%;
+    --input: 224 20% 18%;
+    --ring: 210 100% 68%;
 
-    --success: 142 76% 41%;
-    --success-foreground: 224 28% 8%;
+    --warning: 45 93% 62%;
+    --warning-foreground: 0 0% 0%;
 
-    --border: 224 28% 20%;
-    --input: 224 28% 15%;
-    --ring: 267 78% 72%;
-
-    /* Dark Theme Brand Colors */
-    --brand-primary: 267 78% 72%;
-    --brand-secondary: 212 100% 80%;
-    --brand-accent: 267 35% 85%;
-    --brand-neutral: 224 28% 12%;
-    
+    /* Dark gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-subtle: linear-gradient(135deg, hsl(var(--background)), hsl(var(--accent)));
-    --gradient-chart: linear-gradient(180deg, hsl(var(--primary) / 0.9), hsl(var(--primary) / 0.3)));
-    
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.2), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.1);
-    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.2), 0 8px 25px -5px hsl(var(--primary) / 0.3);
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --gradient-hero: linear-gradient(135deg, hsl(210 100% 68%) 0%, hsl(220 100% 73%) 50%, hsl(240 100% 78%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(224 20% 12%) 0%, hsl(224 20% 10%) 100%);
+    --gradient-bg: linear-gradient(180deg, hsl(224 20% 8%) 0%, hsl(224 20% 6%) 100%);
+
+    /* Dark shadows */
+    --shadow-card: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 10px 40px -8px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 30px hsl(210 100% 68% / 0.2);
+
+    /* Dark sidebar */
+    --sidebar-background: 224 20% 6%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 210 100% 68%;
+    --sidebar-primary-foreground: 224 20% 8%;
+    --sidebar-accent: 224 20% 12%;
+    --sidebar-accent-foreground: 210 20% 85%;
+    --sidebar-border: 224 20% 15%;
+    --sidebar-ring: 210 100% 68%;
   }
 }
 
@@ -163,65 +146,32 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    scroll-behavior: smooth;
+    @apply bg-background text-foreground font-sans antialiased;
+    background: hsl(var(--gradient-bg));
   }
-  
-  .metric-card {
-    @apply rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 border-l-primary;
-    background: linear-gradient(135deg, hsl(var(--card)), hsl(var(--accent) / 0.3));
-  }
-  
-  .metric-card:hover {
-    box-shadow: var(--shadow-glow);
-  }
-  
+
+  /* Custom component classes */
   .gradient-text {
-    background: var(--gradient-primary);
+    background: var(--gradient-hero);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
-  .chart-container {
-    @apply rounded-lg border bg-card p-4 transition-all duration-300 hover:shadow-lg border border-border/50;
-    background: linear-gradient(135deg, hsl(var(--card)), hsl(var(--accent) / 0.1));
+
+  .card-gradient {
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
   }
-  
-  .data-table {
-    @apply w-full rounded-lg border bg-card shadow-sm;
+
+  .hero-glow {
+    box-shadow: var(--shadow-glow);
   }
-  
-  .data-table th {
-    @apply border-b bg-muted/50 px-4 py-3 text-left text-sm font-semibold text-muted-foreground;
+
+  .transition-smooth {
+    transition: var(--transition-smooth);
   }
-  
-  .data-table td {
-    @apply border-b px-4 py-3 text-sm;
-  }
-  
-  .tier-low {
-    @apply bg-warning/10 text-warning border-warning/20;
-  }
-  
-  .tier-medium {
-    @apply bg-primary/10 text-primary border-primary/20;
-  }
-  
-  .tier-high {
-    @apply bg-success/10 text-success border-success/20;
-  }
-  
-  .sentiment-positive {
-    @apply bg-success/10 text-success border-success/20;
-  }
-  
-  .sentiment-neutral {
-    @apply bg-muted/50 text-muted-foreground border-muted;
-  }
-  
-  .sentiment-negative {
-    @apply bg-destructive/10 text-destructive border-destructive/20;
+
+  .transition-bounce {
+    transition: var(--transition-bounce);
   }
 }
