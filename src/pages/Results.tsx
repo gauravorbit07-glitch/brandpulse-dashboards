@@ -308,15 +308,15 @@ export default function Results() {
     );
   }
 
-  // Show the professional dashboard
+  // Show the professional dashboard with Layout
   return (
-    <div className="min-h-screen">
+    <Layout>
       <BrandDashboard 
         analyticsData={analytics?.analysis}
         brandName={analytics?.brand_name || websiteName}
         brandWebsite={analytics?.brand_website || resultsData.website}
         reportDate={currentAnalytics?.updated_at || currentAnalytics?.created_at}
       />
-    </div>
+    </Layout>
   );
 }
