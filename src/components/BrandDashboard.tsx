@@ -68,8 +68,12 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground gradient-text">AI Visibility Report</h1>
-              <p className="text-muted-foreground mt-2">Brand Intelligence Analysis for {brandName}</p>
+              <h1 className="text-3xl font-bold text-foreground gradient-text">{brandName}</h1>
+              <p className="text-muted-foreground mt-1 flex items-center">
+                <Globe className="w-4 h-4 mr-2" />
+                {brandWebsite}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">Brand Intelligence Analysis for {brandName}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Report Generated</p>
@@ -81,8 +85,8 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
 
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Overall Insights */}
-        <Card className="card-gradient border-border shadow-elevated">
-          <CardHeader className="bg-gradient-primary text-primary-foreground">
+        <Card className="card-gradient border-border shadow-elevated rounded-xl">
+          <CardHeader className="bg-gradient-primary text-primary-foreground rounded-t-xl">
             <CardTitle className="text-2xl">Overall Insights</CardTitle>
             <CardDescription className="text-primary-foreground/80">
               Key performance metrics and brand visibility overview
@@ -91,7 +95,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* AI Visibility Score */}
-              <div className="bg-card/50 p-4 rounded-lg border border-border">
+              <div className="bg-card/50 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <Eye className="w-5 h-5 text-primary" />
@@ -110,7 +114,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
               </div>
 
               {/* Geo Score */}
-              <div className="bg-card/50 p-4 rounded-lg border border-border">
+              <div className="bg-card/50 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <Globe className="w-5 h-5 text-success" />
@@ -124,7 +128,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
               </div>
 
               {/* Brand Mentions */}
-              <div className="bg-card/50 p-4 rounded-lg border border-border">
+              <div className="bg-card/50 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <MessageSquare className="w-5 h-5 text-accent" />
@@ -143,7 +147,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
               </div>
 
               {/* Query Count */}
-              <div className="bg-card/50 p-4 rounded-lg border border-border">
+              <div className="bg-card/50 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <FileText className="w-5 h-5 text-warning" />
@@ -158,7 +162,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
             </div>
 
             {/* Summary */}
-            <div className="mt-6 p-4 bg-muted/30 rounded-lg border border-border">
+            <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-border">
               <h3 className="font-semibold text-foreground mb-2">Executive Summary</h3>
               <p className="text-muted-foreground">
                 {analyticsData?.overall_insights?.summary || 'Analysis summary not available'}
@@ -168,8 +172,8 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
         </Card>
 
         {/* AI Sentiment - Moved above Source Analysis */}
-        <Card className="card-gradient border-border shadow-elevated">
-          <CardHeader className="bg-gradient-to-r from-success to-success/80 text-success-foreground">
+        <Card className="card-gradient border-border shadow-elevated rounded-xl">
+          <CardHeader className="bg-gradient-to-r from-success to-success/80 text-success-foreground rounded-t-xl">
             <CardTitle className="text-xl flex items-center">
               <Heart className="mr-2 h-5 w-5" />
               AI Sentiment Analysis
@@ -186,7 +190,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
                 </Badge>
               </div>
             </div>
-            <div className="bg-muted/30 p-4 rounded-lg border border-border">
+            <div className="bg-muted/30 p-4 rounded-xl border border-border">
               <p className="text-foreground">
                 {analyticsData?.overall_insights?.dominant_sentiment?.statement || 'Sentiment analysis not available'}
               </p>
@@ -195,8 +199,8 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
         </Card>
 
         {/* Source Analysis */}
-        <Card className="card-gradient border-border shadow-elevated">
-          <CardHeader className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">
+        <Card className="card-gradient border-border shadow-elevated rounded-xl">
+          <CardHeader className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground rounded-t-xl">
             <CardTitle className="text-xl flex items-center">
               <BarChart3 className="mr-2 h-5 w-5" />
               Source Analysis
@@ -272,49 +276,69 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
         </Card>
 
         {/* Competitor Analysis */}
-        <Card className="card-gradient border-border shadow-elevated">
-          <CardHeader className="bg-gradient-to-r from-accent to-accent-foreground text-primary-foreground">
+        <Card className="card-gradient border-border shadow-elevated rounded-xl">
+          <CardHeader className="bg-gradient-to-r from-accent to-accent-foreground text-primary-foreground rounded-t-xl">
             <CardTitle className="text-xl flex items-center">
               <Users className="mr-2 h-5 w-5" />
               Competitor Analysis
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Competitor Table */}
+            <div className="space-y-8">
+              {/* Competitor Comparison Table */}
               <div>
-                <h3 className="text-lg font-semibold text-foreground mb-4">Brand Positioning</h3>
-                <div className="overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-3 text-sm font-semibold text-foreground">Dimension</th>
-                        <th className="text-center py-3 text-sm font-semibold text-foreground">Our Position</th>
-                        <th className="text-center py-3 text-sm font-semibold text-foreground">Visibility</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(analyticsData?.competitor_analysis?.table_1_by_dimension || []).map((item: any, index: number) => (
-                        <tr key={index} className="border-b border-border/50">
-                          <td className="py-3">
-                            <div className="font-medium text-foreground">{item.dimension}</div>
-                          </td>
-                          <td className="py-3 text-center">
-                            <Badge className={
-                              item.our_brand_position?.Value <= 2 ? 'bg-success/10 text-success border-success/20' :
-                              item.our_brand_position?.Value <= 4 ? 'bg-warning/10 text-warning border-warning/20' :
-                              'bg-destructive/10 text-destructive border-destructive/20'
-                            }>
-                              #{item.our_brand_position?.Value || 'N/A'}
-                            </Badge>
-                          </td>
-                          <td className="py-3 text-center">
-                            <span className="font-semibold text-foreground">{item.our_brand_visibility_count?.Value || 0}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Competitor Visibility Comparison</h3>
+                <div className="overflow-x-auto bg-card/30 rounded-xl border border-border">
+                  {(analyticsData?.competitor_analysis?.table_1_by_dimension || []).map((dimension: any, dimIndex: number) => (
+                    <div key={dimIndex} className="mb-6 last:mb-0">
+                      <div className="bg-muted/50 px-4 py-2 border-b border-border">
+                        <h4 className="font-semibold text-foreground">{dimension.dimension}</h4>
+                      </div>
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-muted/20 border-b border-border">
+                            <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Brand</th>
+                            <th className="text-center py-3 px-4 text-sm font-semibold text-foreground">Visibility Count</th>
+                            <th className="text-center py-3 px-4 text-sm font-semibold text-foreground">Rank</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Our Brand Row - Highlighted */}
+                          <tr className="bg-primary/5 border-b border-border/50">
+                            <td className="py-3 px-4">
+                              <div className="font-semibold text-primary">{brandName} (Our Brand)</div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="font-semibold text-primary">{dimension.our_brand_visibility_count?.Value || 0}</span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <Badge className={
+                                dimension.our_brand_position?.Value <= 2 ? 'bg-success/10 text-success border-success/20' :
+                                dimension.our_brand_position?.Value <= 4 ? 'bg-warning/10 text-warning border-warning/20' :
+                                'bg-destructive/10 text-destructive border-destructive/20'
+                              }>
+                                #{dimension.our_brand_position?.Value || 'N/A'}
+                              </Badge>
+                            </td>
+                          </tr>
+                          {/* Competitor Rows */}
+                          {(dimension.top_5_competitors || []).map((competitor: any, compIndex: number) => (
+                            <tr key={compIndex} className="border-b border-border/50 hover:bg-muted/20">
+                              <td className="py-3 px-4">
+                                <div className="font-medium text-foreground">{competitor.brand}</div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <span className="font-semibold text-foreground">{competitor.visibility_count?.Value || 0}</span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <Badge variant="outline">#{compIndex + 1}</Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -323,7 +347,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
                 <h3 className="text-lg font-semibold text-foreground mb-4">Competitor Profiles</h3>
                 <div className="space-y-4">
                   {(analyticsData?.competitor_analysis?.table_2_brand_profiles || []).slice(0, 4).map((brand: any, index: number) => (
-                    <div key={index} className="p-4 rounded-lg bg-muted/30 border border-border">
+                    <div key={index} className="p-4 rounded-xl bg-muted/30 border border-border hover:bg-muted/40 transition-colors">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold text-foreground">{brand.brand_name}</h4>
                         <Badge className={getSentimentColor(brand.ai_sentiment)}>
@@ -343,8 +367,8 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
         </Card>
 
         {/* Content Impact */}
-        <Card className="card-gradient border-border shadow-elevated">
-          <CardHeader className="bg-gradient-to-r from-secondary to-primary text-primary-foreground">
+        <Card className="card-gradient border-border shadow-elevated rounded-xl">
+          <CardHeader className="bg-gradient-to-r from-secondary to-primary text-primary-foreground rounded-t-xl">
             <CardTitle className="text-xl flex items-center">
               <TrendingUp className="mr-2 h-5 w-5" />
               Content Impact Analysis
@@ -422,8 +446,8 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
         </Card>
 
         {/* Strategic Recommendations */}
-        <Card className="card-gradient border-border shadow-elevated">
-          <CardHeader className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">
+        <Card className="card-gradient border-border shadow-elevated rounded-xl">
+          <CardHeader className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground rounded-t-xl">
             <CardTitle className="text-xl flex items-center">
               <Target className="mr-2 h-5 w-5" />
               Strategic Recommendations
@@ -432,7 +456,7 @@ export default function BrandDashboard({ analyticsData, brandName, brandWebsite,
           <CardContent className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {(analyticsData?.recommendations || []).map((rec: any, index: number) => (
-                <Card key={index} className={`border-l-4 shadow-card ${getEffortColor(rec.effort)}`}>
+                <Card key={index} className={`border-l-4 shadow-card rounded-xl ${getEffortColor(rec.effort)}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
