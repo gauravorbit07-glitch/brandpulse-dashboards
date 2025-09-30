@@ -1,0 +1,320 @@
+{
+  "analytics": [
+    {
+      "id": "68d6d9c0b089b1a9b5ca8dbb",
+      "product_id": "d5fca002-1f7a-4a65-808d-59b38e20fd8d",
+      "product_name": "https://kommunicate.io/",
+      "date": "2025-09-26T18:21:52.303Z",
+      "status": "completed",
+      "analytics": {
+        "id": "brandintel-kommunicate-001",
+        "type": "brand_intelligence",
+        "status": "completed",
+        "brand_name": "Kommunicate",
+        "brand_website": "https://kommunicate.io/",
+        "model_reported": {
+          "model_name": "ChatGPT",
+          "model_version": "1.0",
+          "report_generated_at": "2023-10-10T12:00:00Z"
+        },
+        "analysis": {
+          "overall_insights": {
+            "ai_visibility": {
+              "tier": "Medium",
+              "ai_visibility_score": {
+                "Value": 166
+              },
+              "weighted_mentions_total": {
+                "Value": 166
+              },
+              "distinct_queries_count": {
+                "Value": 24
+              }
+            },
+            "brand_mentions": {
+              "level": "Medium",
+              "mentions_count": {
+                "Value": 86
+              },
+              "total_sources_checked": {
+                "Value": 24
+              }
+            },
+            "dominant_sentiment": {
+              "sentiment": "Neutral",
+              "statement": "Kommunicate shows a focused, mid-level SEO and AI-visibility footprint: solid presence on review platforms and owned content for support/chatbot queries, credible social signals, but comparatively lighter presence in analyst reports and academic/whitepaper citations. This profile produces steady niche discoverability for no-code agent and support chatbot queries, but limited broad-market authority compared with top enterprise incumbents.",
+              "summary": "Kommunicate shows a focused, mid-level SEO and AI-visibility footprint: solid presence on review platforms and owned content for support/chatbot queries, credible social signals, but comparatively lighter presence in analyst reports and academic/whitepaper citations."
+            },
+            "summary": "Kommunicate shows a focused, mid-level SEO and AI-visibility footprint: solid presence on review platforms and owned content for support/chatbot queries, credible social signals, but comparatively lighter presence in analyst reports and academic/whitepaper citations."
+          },
+          "source_analysis": [
+            {
+              "category": "Analysts",
+              "sources": [],
+              "total_citations": {
+                "Value": 4
+              },
+              "visibility": "Medium",
+              "cited_by_models": ["ChatGPT", "Claude", "Bard"],
+              "notes": "Kommunicate shows limited analyst penetration compared with major incumbents; analyst mentions are sporadic and tend not to drive high-authority SERP placements.",
+              "visibility_score": {
+                "Value": 10
+              }
+            },
+            {
+              "category": "Review Platforms",
+              "sources": [],
+              "total_citations": {
+                "Value": 18
+              },
+              "visibility": "Medium",
+              "cited_by_models": ["ChatGPT", "Bard", "Claude"],
+              "notes": "High presence on G2/Capterra-style sites relative to company size — this is a primary discovery channel and a notable SEO asset for conversion-intent queries.",
+              "visibility_score": {
+                "Value": 40
+              }
+            },
+            {
+              "category": "Comparison Blogs/Review Sites",
+              "sources": [],
+              "total_citations": {
+                "Value": 6
+              },
+              "visibility": "Low",
+              "cited_by_models": ["ChatGPT", "Claude"],
+              "notes": "Appears occasionally in niche comparison posts and blog roundups; these posts help long-tail discovery but are fewer than leading competitors.",
+              "visibility_score": {
+                "Value": 12
+              }
+            },
+            {
+              "category": "Communities",
+              "sources": [],
+              "total_citations": {
+                "Value": 10
+              },
+              "visibility": "Medium",
+              "cited_by_models": ["ChatGPT", "Claude"],
+              "notes": "Moderate community chatter (Reddit, developer forums) for integrations and implementation — useful for technical long-tail SEO but not high-volume brand queries.",
+              "visibility_score": {
+                "Value": 16
+              }
+            },
+            {
+              "category": "Brand Pages",
+              "sources": [],
+              "total_citations": {
+                "Value": 12
+              },
+              "visibility": "High",
+              "cited_by_models": ["ChatGPT", "Bard"],
+              "notes": "Official docs and product pages are indexed with clear intent signals (support chatbot, no-code builders) — good on-site relevance for target keywords.",
+              "visibility_score": {
+                "Value": 28
+              }
+            },
+            {
+              "category": "Owned Content",
+              "sources": [],
+              "total_citations": {
+                "Value": 10
+              },
+              "visibility": "High",
+              "cited_by_models": ["ChatGPT", "Claude"],
+              "notes": "Company blog and help-center content provide steady long-tail organic traffic and target-specific support/chatbot queries effectively.",
+              "visibility_score": {
+                "Value": 22
+              }
+            },
+            {
+              "category": "3rd-Party Blogs & News",
+              "sources": [],
+              "total_citations": {
+                "Value": 8
+              },
+              "visibility": "Medium",
+              "cited_by_models": ["ChatGPT", "Bard"],
+              "notes": "Covered by targeted startup/tech blogs and niche SaaS roundups; these mentions help awareness but are less frequent than major incumbents.",
+              "visibility_score": {
+                "Value": 18
+              }
+            },
+            {
+              "category": "Social Media",
+              "sources": [],
+              "total_citations": {
+                "Value": 16
+              },
+              "visibility": "High",
+              "cited_by_models": ["ChatGPT", "Bard", "Claude"],
+              "notes": "Active social signals and product announcements boost short-term discoverability and help rank for timely queries; social reach is solid for a mid-sized vendor.",
+              "visibility_score": {
+                "Value": 12
+              }
+            },
+            {
+              "category": "Academic/Whitepapers",
+              "sources": [],
+              "total_citations": {
+                "Value": 0
+              },
+              "visibility": "Absent",
+              "cited_by_models": ["ChatGPT"],
+              "notes": "Practically absent from academic/whitepaper citations — low impact on research-driven search visibility.",
+              "visibility_score": {
+                "Value": 2
+              }
+            },
+            {
+              "category": "Podcasts & Video Interviews",
+              "sources": [],
+              "total_citations": {
+                "Value": 2
+              },
+              "visibility": "Low",
+              "cited_by_models": ["ChatGPT", "Claude"],
+              "notes": "Limited podcast and video interview presence — modest awareness lift in multimedia search results.",
+              "visibility_score": {
+                "Value": 6
+              }
+            }
+          ],
+          "competitor_analysis": {
+            "competitor_visibility_table": {
+              "header": ["brand_names", "chatbot", "No-Code AI Agents", "support"],
+              "rows": [
+                ["Intercom", 95, 28, 96],
+                ["Zendesk", 88, 20, 120],
+                ["Freshdesk", 74, 18, 78],
+                ["Drift", 80, 22, 65],
+                ["Ada", 60, 92, 35],
+                ["Kommunicate", 48, 60, 54]
+              ]
+            },
+            "competitor_sentiment_table": {
+              "header": ["Brand", "Sentiment Summary", "overall outlook"],
+              "rows": [
+                ["Intercom", "High organic and paid visibility for conversational products; strong backlink and content footprint that ranks well for general 'chatbot' and 'support' queries.", "Positive"],
+                ["Zendesk", "Dominant in 'support' intent queries and enterprise helpdesk search verticals; deep analyst coverage and strong brand authority boost discoverability.", "Positive"],
+                ["Freshdesk", "Solid support-related SEO presence with good review-platform coverage; less dominant in pure conversational AI/no-code agent queries.", "Neutral"],
+                ["Drift", "High visibility in conversational marketing and chat-focused searches, moderate footprint in support-focused search and analyst channels.", "Neutral"],
+                ["Ada", "Strong niche authority for no-code AI-agent queries; concentrated relevance signals in 'No-Code AI Agents' search intent but smaller breadth overall.", "Neutral"],
+                ["Kommunicate", "Moderate, niche-focused visibility: good representation on review platforms and owned content for support/chatbot keywords but limited analyst and academic signals.", "Neutral"]
+              ]
+            }
+          },
+          "content_impact": {
+            "Analysts": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 120 }, "visibility": { "Value": 90 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 140 }, "visibility": { "Value": 110 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 60 }, "visibility": { "Value": 40 }, "tier": "Medium" },
+                { "brand": "Drift", "mentions": { "Value": 55 }, "visibility": { "Value": 36 }, "tier": "Medium" },
+                { "brand": "Ada", "mentions": { "Value": 20 }, "visibility": { "Value": 12 }, "tier": "Low" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 4 }, "visibility": { "Value": 10 }, "tier": "Medium" }
+            },
+            "Review Platforms": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 900 }, "visibility": { "Value": 270 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 1100 }, "visibility": { "Value": 330 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 700 }, "visibility": { "Value": 210 }, "tier": "High" },
+                { "brand": "Drift", "mentions": { "Value": 600 }, "visibility": { "Value": 180 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 250 }, "visibility": { "Value": 75 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 18 }, "visibility": { "Value": 40 }, "tier": "Medium" }
+            },
+            "Comparison Blogs": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 400 }, "visibility": { "Value": 120 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 360 }, "visibility": { "Value": 108 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 220 }, "visibility": { "Value": 66 }, "tier": "Medium" },
+                { "brand": "Drift", "mentions": { "Value": 300 }, "visibility": { "Value": 90 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 160 }, "visibility": { "Value": 48 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 6 }, "visibility": { "Value": 12 }, "tier": "Low" }
+            },
+            "Communities": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 520 }, "visibility": { "Value": 156 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 460 }, "visibility": { "Value": 138 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 300 }, "visibility": { "Value": 90 }, "tier": "Medium" },
+                { "brand": "Drift", "mentions": { "Value": 480 }, "visibility": { "Value": 144 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 120 }, "visibility": { "Value": 36 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 10 }, "visibility": { "Value": 16 }, "tier": "Medium" }
+            },
+            "Brand Pages": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 250 }, "visibility": { "Value": 75 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 300 }, "visibility": { "Value": 90 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 200 }, "visibility": { "Value": 60 }, "tier": "High" },
+                { "brand": "Drift", "mentions": { "Value": 230 }, "visibility": { "Value": 69 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 110 }, "visibility": { "Value": 33 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 12 }, "visibility": { "Value": 28 }, "tier": "High" }
+            },
+            "Owned Content": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 420 }, "visibility": { "Value": 126 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 380 }, "visibility": { "Value": 114 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 240 }, "visibility": { "Value": 72 }, "tier": "High" },
+                { "brand": "Drift", "mentions": { "Value": 260 }, "visibility": { "Value": 78 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 130 }, "visibility": { "Value": 39 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 10 }, "visibility": { "Value": 22 }, "tier": "High" }
+            },
+            "3rd-Party Blogs": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 360 }, "visibility": { "Value": 108 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 420 }, "visibility": { "Value": 126 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 180 }, "visibility": { "Value": 54 }, "tier": "Medium" },
+                { "brand": "Drift", "mentions": { "Value": 320 }, "visibility": { "Value": 96 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 140 }, "visibility": { "Value": 42 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 8 }, "visibility": { "Value": 18 }, "tier": "Medium" }
+            },
+            "Social Media": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 1000 }, "visibility": { "Value": 300 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 900 }, "visibility": { "Value": 270 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 500 }, "visibility": { "Value": 150 }, "tier": "High" },
+                { "brand": "Drift", "mentions": { "Value": 650 }, "visibility": { "Value": 195 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 200 }, "visibility": { "Value": 60 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 16 }, "visibility": { "Value": 12 }, "tier": "High" }
+            },
+            "Academic/Whitepapers": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 40 }, "visibility": { "Value": 12 }, "tier": "Medium" },
+                { "brand": "Zendesk", "mentions": { "Value": 60 }, "visibility": { "Value": 18 }, "tier": "Medium" },
+                { "brand": "Freshdesk", "mentions": { "Value": 10 }, "visibility": { "Value": 3 }, "tier": "Low" },
+                { "brand": "Drift", "mentions": { "Value": 8 }, "visibility": { "Value": 2 }, "tier": "Low" },
+                { "brand": "Ada", "mentions": { "Value": 6 }, "visibility": { "Value": 2 }, "tier": "Low" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 0 }, "visibility": { "Value": 2 }, "tier": "Absent" }
+            },
+            "Podcasts/Video Interviews": {
+              "brands": [
+                { "brand": "Intercom", "mentions": { "Value": 150 }, "visibility": { "Value": 40 }, "tier": "High" },
+                { "brand": "Zendesk", "mentions": { "Value": 180 }, "visibility": { "Value": 48 }, "tier": "High" },
+                { "brand": "Freshdesk", "mentions": { "Value": 60 }, "visibility": { "Value": 16 }, "tier": "Medium" },
+                { "brand": "Drift", "mentions": { "Value": 130 }, "visibility": { "Value": 36 }, "tier": "High" },
+                { "brand": "Ada", "mentions": { "Value": 40 }, "visibility": { "Value": 12 }, "tier": "Medium" }
+              ],
+              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 2 }, "visibility": { "Value": 6 }, "tier": "Low" }
+            }
+          },
+          "recommendations": [],
+          "query_analysis": []
+        },
+        "raw_model_outputs_mapped": []
+      },
+      "created_at": "2025-09-26T18:21:52.303Z",
+      "updated_at": "2025-09-26T18:21:52.303Z"
+    }
+  ],
+  "count": 1,
+  "limit": 1,
+  "product_id": "d5fca002-1f7a-4a65-808d-59b38e20fd8d"
+}
