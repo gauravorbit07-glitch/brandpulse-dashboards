@@ -18,29 +18,29 @@ const Index = () => {
         <BrandHeader 
           brandName={data.analytics.brand_name}
           brandWebsite={data.analytics.brand_website}
-          keywordsAnalyzed={analysis.overall_insights.ai_visibility.distinct_queries_count.Value}
+          keywordsAnalyzed={analysis.analysis_scope?.search_keywords || []}
           status={data.status}
           date={data.date}
+          modelName={data.analytics.model_name}
         />
         
-        <OverallInsights insights={analysis.overall_insights} />
+        <OverallInsights insights={analysis.overall_insights} executiveSummary={analysis.executive_summary} />
         
-        <SourceAnalysis sources={analysis.source_analysis} />
-        
-        {analysis.content_impact && Object.keys(analysis.content_impact).length > 0 && (
-          <ContentImpact contentImpact={analysis.content_impact} />
-        )}
+        <SourceAnalysis 
+          contentImpact={analysis.content_impact}
+          brandName={data.analytics.brand_name}
+        />
 
         {(analysis.competitor_analysis.competitor_visibility_table || analysis.competitor_analysis.competitor_sentiment_table) && (
           <CompetitorAnalysis analysis={analysis.competitor_analysis} />
         )}
+        
+        {analysis.content_impact && analysis.content_impact.rows && analysis.content_impact.rows.length > 0 && (
+          <ContentImpact contentImpact={analysis.content_impact} />
+        )}
 
         {analysis.recommendations && analysis.recommendations.length > 0 && (
           <Recommendations recommendations={analysis.recommendations} />
-        )}
-
-        {data.analytics.raw_model_outputs_mapped && data.analytics.raw_model_outputs_mapped.length > 0 && (
-          <QueryAnalysis rawOutputs={data.analytics.raw_model_outputs_mapped} />
         )}
       </div>
     </div>

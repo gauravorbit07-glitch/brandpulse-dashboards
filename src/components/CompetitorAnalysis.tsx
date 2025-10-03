@@ -100,32 +100,33 @@ export const CompetitorAnalysis = ({ analysis }: CompetitorAnalysisProps) => {
             <CardTitle className="text-lg">Competitor Sentiment Analysis</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {analysis.competitor_sentiment_table.rows.map((row, index) => {
-                const [brand, summary, sentiment] = row;
-                const isKommunicate = brand === 'Kommunicate';
-                return (
-                  <Card key={index} className={`border-2 ${isKommunicate ? 'border-primary shadow-primary/20 shadow-lg' : ''}`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className={`text-base ${isKommunicate ? 'text-primary' : ''}`}>
-                          {brand}
-                          {isKommunicate && (
-                            <Badge variant="outline" className="ml-2 text-xs">Your Brand</Badge>
-                          )}
-                        </CardTitle>
-                        <Badge className={getSentimentColor(sentiment)} variant="secondary">
-                          {sentiment}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="font-bold">Brand</TableHead>
+                  <TableHead className="font-bold">Sentiment Summary</TableHead>
+                  <TableHead className="text-center font-bold">Overall Outlook</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {analysis.competitor_sentiment_table.rows.map((row, rowIndex) => {
+                  const isKommunicate = row[0].toLowerCase() === 'kommunicate';
+                  return (
+                    <TableRow key={rowIndex} className={isKommunicate ? 'bg-primary/5' : ''}>
+                      <TableCell className={`font-semibold ${isKommunicate ? 'text-primary font-bold' : ''}`}>
+                        {row[0]}
+                      </TableCell>
+                      <TableCell>{row[1]}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge className={getSentimentColor(row[2])}>
+                          {row[2]}
                         </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{summary}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}

@@ -5,19 +5,20 @@ import { ExternalLink, Globe } from "lucide-react";
 interface BrandHeaderProps {
   brandName: string;
   brandWebsite: string;
-  keywordsAnalyzed: number;
+  keywordsAnalyzed: string[];
   status: string;
   date: string;
+  modelName: string;
 }
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'completed':
-      return 'bg-positive text-positive-foreground';
+      return 'bg-emerald-500 text-white';
+    case 'error':
+      return 'bg-red-500 text-white';
     case 'processing':
-      return 'bg-warning text-warning-foreground';
-    case 'failed':
-      return 'bg-negative text-negative-foreground';
+      return 'bg-yellow-500 text-white';
     default:
       return 'bg-secondary text-secondary-foreground';
   }
@@ -28,7 +29,8 @@ export const BrandHeader = ({
   brandWebsite, 
   keywordsAnalyzed, 
   status, 
-  date 
+  date,
+  modelName 
 }: BrandHeaderProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -64,10 +66,20 @@ export const BrandHeader = ({
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-6 lg:gap-8">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{keywordsAnalyzed}</div>
-            <div className="text-sm text-muted-foreground">Keywords Analyzed</div>
+        <div className="grid grid-cols-3 gap-6 lg:gap-8">
+          <div>
+            <div className="text-sm font-semibold text-foreground mb-2">Keywords Analyzed ({keywordsAnalyzed.length})</div>
+            <div className="flex flex-wrap gap-2">
+              {keywordsAnalyzed.map((keyword, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {keyword}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-foreground mb-2">Model</div>
+            <div className="text-sm text-muted-foreground">{modelName}</div>
           </div>
           <div className="text-center">
             <div className="text-sm font-semibold text-foreground">Analysis Date</div>

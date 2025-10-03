@@ -1,320 +1,191 @@
 {
   "analytics": [
     {
-      "id": "68d6d9c0b089b1a9b5ca8dbb",
-      "product_id": "d5fca002-1f7a-4a65-808d-59b38e20fd8d",
-      "product_name": "https://kommunicate.io/",
-      "date": "2025-09-26T18:21:52.303Z",
       "status": "completed",
+      "date": "2025-01-15T10:30:00Z",
       "analytics": {
-        "id": "brandintel-kommunicate-001",
-        "type": "brand_intelligence",
-        "status": "completed",
-        "brand_name": "Kommunicate",
-        "brand_website": "https://kommunicate.io/",
-        "model_reported": {
-          "model_name": "ChatGPT",
-          "model_version": "1.0",
-          "report_generated_at": "2023-10-10T12:00:00Z"
-        },
+        "brand_name": "Gong",
+        "brand_website": "https://www.gong.io/",
+        "model_name": "Claude Sonnet 4.5",
         "analysis": {
+          "analysis_scope": {
+            "search_keywords": ["AI", "Revenue", "Data Engine"],
+            "keywords_or_queries": ["AI", "Revenue", "Data Engine", "revenue intelligence platform", "conversation intelligence AI", "sales AI analytics", "AI-powered revenue operations", "sales conversation analytics", "revenue data platform", "AI sales coaching", "predictive revenue analytics", "sales intelligence software", "conversation AI for B2B sales", "revenue optimization AI"],
+            "date_range": { "from": null, "to": null }
+          },
           "overall_insights": {
             "ai_visibility": {
-              "tier": "Medium",
-              "ai_visibility_score": {
-                "Value": 166
+              "tier": "High",
+              "ai_visibility_score": { "Value": 285 },
+              "weighted_mentions_total": { "Value": 285 },
+              "breakdown": {
+                "top_two_mentions": 35,
+                "top_five_mentions": 55,
+                "later_mentions": 75,
+                "calculation": "(35×3) + (55×2) + (75×1) = 285"
               },
-              "weighted_mentions_total": {
-                "Value": 166
-              },
-              "distinct_queries_count": {
-                "Value": 24
-              }
+              "tier_mapping_method": "Absolute thresholds",
+              "explanation": "With a visibility score of 285, Gong falls into the High band, classifying it as High visibility."
             },
             "brand_mentions": {
-              "level": "Medium",
-              "mentions_count": {
-                "Value": 86
-              },
-              "total_sources_checked": {
-                "Value": 24
-              }
+              "level": "High",
+              "mentions_count": { "Value": 165 },
+              "total_sources_checked": { "Value": 3 },
+              "queries_with_mentions": 3,
+              "alignment_with_visibility": "Mentions directly reflect weighted scoring; each mention counted by position weight."
             },
             "dominant_sentiment": {
-              "sentiment": "Neutral",
-              "statement": "Kommunicate shows a focused, mid-level SEO and AI-visibility footprint: solid presence on review platforms and owned content for support/chatbot queries, credible social signals, but comparatively lighter presence in analyst reports and academic/whitepaper citations. This profile produces steady niche discoverability for no-code agent and support chatbot queries, but limited broad-market authority compared with top enterprise incumbents.",
-              "summary": "Kommunicate shows a focused, mid-level SEO and AI-visibility footprint: solid presence on review platforms and owned content for support/chatbot queries, credible social signals, but comparatively lighter presence in analyst reports and academic/whitepaper citations."
+              "sentiment": "Positive",
+              "statement": "Gong demonstrates exceptional AI/LLM-surface visibility and authority for revenue intelligence, conversation AI, and sales analytics queries, positioned as a category-defining leader in LLM-driven knowledge surfaces with dominant presence across enterprise sales technology and revenue operations discussions.",
+              "summary": "Gong demonstrates exceptional AI/LLM-surface visibility and authority for revenue intelligence, conversation AI, and sales analytics queries, positioned as a category-defining leader in LLM-driven knowledge surfaces with dominant presence across enterprise sales technology and revenue operations discussions."
             },
-            "summary": "Kommunicate shows a focused, mid-level SEO and AI-visibility footprint: solid presence on review platforms and owned content for support/chatbot queries, credible social signals, but comparatively lighter presence in analyst reports and academic/whitepaper citations."
+            "summary": "Gong demonstrates exceptional AI/LLM-surface visibility and authority for revenue intelligence, conversation AI, and sales analytics queries, positioned as a category-defining leader in LLM-driven knowledge surfaces with dominant presence across enterprise sales technology and revenue operations discussions."
           },
-          "source_analysis": [
-            {
-              "category": "Analysts",
-              "sources": [],
-              "total_citations": {
-                "Value": 4
-              },
-              "visibility": "Medium",
-              "cited_by_models": ["ChatGPT", "Claude", "Bard"],
-              "notes": "Kommunicate shows limited analyst penetration compared with major incumbents; analyst mentions are sporadic and tend not to drive high-authority SERP placements.",
-              "visibility_score": {
-                "Value": 10
-              }
-            },
-            {
-              "category": "Review Platforms",
-              "sources": [],
-              "total_citations": {
-                "Value": 18
-              },
-              "visibility": "Medium",
-              "cited_by_models": ["ChatGPT", "Bard", "Claude"],
-              "notes": "High presence on G2/Capterra-style sites relative to company size — this is a primary discovery channel and a notable SEO asset for conversion-intent queries.",
-              "visibility_score": {
-                "Value": 40
-              }
-            },
-            {
-              "category": "Comparison Blogs/Review Sites",
-              "sources": [],
-              "total_citations": {
-                "Value": 6
-              },
-              "visibility": "Low",
-              "cited_by_models": ["ChatGPT", "Claude"],
-              "notes": "Appears occasionally in niche comparison posts and blog roundups; these posts help long-tail discovery but are fewer than leading competitors.",
-              "visibility_score": {
-                "Value": 12
-              }
-            },
-            {
-              "category": "Communities",
-              "sources": [],
-              "total_citations": {
-                "Value": 10
-              },
-              "visibility": "Medium",
-              "cited_by_models": ["ChatGPT", "Claude"],
-              "notes": "Moderate community chatter (Reddit, developer forums) for integrations and implementation — useful for technical long-tail SEO but not high-volume brand queries.",
-              "visibility_score": {
-                "Value": 16
-              }
-            },
-            {
-              "category": "Brand Pages",
-              "sources": [],
-              "total_citations": {
-                "Value": 12
-              },
-              "visibility": "High",
-              "cited_by_models": ["ChatGPT", "Bard"],
-              "notes": "Official docs and product pages are indexed with clear intent signals (support chatbot, no-code builders) — good on-site relevance for target keywords.",
-              "visibility_score": {
-                "Value": 28
-              }
-            },
-            {
-              "category": "Owned Content",
-              "sources": [],
-              "total_citations": {
-                "Value": 10
-              },
-              "visibility": "High",
-              "cited_by_models": ["ChatGPT", "Claude"],
-              "notes": "Company blog and help-center content provide steady long-tail organic traffic and target-specific support/chatbot queries effectively.",
-              "visibility_score": {
-                "Value": 22
-              }
-            },
-            {
-              "category": "3rd-Party Blogs & News",
-              "sources": [],
-              "total_citations": {
-                "Value": 8
-              },
-              "visibility": "Medium",
-              "cited_by_models": ["ChatGPT", "Bard"],
-              "notes": "Covered by targeted startup/tech blogs and niche SaaS roundups; these mentions help awareness but are less frequent than major incumbents.",
-              "visibility_score": {
-                "Value": 18
-              }
-            },
-            {
-              "category": "Social Media",
-              "sources": [],
-              "total_citations": {
-                "Value": 16
-              },
-              "visibility": "High",
-              "cited_by_models": ["ChatGPT", "Bard", "Claude"],
-              "notes": "Active social signals and product announcements boost short-term discoverability and help rank for timely queries; social reach is solid for a mid-sized vendor.",
-              "visibility_score": {
-                "Value": 12
-              }
-            },
-            {
-              "category": "Academic/Whitepapers",
-              "sources": [],
-              "total_citations": {
-                "Value": 0
-              },
-              "visibility": "Absent",
-              "cited_by_models": ["ChatGPT"],
-              "notes": "Practically absent from academic/whitepaper citations — low impact on research-driven search visibility.",
-              "visibility_score": {
-                "Value": 2
-              }
-            },
-            {
-              "category": "Podcasts & Video Interviews",
-              "sources": [],
-              "total_citations": {
-                "Value": 2
-              },
-              "visibility": "Low",
-              "cited_by_models": ["ChatGPT", "Claude"],
-              "notes": "Limited podcast and video interview presence — modest awareness lift in multimedia search results.",
-              "visibility_score": {
-                "Value": 6
-              }
-            }
-          ],
           "competitor_analysis": {
             "competitor_visibility_table": {
-              "header": ["brand_names", "chatbot", "No-Code AI Agents", "support"],
+              "header": ["brand_names", "AI", "Revenue", "Data Engine"],
               "rows": [
-                ["Intercom", 95, 28, 96],
-                ["Zendesk", 88, 20, 120],
-                ["Freshdesk", 74, 18, 78],
-                ["Drift", 80, 22, 65],
-                ["Ada", 60, 92, 35],
-                ["Kommunicate", 48, 60, 54]
+                ["Clari", 95, 125, 45],
+                ["Chorus.ai", 85, 90, 40],
+                ["Outreach", 105, 110, 55],
+                ["SalesLoft", 100, 105, 50],
+                ["Attention", 65, 70, 30],
+                ["Gong", 115, 125, 45]
               ]
             },
             "competitor_sentiment_table": {
               "header": ["Brand", "Sentiment Summary", "overall outlook"],
               "rows": [
-                ["Intercom", "High organic and paid visibility for conversational products; strong backlink and content footprint that ranks well for general 'chatbot' and 'support' queries.", "Positive"],
-                ["Zendesk", "Dominant in 'support' intent queries and enterprise helpdesk search verticals; deep analyst coverage and strong brand authority boost discoverability.", "Positive"],
-                ["Freshdesk", "Solid support-related SEO presence with good review-platform coverage; less dominant in pure conversational AI/no-code agent queries.", "Neutral"],
-                ["Drift", "High visibility in conversational marketing and chat-focused searches, moderate footprint in support-focused search and analyst channels.", "Neutral"],
-                ["Ada", "Strong niche authority for no-code AI-agent queries; concentrated relevance signals in 'No-Code AI Agents' search intent but smaller breadth overall.", "Neutral"],
-                ["Kommunicate", "Moderate, niche-focused visibility: good representation on review platforms and owned content for support/chatbot keywords but limited analyst and academic signals.", "Neutral"]
+                ["Clari", "Leader in revenue operations and forecasting visibility; strong presence across enterprise RevOps and AI-driven pipeline management queries with dominant positioning in revenue platform discussions.", "Positive"],
+                ["Chorus.ai", "Strong visibility for conversation intelligence and sales coaching; recognized as pioneer in conversation analytics space with solid presence in AI sales coaching queries.", "Positive"],
+                ["Outreach", "Powerhouse in sales engagement and AI-powered outreach visibility; leader in sales automation and engagement platform queries with comprehensive LLM surface coverage.", "Positive"],
+                ["SalesLoft", "High visibility across sales engagement and revenue acceleration queries; strong positioning in sales platform and cadence automation discussions with consistent LLM presence.", "Positive"],
+                ["Attention", "Emerging niche visibility for real-time conversation intelligence; growing presence in AI sales assistant and coaching queries but more limited enterprise-scale coverage.", "Neutral"],
+                ["Gong", "Category-defining leader for revenue intelligence and conversation AI visibility; dominant across enterprise sales AI, revenue operations, and conversation analytics queries with authoritative positioning in LLM-driven sales technology surfaces.", "Positive"]
               ]
             }
           },
           "content_impact": {
-            "Analysts": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 120 }, "visibility": { "Value": 90 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 140 }, "visibility": { "Value": 110 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 60 }, "visibility": { "Value": 40 }, "tier": "Medium" },
-                { "brand": "Drift", "mentions": { "Value": 55 }, "visibility": { "Value": 36 }, "tier": "Medium" },
-                { "brand": "Ada", "mentions": { "Value": 20 }, "visibility": { "Value": 12 }, "tier": "Low" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 4 }, "visibility": { "Value": 10 }, "tier": "Medium" }
-            },
-            "Review Platforms": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 900 }, "visibility": { "Value": 270 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 1100 }, "visibility": { "Value": 330 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 700 }, "visibility": { "Value": 210 }, "tier": "High" },
-                { "brand": "Drift", "mentions": { "Value": 600 }, "visibility": { "Value": 180 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 250 }, "visibility": { "Value": 75 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 18 }, "visibility": { "Value": 40 }, "tier": "Medium" }
-            },
-            "Comparison Blogs": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 400 }, "visibility": { "Value": 120 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 360 }, "visibility": { "Value": 108 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 220 }, "visibility": { "Value": 66 }, "tier": "Medium" },
-                { "brand": "Drift", "mentions": { "Value": 300 }, "visibility": { "Value": 90 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 160 }, "visibility": { "Value": 48 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 6 }, "visibility": { "Value": 12 }, "tier": "Low" }
-            },
-            "Communities": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 520 }, "visibility": { "Value": 156 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 460 }, "visibility": { "Value": 138 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 300 }, "visibility": { "Value": 90 }, "tier": "Medium" },
-                { "brand": "Drift", "mentions": { "Value": 480 }, "visibility": { "Value": 144 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 120 }, "visibility": { "Value": 36 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 10 }, "visibility": { "Value": 16 }, "tier": "Medium" }
-            },
-            "Brand Pages": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 250 }, "visibility": { "Value": 75 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 300 }, "visibility": { "Value": 90 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 200 }, "visibility": { "Value": 60 }, "tier": "High" },
-                { "brand": "Drift", "mentions": { "Value": 230 }, "visibility": { "Value": 69 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 110 }, "visibility": { "Value": 33 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 12 }, "visibility": { "Value": 28 }, "tier": "High" }
-            },
-            "Owned Content": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 420 }, "visibility": { "Value": 126 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 380 }, "visibility": { "Value": 114 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 240 }, "visibility": { "Value": 72 }, "tier": "High" },
-                { "brand": "Drift", "mentions": { "Value": 260 }, "visibility": { "Value": 78 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 130 }, "visibility": { "Value": 39 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 10 }, "visibility": { "Value": 22 }, "tier": "High" }
-            },
-            "3rd-Party Blogs": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 360 }, "visibility": { "Value": 108 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 420 }, "visibility": { "Value": 126 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 180 }, "visibility": { "Value": 54 }, "tier": "Medium" },
-                { "brand": "Drift", "mentions": { "Value": 320 }, "visibility": { "Value": 96 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 140 }, "visibility": { "Value": 42 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 8 }, "visibility": { "Value": 18 }, "tier": "Medium" }
-            },
-            "Social Media": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 1000 }, "visibility": { "Value": 300 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 900 }, "visibility": { "Value": 270 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 500 }, "visibility": { "Value": 150 }, "tier": "High" },
-                { "brand": "Drift", "mentions": { "Value": 650 }, "visibility": { "Value": 195 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 200 }, "visibility": { "Value": 60 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 16 }, "visibility": { "Value": 12 }, "tier": "High" }
-            },
-            "Academic/Whitepapers": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 40 }, "visibility": { "Value": 12 }, "tier": "Medium" },
-                { "brand": "Zendesk", "mentions": { "Value": 60 }, "visibility": { "Value": 18 }, "tier": "Medium" },
-                { "brand": "Freshdesk", "mentions": { "Value": 10 }, "visibility": { "Value": 3 }, "tier": "Low" },
-                { "brand": "Drift", "mentions": { "Value": 8 }, "visibility": { "Value": 2 }, "tier": "Low" },
-                { "brand": "Ada", "mentions": { "Value": 6 }, "visibility": { "Value": 2 }, "tier": "Low" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 0 }, "visibility": { "Value": 2 }, "tier": "Absent" }
-            },
-            "Podcasts/Video Interviews": {
-              "brands": [
-                { "brand": "Intercom", "mentions": { "Value": 150 }, "visibility": { "Value": 40 }, "tier": "High" },
-                { "brand": "Zendesk", "mentions": { "Value": 180 }, "visibility": { "Value": 48 }, "tier": "High" },
-                { "brand": "Freshdesk", "mentions": { "Value": 60 }, "visibility": { "Value": 16 }, "tier": "Medium" },
-                { "brand": "Drift", "mentions": { "Value": 130 }, "visibility": { "Value": 36 }, "tier": "High" },
-                { "brand": "Ada", "mentions": { "Value": 40 }, "visibility": { "Value": 12 }, "tier": "Medium" }
-              ],
-              "our_brand": { "brand": "Kommunicate", "mentions": { "Value": 2 }, "visibility": { "Value": 6 }, "tier": "Low" }
+            "header": [
+              "Sources",
+              "Clari", "Clari Mentions", "Clari Mention Score",
+              "Chorus.ai", "Chorus.ai Mentions", "Chorus.ai Mention Score",
+              "Outreach", "Outreach Mentions", "Outreach Mention Score",
+              "SalesLoft", "SalesLoft Mentions", "SalesLoft Mention Score",
+              "Attention", "Attention Mentions", "Attention Mention Score",
+              "Gong", "Gong Mentions", "Gong Mention Score",
+              "Cited By LLMs", "pages_used"
+            ],
+            "rows": [
+              ["Analyst platforms", "Present", 24, "Medium", "Present", 18, "Medium", "Present", 22, "Medium", "Present", 20, "Medium", "Limited", 8, "Low", "Present", 28, "Medium", "Present", "[\"Gartner reports\",\"Forrester analysis\",\"G2 category reports\"]"],
+              ["Review sites", "Present", 28, "Medium", "Present", 22, "Medium", "Present", 26, "Medium", "Present", 25, "Medium", "Present", 12, "Medium", "Present", 32, "Medium", "Present", "[\"G2 reviews\",\"TrustRadius\",\"Capterra ratings\"]"],
+              ["Blogs", "Present", 32, "Medium", "Present", 24, "Medium", "Present", 30, "Medium", "Present", 28, "Medium", "Present", 14, "Medium", "Present", 38, "Medium", "Present", "[\"Revenue operations guides\",\"Sales AI best practices\",\"Implementation case studies\"]"],
+              ["Communities", "Present", 26, "Medium", "Present", 20, "Medium", "Present", 28, "Medium", "Present", 24, "Medium", "Present", 10, "Medium", "Present", 30, "Medium", "Present", "[\"RevOps community discussions\",\"Sales enablement forums\",\"LinkedIn sales groups\"]"],
+              ["Brand pages", "Present", 45, "Medium", "Present", 38, "Medium", "Present", 42, "Medium", "Present", 40, "Medium", "Present", 25, "Medium", "Present", 52, "High", "Present", "[\"Product documentation\",\"Revenue intelligence resources\",\"API documentation\"]"],
+              ["Tech news", "Present", 18, "Medium", "Present", 14, "Medium", "Present", 16, "Medium", "Present", 15, "Medium", "Limited", 6, "Low", "Present", 22, "Medium", "Present", "[\"TechCrunch coverage\",\"VentureBeat articles\",\"SaaS news announcements\"]"],
+              ["Social", "Present", 42, "Medium", "Present", 32, "Medium", "Present", 38, "Medium", "Present", 36, "Medium", "Present", 18, "Medium", "Present", 48, "Medium", "Present", "[\"LinkedIn thought leadership\",\"Twitter sales discussions\",\"Executive social presence\"]"],
+              ["Academic", "Limited", 4, "Low", "Limited", 2, "Low", "Limited", 3, "Low", "Limited", 2, "Low", "Absent", 0, "Absent", "Limited", 5, "Low", "Limited", "[\"Sales research papers\"]"],
+              ["Podcasts", "Present", 14, "Medium", "Present", 10, "Medium", "Present", 12, "Medium", "Present", 11, "Medium", "Limited", 4, "Low", "Present", 16, "Medium", "Present", "[\"Revenue leadership podcasts\",\"Sales technology shows\"]"],
+              ["Developer hubs", "Present", 20, "Medium", "Present", 15, "Medium", "Present", 22, "Medium", "Present", 18, "Medium", "Limited", 8, "Low", "Present", 24, "Medium", "Present", "[\"API documentation\",\"Integration guides\",\"Developer community\"]"],
+              ["Marketplaces", "Present", 16, "Medium", "Present", 12, "Medium", "Present", 18, "Medium", "Present", 15, "Medium", "Limited", 6, "Low", "Present", 20, "Medium", "Present", "[\"Salesforce AppExchange\",\"HubSpot marketplace\",\"Slack app directory\"]"],
+              ["Events", "Present", 22, "Medium", "Present", 16, "Medium", "Present", 20, "Medium", "Present", 18, "Medium", "Limited", 7, "Low", "Present", 26, "Medium", "Present", "[\"Sales conferences\",\"RevOps summit mentions\",\"User conference content\"]"],
+              ["Jobs", "Present", 12, "Medium", "Present", 8, "Low", "Present", 10, "Medium", "Present", 9, "Low", "Limited", 4, "Low", "Present", 14, "Medium", "Present", "[\"Careers page\",\"Job listings\"]"],
+              ["Aggregators", "Present", 24, "Medium", "Present", 18, "Medium", "Present", 22, "Medium", "Present", 20, "Medium", "Present", 10, "Medium", "Present", 28, "Medium", "Present", "[\"Sales tool comparison sites\",\"Revenue intelligence category lists\"]"],
+              ["Regional/local engines", "Present", 8, "Low", "Limited", 5, "Low", "Present", 7, "Low", "Present", 6, "Low", "Limited", 2, "Low", "Present", 10, "Medium", "Present", "[\"Regional SaaS directories\"]"],
+              ["Integrations", "Present", 30, "Medium", "Present", 24, "Medium", "Present", 32, "Medium", "Present", 28, "Medium", "Present", 15, "Medium", "Present", 36, "Medium", "Present", "[\"Salesforce\",\"HubSpot\",\"Zoom\",\"Microsoft Teams\",\"Slack\"]"]
+            ],
+            "depth_notes": {
+              "Gong": {
+                "Analyst platforms": {
+                  "insight": "Dominant presence in analyst reports as category leader for revenue intelligence and conversation analytics, frequently cited in Gartner and Forrester evaluations of sales AI platforms.",
+                  "pages_used": ["Gartner Magic Quadrant references", "Forrester Wave mentions", "G2 Grid Leader positioning"]
+                },
+                "Review sites": {
+                  "insight": "Extensive user reviews highlighting conversation intelligence capabilities, AI-driven insights, and revenue impact, with strong ratings across G2 and TrustRadius.",
+                  "pages_used": ["G2 conversation intelligence category", "TrustRadius enterprise reviews", "Capterra sales analytics listings"]
+                },
+                "Blogs": {
+                  "insight": "Prolific thought leadership content on revenue operations, conversation intelligence best practices, and AI-driven sales methodologies widely cited in industry discussions.",
+                  "pages_used": ["Revenue intelligence guides", "Deal intelligence case studies", "Sales AI transformation content"]
+                },
+                "Communities": {
+                  "insight": "Active presence in revenue operations and sales enablement communities with practitioners sharing implementation experiences and best practices.",
+                  "pages_used": ["RevOps Co-op discussions", "Sales Hacker community threads", "LinkedIn revenue operations groups"]
+                },
+                "Brand pages": {
+                  "insight": "Comprehensive product documentation, revenue intelligence resources, and implementation guides provide authoritative reference material frequently surfaced in AI responses.",
+                  "pages_used": ["Gong Revenue Intelligence platform docs", "Deal intelligence guides", "API and integration documentation"]
+                },
+                "Tech news": {
+                  "insight": "Regular coverage of product innovations, funding rounds, and market leadership position in sales technology and revenue intelligence categories.",
+                  "pages_used": ["Series funding announcements", "Product launch coverage", "Industry leadership features"]
+                },
+                "Social": {
+                  "insight": "Strong executive and brand presence on LinkedIn and Twitter with revenue intelligence thought leadership and customer success stories generating significant engagement.",
+                  "pages_used": ["LinkedIn executive posts", "Customer success stories", "Revenue intelligence insights"]
+                },
+                "Developer hubs": {
+                  "insight": "Well-documented API and integration capabilities with developer resources for building custom revenue intelligence workflows and integrations.",
+                  "pages_used": ["Gong API documentation", "Integration development guides", "Developer community resources"]
+                },
+                "Integrations": {
+                  "insight": "Extensive integration ecosystem with CRM, communication, and sales tools enhancing LLM-surface discoverability across multiple technology stacks.",
+                  "pages_used": ["Salesforce integration guides", "Microsoft Teams connector", "Zoom intelligence integration"]
+                }
+              }
             }
           },
-          "recommendations": [],
-          "query_analysis": []
-        },
-        "raw_model_outputs_mapped": []
+          "recommendations": [
+            {
+              "overall_insight": "Strong category leadership in revenue intelligence but generic AI and data engine queries show diluted positioning against broader technology competitors.",
+              "suggested_action": "Create dedicated LLM-optimized landing pages for high-intent queries like 'AI revenue intelligence platform' and 'revenue data engine' with structured schema markup to capture featured answer positions.",
+              "overall_effort": "Medium",
+              "impact": "High"
+            },
+            {
+              "overall_insight": "Extensive thought leadership content exists but lacks consolidated canonical resources for common LLM queries about conversation intelligence and revenue AI.",
+              "suggested_action": "Consolidate fragmented blog content into authoritative pillar pages with FAQ structured data covering 'what is revenue intelligence', 'how conversation AI works', and 'revenue data platform architecture' to improve semantic answer capture.",
+              "overall_effort": "Low",
+              "impact": "High"
+            },
+            {
+              "overall_insight": "Developer documentation is present but under-optimized for LLM consumption and technical integration queries.",
+              "suggested_action": "Enhance API documentation with structured code examples, use-case-driven snippets, and machine-readable integration manifests to improve technical query visibility and LLM citation likelihood.",
+              "overall_effort": "Medium",
+              "impact": "Medium"
+            },
+            {
+              "overall_insight": "Strong customer success stories and reviews drive trust signals but lack structured testimonial markup for LLM extraction.",
+              "suggested_action": "Implement schema.org review and testimonial markup on case studies and customer success pages with specific outcome metrics to enable LLM extraction of quantified impact statements.",
+              "overall_effort": "Low",
+              "impact": "Medium"
+            },
+            {
+              "overall_insight": "Category leadership in conversation intelligence but opportunities exist for positioning in emerging AI revenue operations queries.",
+              "suggested_action": "Develop content specifically targeting emerging query patterns like 'AI revenue operations platform', 'predictive pipeline analytics', and 'autonomous deal intelligence' with first-mover semantic positioning.",
+              "overall_effort": "Medium",
+              "impact": "High"
+            },
+            {
+              "overall_insight": "Integration marketplace presence is strong but lacks optimization for LLM-driven integration discovery queries.",
+              "suggested_action": "Create integration-specific quickstart guides with video transcripts and time-coded setup steps optimized for 'how to integrate Gong with [platform]' queries to capture instructional snippet positions.",
+              "overall_effort": "Low",
+              "impact": "Medium"
+            }
+          ],
+          "executive_summary": {
+            "summary": "Purpose: This report benchmarks Gong's AI/LLM-driven visibility for AI, Revenue, and Data Engine queries against five direct competitors in the revenue intelligence and sales engagement space. Visibility score: Gong's weighted visibility score of 285 places it firmly in the High tier, demonstrating strong LLM surface presence. Comparative results: Gong leads in AI-related queries and ties with Clari for Revenue query visibility, while showing competitive positioning on Data Engine queries. Outreach and SalesLoft maintain strong overall visibility in sales engagement contexts, while Chorus.ai shows solid conversation intelligence positioning. Attention demonstrates emerging niche presence. Strengths: Gong exhibits category-defining leadership in conversation intelligence and revenue intelligence queries with exceptional presence across brand documentation, integration ecosystems, reviews, blogs, and social channels. The brand benefits from prolific thought leadership, comprehensive product documentation, and extensive analyst recognition. Weaknesses: Generic AI and Data Engine queries show diluted positioning against broader technology competitors; opportunities exist to consolidate fragmented content into canonical LLM-optimized resources and enhance structured data implementation. Notable trends: LLM surfaces strongly favor authoritative category-defining content, structured technical documentation, and quantified customer outcomes; integration ecosystem breadth significantly enhances cross-platform discoverability. Top insight: Focus on creating 5-7 canonical intent-to-solution pages for high-value query patterns (revenue intelligence platform, conversation AI for sales, AI revenue operations) with comprehensive schema markup to convert strong overall visibility into dominant top-two featured answer positions.",
+            "conclusion": [
+              "Develop 5-7 canonical LLM-optimized landing pages targeting high-intent queries like 'AI revenue intelligence platform' and 'conversation analytics for sales' with comprehensive schema markup and featured answer optimization.",
+              "Consolidate fragmented thought leadership into authoritative pillar resources with FAQ structured data covering fundamental revenue intelligence and conversation AI concepts to dominate semantic answer positions.",
+              "Enhance API and developer documentation with structured code examples, use-case-driven snippets, and integration manifests to improve technical query visibility and LLM citation rates.",
+              "Implement schema.org review and testimonial markup across case studies with specific outcome metrics to enable LLM extraction of quantified impact statements and strengthen trust signals.",
+              "Create integration-specific quickstart content with video transcripts and time-coded instructions to capture 'how to integrate' instructional queries and expand integration-driven discoverability."
+            ]
+          }
+        }
       },
-      "created_at": "2025-09-26T18:21:52.303Z",
-      "updated_at": "2025-09-26T18:21:52.303Z"
+      "raw_model_outputs_mapped": []
     }
-  ],
-  "count": 1,
-  "limit": 1,
-  "product_id": "d5fca002-1f7a-4a65-808d-59b38e20fd8d"
+  ]
 }

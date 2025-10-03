@@ -5,25 +5,30 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Database, Users, FileText } from "lucide-react";
 
 interface SourceAnalysisProps {
-  sources: Array<{
-    category: string;
-    sources: string[];
-    total_citations: { Value: number };
-    visibility: string;
-    cited_by_models: string[];
-    notes: string;
-    visibility_score: { Value: number };
-  }>;
+  contentImpact: {
+    header: string[];
+    rows: (string | number)[][];
+    depth_notes?: {
+      [brand: string]: {
+        [source: string]: {
+          insight: string;
+          pages_used: string[];
+        };
+      };
+    };
+  };
+  brandName: string;
 }
 
 const getVisibilityColor = (visibility: string) => {
   switch (visibility.toLowerCase()) {
     case 'high':
-      return 'bg-positive text-positive-foreground';
+      return 'bg-emerald-500 text-white';
     case 'medium':
-      return 'bg-warning text-warning-foreground';
+      return 'bg-yellow-500 text-white';
     case 'low':
-      return 'bg-negative text-negative-foreground';
+    case 'absent':
+      return 'bg-red-500 text-white';
     default:
       return 'bg-secondary text-secondary-foreground';
   }
@@ -42,21 +47,66 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-export const SourceAnalysis = ({ sources }: SourceAnalysisProps) => {
+export const SourceAnalysis = ({ contentImpact, brandName }: SourceAnalysisProps) => {
+  // Extract brand data from contentImpact
+  const brandColumnIndex = contentImpact.header.findIndex(h => h === brandName);
+  
+  const sources = contentImpact.rows.map(row => {
+    const sourceName = row[0] as string;
+    const mentions = row[brandColumnIndex + 1] as number;
+    const score = row[brandColumnIndex + 2] as string;
+    
+    // Get depth notes if available
+    const depthNote = contentImpact.depth_notes?.[brandName]?.[sourceName];
+    
+    // Map source names to shorter versions for chart
+    const getShortName = (name: string) => {
+      const mapping: Record<string, string> = {
+        'Analyst platforms': 'Analysts',
+        'Review sites': 'Reviews',
+        'Blogs': 'Blogs',
+        'Communities': 'Communities',
+        'Brand pages': 'Owned Content',
+        'Tech news': 'News',
+        'Social': 'Social',
+        'Academic': 'Academic',
+        'Podcasts': 'Podcasts',
+        'Developer hubs': 'Dev Hubs',
+        'Marketplaces': 'Marketplaces',
+        'Events': 'Events',
+        'Jobs': 'Jobs',
+        'Aggregators': 'Aggregators',
+        'Regional/local engines': 'Regional',
+        'Integrations': 'Integrations'
+      };
+      return mapping[name] || name;
+    };
+    
+    return {
+      category: sourceName,
+      shortCategory: getShortName(sourceName),
+      mentions,
+      score,
+      insight: depthNote?.insight || '',
+      pages_used: depthNote?.pages_used || []
+    };
+  });
+
   const chartData = sources.map(source => ({
-    category: source.category,
-    citations: source.total_citations.Value,
-    visibility: source.visibility
+    category: source.shortCategory,
+    citations: source.mentions,
+    visibility: source.score
   }));
 
   const getBarColor = (visibility: string) => {
     switch (visibility.toLowerCase()) {
       case 'high':
-        return 'hsl(var(--positive))';
+        return '#10b981';
       case 'medium':
-        return 'hsl(var(--warning))';
+        return '#eab308';
       case 'low':
-        return 'hsl(var(--negative))';
+      case 'absent':
+        return '#ef4444';
       default:
         return 'hsl(var(--primary))';
     }
@@ -78,7 +128,6 @@ export const SourceAnalysis = ({ sources }: SourceAnalysisProps) => {
                 dataKey="category" 
                 stroke="hsl(var(--muted-foreground))" 
                 fontSize={12}
-                tickFormatter={(value) => value.split(' ')[0]}
               />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <Tooltip 
@@ -103,7 +152,7 @@ export const SourceAnalysis = ({ sources }: SourceAnalysisProps) => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Source Details</CardTitle>
+          <CardTitle className="text-lg">Source Details for {brandName}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -111,9 +160,9 @@ export const SourceAnalysis = ({ sources }: SourceAnalysisProps) => {
               <TableRow>
                 <TableHead>Source</TableHead>
                 <TableHead className="text-center">Mentions</TableHead>
-                <TableHead className="text-center">Visibility Score</TableHead>
                 <TableHead className="text-center">Tier</TableHead>
-                <TableHead>Notes</TableHead>
+                <TableHead>Insights</TableHead>
+                <TableHead>Pages Used</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -123,14 +172,24 @@ export const SourceAnalysis = ({ sources }: SourceAnalysisProps) => {
                     {getCategoryIcon(source.category)}
                     {source.category}
                   </TableCell>
-                  <TableCell className="text-center font-semibold">{source.total_citations.Value}</TableCell>
-                  <TableCell className="text-center font-semibold text-primary">{source.visibility_score.Value}</TableCell>
+                  <TableCell className="text-center font-semibold">{source.mentions}</TableCell>
                   <TableCell className="text-center">
-                    <Badge className={getVisibilityColor(source.visibility)} variant="secondary">
-                      {source.visibility}
+                    <Badge className={getVisibilityColor(source.score)} variant="secondary">
+                      {source.score}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{source.notes}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{source.insight || 'No insights available'}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {source.pages_used && source.pages_used.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-1">
+                        {source.pages_used.map((page, idx) => (
+                          <li key={idx}>{page}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      'No pages listed'
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
