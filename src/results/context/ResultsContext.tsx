@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import { getProductAnalytics } from "@/apiHelpers";
 import { setAnalyticsData, loadAnalyticsFromStorage, clearCurrentAnalyticsData } from "@/results/data/analyticsData";
+import { clearAnalyticsDataForCurrentUser } from "@/lib/storageKeys";
 import { useToast } from "@/hooks/use-toast";
 import { handleUnauthorized, isUnauthorizedError } from "@/lib/authGuard";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
@@ -351,6 +352,11 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               hasReceivedDataRef.current = true;
               pollingAttemptsRef.current = 0;
               
+              // Clear OLD data now that we have NEW data
+              clearAnalyticsDataForCurrentUser();
+              clearCurrentAnalyticsData();
+              console.log("🧹 [POLL] Cleared old analytics data - new data arrived");
+              
               // Clear analysis state via hook
               completeAnalysis();
 
@@ -600,9 +606,6 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
       clearTimeout(cooldownTimerRef.current);
       cooldownTimerRef.current = undefined;
     }
-
-    // Clear in-memory analytics data to ensure fresh fetch
-    clearCurrentAnalyticsData();
 
     console.log("▶️ [EFFECT] Starting poll for product:", productId);
     pollProductAnalytics(productId);
