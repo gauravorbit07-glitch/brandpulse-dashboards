@@ -33,6 +33,12 @@ export const clearCurrentUserEmail = () => {
   console.log('👤 [ANALYTICS] User email cleared from memory');
 };
 
+// Clear current analytics data (call when starting new analysis)
+export const clearCurrentAnalyticsData = () => {
+  currentAnalyticsData = null;
+  console.log('🧹 [ANALYTICS] Current analytics data cleared from memory');
+};
+
 // Format logo URL using Google Favicon service
 export const formatLogoUrl = (domain: string): string => {
   if (!domain) return '';

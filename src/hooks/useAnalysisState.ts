@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useSyncExternalStore } from "react";
+import { clearAnalyticsDataForCurrentUser, STORAGE_KEYS, getEmailScopedKey } from "@/lib/storageKeys";
 
 const STORAGE_KEY_PREFIX = "analysis_state";
 
@@ -142,15 +143,27 @@ export function useAnalysisState() {
 
   /**
    * Call when a new analysis is triggered (from InputPage or Regenerate)
+   * This also clears old analytics data to ensure fresh data is shown
    */
   const startAnalysis = useCallback((productId: string) => {
+    // Clear old analytics data from localStorage to ensure new data is shown
+    clearAnalyticsDataForCurrentUser();
+    
+    // Also clear the completion toast flag so notification can show for new analysis
+    try {
+      const toastKey = getEmailScopedKey(STORAGE_KEYS.COMPLETION_TOAST_SHOWN);
+      localStorage.removeItem(toastKey);
+    } catch {
+      // ignore
+    }
+    
     const newState: AnalysisState = {
       isAnalyzing: true,
       triggeredAt: Date.now(),
       productId,
     };
     writeToStorage(newState);
-    console.log("🚀 [ANALYSIS_STATE] Analysis started for product:", productId);
+    console.log("🚀 [ANALYSIS_STATE] Analysis started for product:", productId, "- Old data cleared");
   }, []);
 
   /**
