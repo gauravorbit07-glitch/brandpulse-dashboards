@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import { getProductAnalytics } from "@/apiHelpers";
-import { setAnalyticsData, loadAnalyticsFromStorage } from "@/results/data/analyticsData";
+import { setAnalyticsData, loadAnalyticsFromStorage, clearCurrentAnalyticsData } from "@/results/data/analyticsData";
 import { useToast } from "@/hooks/use-toast";
 import { handleUnauthorized, isUnauthorizedError } from "@/lib/authGuard";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
@@ -108,10 +108,9 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
     }
   };
 
-  // Polling configuration
-  const POLL_INITIAL_DELAY_MS = 2 * 60 * 1000;
-  const POLL_INTERVAL_MS = 2 * 60 * 1000;
-  const POLL_MAX_ATTEMPTS = 5;
+  // Polling configuration - 2 minutes between each poll
+  const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+  const POLL_MAX_ATTEMPTS = 30; // Allow polling for up to 1 hour (30 * 2min)
   const POLL_COOLDOWN_MS = 10 * 60 * 1000;
 
   // Refs for polling
@@ -126,10 +125,13 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
   const isInCooldownRef = useRef(false);
   const hasReceivedDataRef = useRef(false);
   const accessTokenRef = useRef<string>("");
-  const initialPollDoneRef = useRef(false);
-  const toastRef = useRef(toast);
   const hasFetchedRef = useRef(false);
-  const completionToastShownRef = useRef<string | null>(null);
+  const toastRef = useRef(toast);
+  
+  // Load completion toast shown state from localStorage
+  const getCompletionToastShownKey = useCallback(() => {
+    return getEmailScopedKey(STORAGE_KEYS.COMPLETION_TOAST_SHOWN);
+  }, []);
 
   useEffect(() => {
     toastRef.current = toast;
@@ -187,7 +189,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
   }, [currentAnalytics, previousAnalytics, productData?.id]);
 
   const scheduleNextPoll = useCallback(
-    (productId: string, wasInitialPoll: boolean) => {
+    (productId: string) => {
       if (pollingTimerRef.current) {
         clearTimeout(pollingTimerRef.current);
       }
@@ -197,44 +199,28 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
         return;
       }
 
-      if (wasInitialPoll && !initialPollDoneRef.current) {
-        initialPollDoneRef.current = true;
-        console.log(`⏱️ [SCHEDULE] Initial poll done - waiting ${POLL_INITIAL_DELAY_MS / 60000} minutes before batch`);
-        pollingTimerRef.current = window.setTimeout(() => {
-          if (
-            mountedRef.current &&
-            currentProductIdRef.current === productId &&
-            !hasReceivedDataRef.current
-          ) {
-            isPollingRef.current = false;
-            pollingAttemptsRef.current = 0;
-            pollProductAnalytics(productId, false);
-          }
-        }, POLL_INITIAL_DELAY_MS);
-      } else {
-        console.log(`⏱️ [SCHEDULE] Scheduling batch poll in ${POLL_INTERVAL_MS / 60000} minutes...`);
-        pollingTimerRef.current = window.setTimeout(() => {
-          if (
-            mountedRef.current &&
-            currentProductIdRef.current === productId &&
-            !hasReceivedDataRef.current
-          ) {
-            isPollingRef.current = false;
-            pollProductAnalytics(productId, false);
-          }
-        }, POLL_INTERVAL_MS);
-      }
+      console.log(`⏱️ [SCHEDULE] Scheduling next poll in ${POLL_INTERVAL_MS / 60000} minutes...`);
+      pollingTimerRef.current = window.setTimeout(() => {
+        if (
+          mountedRef.current &&
+          currentProductIdRef.current === productId &&
+          !hasReceivedDataRef.current
+        ) {
+          isPollingRef.current = false;
+          pollProductAnalytics(productId);
+        }
+      }, POLL_INTERVAL_MS);
     },
     []
   );
 
   const pollProductAnalytics = useCallback(
-    async (productId: string, isInitialPoll: boolean = false) => {
-      const attemptNum = pollingAttemptsRef.current + 1;
+    async (productId: string) => {
+      pollingAttemptsRef.current += 1;
+      const attemptNum = pollingAttemptsRef.current;
       console.log(
         `[POLL] Starting poll #${attemptNum} for product:`,
-        productId,
-        isInitialPoll ? "(INITIAL)" : "(BATCH)"
+        productId
       );
 
       // Early exit checks
@@ -268,9 +254,9 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
       }
 
       // Check retry limit
-      if (!isInitialPoll && pollingAttemptsRef.current >= POLL_MAX_ATTEMPTS) {
+      if (pollingAttemptsRef.current >= POLL_MAX_ATTEMPTS) {
         console.log(
-          `🛑 [POLL] Reached max batch limit (${POLL_MAX_ATTEMPTS}) - entering ${POLL_COOLDOWN_MS / 60000} min cooldown`
+          `🛑 [POLL] Reached max poll limit (${POLL_MAX_ATTEMPTS}) - entering ${POLL_COOLDOWN_MS / 60000} min cooldown`
         );
         isInCooldownRef.current = true;
 
@@ -294,7 +280,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
             console.log("[POLL] Cooldown complete - resetting counter and starting new batch");
             pollingAttemptsRef.current = 0;
             isInCooldownRef.current = false;
-            pollProductAnalytics(productId, false);
+            pollProductAnalytics(productId);
           }
         }, POLL_COOLDOWN_MS);
 
@@ -303,9 +289,6 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
 
       // Acquire lock
       isPollingRef.current = true;
-      if (!isInitialPoll) {
-        pollingAttemptsRef.current += 1;
-      }
       console.log(`✅ [POLL] Lock acquired, attempt ${pollingAttemptsRef.current}/${POLL_MAX_ATTEMPTS}`);
 
       try {
@@ -367,7 +350,6 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
             if ((currentStatus === "completed" || currentStatus === "failed") && isNewData) {
               hasReceivedDataRef.current = true;
               pollingAttemptsRef.current = 0;
-              initialPollDoneRef.current = true;
               
               // Clear analysis state via hook
               completeAnalysis();
@@ -390,14 +372,18 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                 prevAnalytics?.updated_at ||
                 prevAnalytics?.created_at;
 
-              // Show toast only once per unique completion
-              const toastKey = `${productId}_${currentDate}`;
-              if (currentStatus === "completed" && previousDate && currentDate && currentDate > previousDate) {
-                if (completionToastShownRef.current !== toastKey) {
-                  completionToastShownRef.current = toastKey;
+              // Show toast only once per unique completion - persist in localStorage
+              const toastKey = getCompletionToastShownKey();
+              const storedToastKey = localStorage.getItem(toastKey);
+              const currentToastId = `${productId}_${currentDate}`;
+              
+              if (currentStatus === "completed" && storedToastKey !== currentToastId) {
+                // Only show if there was previous data to compare against, or if it's genuinely new
+                if (previousDate && currentDate && currentDate > previousDate) {
+                  localStorage.setItem(toastKey, currentToastId);
                   toastRef.current({
                     title: "Analysis Completed",
-                    description: "Your analysis is now complete. Please refresh the page to see the updated insights.",
+                    description: "Your analysis is now complete. The page will update with your new insights.",
                     duration: 10000,
                   });
                   console.log("🎉 [POLL] Showing completion notification for new completed analysis");
@@ -434,7 +420,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                 hasShownStartMessageRef.current = true;
               }
 
-              scheduleNextPoll(productId, isInitialPoll);
+              scheduleNextPoll(productId);
               return;
             }
 
@@ -457,7 +443,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                 hasShownStartMessageRef.current = true;
               }
 
-              scheduleNextPoll(productId, isInitialPoll);
+              scheduleNextPoll(productId);
               return;
             }
 
@@ -469,12 +455,12 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               setIsLoading(true);
             }
             console.log(`⚠️ [POLL] Unknown status "${currentStatus}" - continuing polling`);
-            scheduleNextPoll(productId, isInitialPoll);
+            scheduleNextPoll(productId);
           } else {
             // No analysis found - keep polling
             console.log("⚠️ [POLL] No analysis found - scheduling next poll");
             setIsLoading(true);
-            scheduleNextPoll(productId, isInitialPoll);
+            scheduleNextPoll(productId);
           }
         } else {
           throw new Error("Invalid response format");
@@ -496,7 +482,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
         }
 
         // Schedule retry
-        scheduleNextPoll(productId, isInitialPoll);
+        scheduleNextPoll(productId);
       } finally {
         isPollingRef.current = false;
         console.log("🔓 [POLL] Lock released");
@@ -605,7 +591,6 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
     pollingAttemptsRef.current = 0;
     isInCooldownRef.current = false;
     hasReceivedDataRef.current = false;
-    initialPollDoneRef.current = false;
 
     if (pollingTimerRef.current) {
       clearTimeout(pollingTimerRef.current);
@@ -616,8 +601,11 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
       cooldownTimerRef.current = undefined;
     }
 
-    console.log("▶️ [EFFECT] Starting INITIAL poll for product:", productId);
-    pollProductAnalytics(productId, true);
+    // Clear in-memory analytics data to ensure fresh fetch
+    clearCurrentAnalyticsData();
+
+    console.log("▶️ [EFFECT] Starting poll for product:", productId);
+    pollProductAnalytics(productId);
 
     return () => {
       if (pollingTimerRef.current) {
@@ -631,7 +619,6 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
       isPollingRef.current = false;
       pollingAttemptsRef.current = 0;
       isInCooldownRef.current = false;
-      initialPollDoneRef.current = false;
     };
   }, [productData?.id, pollProductAnalytics]);
 

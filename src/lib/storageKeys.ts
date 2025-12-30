@@ -25,7 +25,31 @@ export const STORAGE_KEYS = {
   LAST_ANALYSIS_DATE: "last_analysis_date",
   ANALYSIS_STATE: "analysis_state",
   USER_EMAIL: "user_email",
+  COMPLETION_TOAST_SHOWN: "completion_toast_shown",
 } as const;
+
+// Clear analytics data for current user (call when starting new analysis)
+export function clearAnalyticsDataForCurrentUser(): void {
+  const sanitized = getSanitizedEmail();
+  if (!sanitized) return;
+  
+  const keysToRemove = [
+    `${STORAGE_KEYS.ANALYTICS_DATA}_${sanitized}`,
+    `${STORAGE_KEYS.LAST_ANALYSIS_DATA}_${sanitized}`,
+    `${STORAGE_KEYS.LAST_ANALYSIS_DATE}_${sanitized}`,
+    `${STORAGE_KEYS.COMPLETION_TOAST_SHOWN}_${sanitized}`,
+  ];
+  
+  keysToRemove.forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+  });
+  
+  console.log("🧹 [STORAGE] Cleared analytics data for current user");
+}
 
 // Get all email-scoped datasets from localStorage
 export function getAllEmailScopedDatasets(): Array<{
