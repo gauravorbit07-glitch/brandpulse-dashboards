@@ -50,51 +50,51 @@ export const PlatformPresence = () => {
   const presentCount = platforms.filter((p) => p.status === "present").length;
 
   return (
-    <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 overflow-hidden shadow-card hover:shadow-elevated transition-shadow duration-300">
+    <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 md:p-6 overflow-hidden hover:border-border/70 transition-all duration-300">
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          <Globe className="w-5 h-5 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">
+          <div className="p-1.5 rounded-lg bg-primary/10">
+            <Globe className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">
             Platform Presence
           </h3>
         </div>
-        <span className="text-xs text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-lg font-medium">
+        <span className="text-[10px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-md font-medium border border-border/30 tabular-nums">
           {presentCount}/{platforms.length}
         </span>
       </div>
-
-      <p className="text-xs text-muted-foreground mb-5">
+      <p className="text-[10px] text-muted-foreground mb-4 ml-9">
         Brand presence on key AI-relevant platforms
       </p>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {platforms.map((platform) => (
           <div
             key={platform.key}
-            className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+            className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
               platform.status === "present"
-                ? "border-emerald-500/15 bg-emerald-500/[0.03] hover:bg-emerald-500/[0.06]"
-                : "border-red-500/15 bg-red-500/[0.03]"
+                ? "border-emerald-500/10 bg-emerald-500/[0.03] hover:bg-emerald-500/[0.06]"
+                : "border-red-500/10 bg-red-500/[0.02] opacity-75"
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <img
                 src={platform.icon}
                 alt={platform.label}
-                className="w-4 h-4 rounded-full object-contain bg-white flex-shrink-0"
+                className="w-3.5 h-3.5 rounded-full object-contain bg-white flex-shrink-0"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}
               />
-              <span className="font-medium text-xs text-foreground">
+              <span className="font-medium text-[11px] text-foreground">
                 {platform.label}
               </span>
             </div>
-
             {platform.status === "present" ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+              <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
             ) : (
-              <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+              <XCircle className="w-3 h-3 text-red-400 flex-shrink-0" />
             )}
           </div>
         ))}

@@ -16,11 +16,11 @@ import { useResults } from "@/results/context/ResultsContext";
 type ViewMode = "geo_score" | "mentions";
 
 const competitorColors = [
-  "hsl(142, 40%, 60%)",
-  "hsl(45, 70%, 65%)",
-  "hsl(258, 55%, 70%)",
-  "hsl(0, 65%, 70%)",
-  "hsl(28, 65%, 65%)"
+  "hsl(210, 15%, 70%)",
+  "hsl(210, 15%, 62%)",
+  "hsl(210, 15%, 55%)",
+  "hsl(210, 15%, 48%)",
+  "hsl(210, 15%, 42%)"
 ];
 
 export const CompetitorComparisonChart = () => {
@@ -65,7 +65,6 @@ export const CompetitorComparisonChart = () => {
     [chartData]
   );
 
-  // Dynamic insight
   const insight = useMemo(() => {
     const brand = chartData.find(d => d.isBrand);
     if (!brand) return null;
@@ -77,22 +76,24 @@ export const CompetitorComparisonChart = () => {
   }, [chartData, brandName]);
 
   return (
-    <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 overflow-hidden shadow-card hover:shadow-elevated transition-shadow duration-300">
+    <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 md:p-6 overflow-hidden hover:border-border/70 transition-all duration-300">
       <div className="flex items-center justify-between mb-1 flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">
+          <div className="p-1.5 rounded-lg bg-primary/10">
+            <TrendingUp className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">
             Competitive Landscape
           </h3>
         </div>
-        <div className="flex items-center gap-0.5 bg-muted/60 rounded-lg p-0.5">
+        <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5 border border-border/30">
           {(["geo_score", "mentions"] as ViewMode[]).map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+              className={`px-2.5 py-1 text-[10px] font-medium rounded-md transition-all ${
                 viewMode === mode
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-card text-foreground shadow-sm border border-border/40"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -101,27 +102,27 @@ export const CompetitorComparisonChart = () => {
           ))}
         </div>
       </div>
-      <p className="text-xs text-muted-foreground mb-5">
+      <p className="text-[10px] text-muted-foreground mb-4 ml-9">
         {viewMode === "geo_score"
           ? "How you stack up against competitors in AI search results"
           : "Who gets mentioned most across AI platforms"}
       </p>
 
-      <div className="h-[300px]">
+      <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
             layout="vertical"
             margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal vertical={false} opacity={0.5} />
             <XAxis
               type="number"
               stroke="hsl(var(--muted-foreground))"
               axisLine={false}
               tickLine={false}
               domain={[0, maxValue]}
-              fontSize={11}
+              fontSize={10}
             />
             <YAxis
               type="category"
@@ -129,23 +130,23 @@ export const CompetitorComparisonChart = () => {
               axisLine={false}
               tickLine={false}
               stroke="hsl(var(--muted-foreground))"
-              fontSize={11}
-              width={150}
+              fontSize={10}
+              width={140}
               tick={({ x, y, payload }) => {
                 const brand = chartData.find((b) => b.name === payload.value);
                 return (
                   <g transform={`translate(${x},${y})`}>
-                    <foreignObject x={-120} y={-12} width={120} height={24}>
-                      <div className="flex items-center gap-2 justify-end">
+                    <foreignObject x={-115} y={-12} width={115} height={24}>
+                      <div className="flex items-center gap-1.5 justify-end">
                         {brand?.logo && (
                           <img
                             src={brand.logo}
                             alt={payload.value}
-                            className="w-4 h-4 rounded-full bg-white object-contain"
+                            className="w-3.5 h-3.5 rounded-full bg-white object-contain"
                           />
                         )}
                         <span
-                          className={`text-xs truncate ${
+                          className={`text-[10px] truncate ${
                             brand?.isBrand
                               ? "text-primary font-semibold"
                               : "text-muted-foreground"
@@ -165,11 +166,12 @@ export const CompetitorComparisonChart = () => {
                 border: "1px solid hsl(var(--border))",
                 borderRadius: 12,
                 boxShadow: "var(--shadow-elevated)",
+                fontSize: 12,
               }}
               formatter={(value, name, props) => {
                 const data = props.payload;
                 return [
-                  <div className="space-y-1 text-sm">
+                  <div className="space-y-0.5 text-xs">
                     <div>Visibility Score: <strong>{data.geoScore}</strong></div>
                     <div>Mentions: <strong>{data.mentionCount}</strong></div>
                   </div>,
@@ -177,10 +179,10 @@ export const CompetitorComparisonChart = () => {
                 ];
               }}
               labelFormatter={(label) => (
-                <span className="font-semibold text-sm">{label}</span>
+                <span className="font-semibold text-xs">{label}</span>
               )}
             />
-            <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>
+            <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={20}>
               {chartData.map((entry, i) => (
                 <Cell key={i} fill={entry.color} />
               ))}
@@ -189,17 +191,16 @@ export const CompetitorComparisonChart = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* Insight + Legend */}
       {insight && (
-        <p className="text-xs text-muted-foreground text-center mt-4 pt-3 border-t border-border/50 italic">
-          💡 {insight}
+        <p className="text-[10px] text-muted-foreground text-center mt-3 pt-3 border-t border-border/30">
+          <span className="text-primary font-medium">Insight:</span> {insight}
         </p>
       )}
-      <div className="flex flex-wrap justify-center gap-4 mt-3">
+      <div className="flex flex-wrap justify-center gap-3 mt-2.5">
         {chartData.map((brand, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: brand.color }} />
-            <span className="text-[11px] text-muted-foreground">{brand.name}</span>
+          <div key={i} className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: brand.color }} />
+            <span className="text-[10px] text-muted-foreground">{brand.name}</span>
           </div>
         ))}
       </div>
