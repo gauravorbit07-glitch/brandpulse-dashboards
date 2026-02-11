@@ -52,7 +52,6 @@ const saveKeywordsOnce = (data: any) => {
     localStorage.getItem("keyword_count") &&
     localStorage.getItem("keyword_count") !== "0"
   ) {
-    console.log("⚠️ Keywords already saved. Not overwriting.");
     return;
   }
 
@@ -65,9 +64,6 @@ const saveKeywordsOnce = (data: any) => {
 
   localStorage.setItem("keywords", JSON.stringify(validKeywords));
   localStorage.setItem("keyword_count", validKeywords.length.toString());
-
-  console.log("✅ Saved keywords:", validKeywords);
-  console.log("✅ Keyword count:", validKeywords.length);
 };
 
 export default function InputPage() {
@@ -216,9 +212,7 @@ export default function InputPage() {
         // Use the new generate/with-keywords endpoint
         const { generateWithKeywords } = await import("@/apiHelpers");
         const data = await generateWithKeywords(productId, keywords);
-        
-        console.log("New analysis generation started");
-        
+              
         // Update localStorage with latest data
         if (productId) {
           localStorage.setItem("product_id", productId);
@@ -256,9 +250,7 @@ export default function InputPage() {
           search_keywords: keywords,
         };
 
-        console.log("Brand analysis generation started");
         const data = await fetchProductsWithKeywords(payload);
-        console.log("Brand analysis created");
 
         // Start analysis state tracking after we have product ID
         if (data.product?.id) {

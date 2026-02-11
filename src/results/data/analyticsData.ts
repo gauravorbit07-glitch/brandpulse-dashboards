@@ -29,7 +29,6 @@ export const setCurrentUserEmail = (email: string) => {
 export const clearCurrentUserEmail = () => {
   currentUserEmail = null;
   currentAnalyticsData = null;
-  // Note: We don't remove user_email from localStorage to preserve it
   console.log('👤 [ANALYTICS] User email cleared from memory');
 };
 
@@ -42,9 +41,7 @@ export const clearCurrentAnalyticsData = () => {
 // Format logo URL using Google Favicon service
 export const formatLogoUrl = (domain: string): string => {
   if (!domain) return '';
-  // Remove protocol and www if present, keep only domain
   const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-  // Build full URL for Google favicon service
   const fullUrl = `https://${cleanDomain}`;
   const template = import.meta.env.VITE_FAVICON_URL_TEMPLATE || 'https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={domain}&size=64';
   return template.replace('{domain}', fullUrl);
@@ -53,18 +50,36 @@ export const formatLogoUrl = (domain: string): string => {
 // Load analytics from localStorage for current user
 export const loadAnalyticsFromStorage = (): boolean => {
   try {
+    // Try email-scoped key from LAST_ANALYSIS_DATA
+    const userEmail = getCurrentUserEmail();
+    if (userEmail) {
+      const sanitizedEmail = userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      const lastDataKey = `last_analysis_data_${sanitizedEmail}`;
+      const stored = localStorage.getItem(lastDataKey);
+      
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.analytics?.[0]) {
+          currentAnalyticsData = parsed;
+          console.log('📦 [ANALYTICS] Data loaded from email-scoped key:', lastDataKey);
+          return true;
+        }
+      }
+    }
+    
+    // Fallback to old keys for backward compatibility
     const storageKey = getStorageKey();
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       currentAnalyticsData = JSON.parse(stored);
-      console.log('📦 [ANALYTICS] Data loaded from localStorage for key:', storageKey);
+      console.log('📦 [ANALYTICS] Data loaded from legacy key:', storageKey);
       return true;
     }
-    // Also try legacy key for backwards compatibility
+    
     const legacyStored = localStorage.getItem(ANALYTICS_STORAGE_KEY_PREFIX);
     if (legacyStored) {
       currentAnalyticsData = JSON.parse(legacyStored);
-      console.log('📦 [ANALYTICS] Data loaded from legacy localStorage key');
+      console.log('📦 [ANALYTICS] Data loaded from legacy key');
       return true;
     }
   } catch (e) {
@@ -107,6 +122,19 @@ export const getModelName = (): string => {
   return analytics?.models_used || '';
 };
 
+// Get human-readable model display name
+export const getModelDisplayName = (modelName: string): string => {
+  const normalized = modelName.toLowerCase();
+
+  if (normalized === 'openai') return 'ChatGPT';
+  if (normalized === 'gemini') return 'Gemini';
+  if (normalized === 'google_ai_overview') return 'Google AI Overview';
+  if (normalized === 'google_ai_mode') return 'Google AI Mode';
+
+  // Fallback: basic capitalization
+  return modelName.charAt(0).toUpperCase() + modelName.slice(1);
+};
+
 // Get analysis date
 export const getAnalysisDate = (): string => {
   if (!currentAnalyticsData) {
@@ -117,10 +145,13 @@ export const getAnalysisDate = (): string => {
   
   try {
     const date = new Date(rawDate);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleString('en-US', { 
       year: 'numeric', 
       month: 'short', 
-      day: 'numeric' 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     });
   } catch {
     return rawDate;
@@ -134,13 +165,13 @@ export const getAnalysisKeywords = (): string[] => {
   return Object.values(searchKeywords).map((k: any) => k.name);
 };
 
-// Get keywords with details (returns string array for compatibility)
+// Get keywords with details
 export const getKeywords = (): string[] => {
   return getAnalysisKeywords();
 };
 
 // Get search keywords with prompts
-export const getSearchKeywordsWithPrompts = (): Array<{ id: string; name: string; prompts: string[] }> => {
+export const getSearchKeywordsWithPrompts = (): Array<{ id: string; name: string; prompts: [{ query: string; brands_per_llm: Record<string, any> }] }> => {
   const analytics = getAnalytics();
   const searchKeywords = analytics?.search_keywords || {};
   return Object.entries(searchKeywords).map(([id, data]: [string, any]) => ({
@@ -220,8 +251,6 @@ export const getProductId = (): string => {
   return currentAnalyticsData?.product_id || '';
 };
 
-// ============ CORE DATA FUNCTION - MUST BE DEFINED BEFORE DEPENDENT FUNCTIONS ============
-
 // Get brand info with logos - REVERSED ORDER for correct ranking
 export const getBrandInfoWithLogos = (): Array<{
   brand: string;
@@ -237,14 +266,12 @@ export const getBrandInfoWithLogos = (): Array<{
 }> => {
   const analytics = getAnalytics();
   
-  // Early return with empty array if no analytics
   if (!analytics) {
     return [];
   }
   
   const brands = analytics?.brands;
   
-  // Only warn once per session about missing brands array
   if (!brands || !Array.isArray(brands)) {
     const hasWarned = sessionStorage.getItem('analytics_brands_warning');
     if (!hasWarned) {
@@ -254,11 +281,9 @@ export const getBrandInfoWithLogos = (): Array<{
     return [];
   }
   
-  // CRITICAL FIX: Reverse the brands array to get descending order (highest score first)
-  // The API returns brands in ascending order by score, so we reverse it
+  // Reverse for descending order (highest score first)
   const reversedBrands = [...brands].reverse();
   
-  // Map the data to ensure consistent field names and format logos
   return reversedBrands.map((brand: any) => ({
     brand: brand.brand,
     geo_score: brand.geo_score || 0,
@@ -273,17 +298,13 @@ export const getBrandInfoWithLogos = (): Array<{
   }));
 };
 
-// ============ DEPENDENT FUNCTIONS - USE getBrandInfoWithLogos ============
-
-// Get brand logo - accepts optional brand name parameter
+// Get brand logo
 export const getBrandLogo = (brandName?: string): string => {
   if (brandName) {
-    // Get logo for specific brand from brandInfoWithLogos
     const brandInfo = getBrandInfoWithLogos();
     const brand = brandInfo.find(b => b.brand === brandName);
     if (brand?.logo) return brand.logo;
     
-    // Fallback to brand_websites mapping
     const analytics = getAnalytics();
     const brandWebsites = analytics?.brand_websites || {};
     const website = brandWebsites[brandName];
@@ -292,13 +313,12 @@ export const getBrandLogo = (brandName?: string): string => {
     }
   }
   
-  // Default: get primary brand logo
   const brandWebsite = getBrandWebsite();
   if (!brandWebsite) return '';
   return formatLogoUrl(brandWebsite);
 };
 
-// Get AI visibility metrics - Now uses already-reversed order from getBrandInfoWithLogos
+// Get AI visibility metrics
 export const getAIVisibilityMetrics = (): {
   score: number;
   tier: string;
@@ -321,13 +341,8 @@ export const getAIVisibilityMetrics = (): {
   }
   
   const brandInfo = brandInfoWithLogos.find(b => b.brand === brandName);
-  
-  // SIMPLIFIED: The array is already sorted in descending order (highest score first)
-  // No need to sort again - just find the index
   const brandIndex = brandInfoWithLogos.findIndex(b => b.brand === brandName);
   
-  // Calculate aggregated position breakdown from llm_wise_data
-  // Sum t1, t2, t3 across all LLMs and average them
   let totalT1 = 0;
   let totalT2 = 0;
   let totalT3 = 0;
@@ -342,7 +357,6 @@ export const getAIVisibilityMetrics = (): {
     }
   });
   
-  // Calculate averages
   const topPosition = llmCount > 0 ? Math.round(totalT1 / llmCount) : 0;
   const midPosition = llmCount > 0 ? Math.round(totalT2 / llmCount) : 0;
   const lowPosition = llmCount > 0 ? Math.round(totalT3 / llmCount) : 0;
@@ -356,7 +370,7 @@ export const getAIVisibilityMetrics = (): {
   };
 };
 
-// Get competitor data with expected shape (name, keywordScores, etc.)
+// Get competitor data
 export const getCompetitorData = (): Array<{
   name: string;
   brand: string;
@@ -371,7 +385,6 @@ export const getCompetitorData = (): Array<{
   const keywordIds = Object.keys(searchKeywords);
   
   return brandInfoWithLogos.map(b => {
-    // Build keyword scores array from mention_breakdown
     const keywordScores = keywordIds.map(keyId => {
       return b.mention_breakdown?.[keyId] || 0;
     });
@@ -387,8 +400,7 @@ export const getCompetitorData = (): Array<{
   });
 };
 
-// Legacy competitor data export - use as a getter function, NOT a constant
-// Components should use getCompetitorData() instead
+// Legacy competitor data export
 export const competitorData = {
   get data() {
     return getCompetitorData();
@@ -404,7 +416,7 @@ export const getCompetitorNames = (): string[] => {
     .map(b => b.brand);
 };
 
-// Get competitor visibility with expected shape (name, visibility, totalScore)
+// Get competitor visibility
 export const getCompetitorVisibility = (): Array<{
   name: string;
   brand: string;
@@ -415,8 +427,6 @@ export const getCompetitorVisibility = (): Array<{
   totalScore: number;
 }> => {
   const brandInfoWithLogos = getBrandInfoWithLogos();
-  
-  // Calculate max mention score for visibility percentage
   const maxMentionScore = Math.max(...brandInfoWithLogos.map(b => b.mention_score), 1);
   
   return brandInfoWithLogos.map(b => ({
@@ -430,7 +440,7 @@ export const getCompetitorVisibility = (): Array<{
   }));
 };
 
-// Get competitor sentiment with expected shape (outlook)
+// Get competitor sentiment
 export const getCompetitorSentiment = (): Array<{
   brand: string;
   name: string;
@@ -450,7 +460,7 @@ export const getCompetitorSentiment = (): Array<{
   }));
 };
 
-// Get mentions position - Now uses already-reversed order from getBrandInfoWithLogos
+// Get mentions position
 export const getMentionsPosition = (): { 
   position: number; 
   tier: string; 
@@ -462,7 +472,6 @@ export const getMentionsPosition = (): {
   const brandName = getBrandName();
   const brandInfoWithLogos = getBrandInfoWithLogos();
   
-  // Safety check - return default values if no data
   if (!brandInfoWithLogos.length || !brandName) {
     return {
       position: 0,
@@ -474,14 +483,11 @@ export const getMentionsPosition = (): {
     };
   }
   
-  // Use mention_score for all calculations
   const allMentionScores: Record<string, number> = {};
   brandInfoWithLogos.forEach(b => {
     allMentionScores[b.brand] = b.mention_score;
   });
   
-  // SIMPLIFIED: The array is already sorted by scores, but we need to sort by mention_score specifically
-  // Sort by mention_score descending, then alphabetically as tiebreaker
   const sortedByMentions = [...brandInfoWithLogos].sort((a, b) => {
     if (b.mention_score !== a.mention_score) {
       return b.mention_score - a.mention_score;
@@ -495,7 +501,6 @@ export const getMentionsPosition = (): {
   const brandInfo = brandInfoWithLogos.find(b => b.brand === brandName);
   const brandMentionScore = brandInfo?.mention_score || 0;
   const topMentionScore = sortedByMentions[0]?.mention_score || 0;
-  
   const tier = brandInfo?.mention_tier || 'Low';
   
   return {
@@ -508,7 +513,7 @@ export const getMentionsPosition = (): {
   };
 };
 
-// Get brand mention response rates - Now uses already-reversed order
+// Get brand mention response rates
 export const getBrandMentionResponseRates = (): Array<{
   brand: string;
   responseRate: number;
@@ -518,12 +523,10 @@ export const getBrandMentionResponseRates = (): Array<{
   const brandName = getBrandName();
   const brandInfoWithLogos = getBrandInfoWithLogos();
   
-  // Safety check
   if (!brandInfoWithLogos.length || !brandName) {
     return [];
   }
   
-  // Map all brands with their mention_score
   const allBrandsWithRates = brandInfoWithLogos.map(b => ({
     brand: b.brand,
     responseRate: b.mention_score,
@@ -531,7 +534,6 @@ export const getBrandMentionResponseRates = (): Array<{
     isTestBrand: b.brand === brandName
   }));
   
-  // Sort all brands by mention_score descending, then alphabetically
   const sortedBrands = [...allBrandsWithRates].sort((a, b) => {
     if (b.responseRate !== a.responseRate) {
       return b.responseRate - a.responseRate;
@@ -539,19 +541,14 @@ export const getBrandMentionResponseRates = (): Array<{
     return a.brand.localeCompare(b.brand);
   });
   
-  // Get top 2 competitors (non-test brands with highest scores)
   const topTwoCompetitors = sortedBrands.filter(b => !b.isTestBrand).slice(0, 2);
-  
-  // Get the test brand
   const testBrand = sortedBrands.find(b => b.isTestBrand);
   
-  // Combine all three brands
   const combinedBrands = [...topTwoCompetitors];
   if (testBrand) {
     combinedBrands.push(testBrand);
   }
   
-  // Sort the final result by responseRate descending, then alphabetically
   return combinedBrands.sort((a, b) => {
     if (b.responseRate !== a.responseRate) {
       return b.responseRate - a.responseRate;
@@ -560,12 +557,11 @@ export const getBrandMentionResponseRates = (): Array<{
   });
 };
 
-// Get sentiment with safety check
+// Get sentiment
 export const getSentiment = () => {
   const brandName = getBrandName();
   const brandInfoWithLogos = getBrandInfoWithLogos();
   
-  // Safety check
   if (!brandInfoWithLogos.length || !brandName) {
     return { 
       dominant_sentiment: 'N/A', 
@@ -581,40 +577,18 @@ export const getSentiment = () => {
   };
 };
 
-// Set analytics data with proper cache management
+// Set analytics data - CRITICAL: This is the main entry point for new data
 export const setAnalyticsData = (apiResponse: any) => {
   if (apiResponse && apiResponse.analytics && Array.isArray(apiResponse.analytics)) {
-    const mostRecent = apiResponse.analytics?.[0];
-    const storageKey = getStorageKey();
-    const signature = JSON.stringify({
-      product_id: apiResponse.product_id || mostRecent?.product_id,
-      id: mostRecent?.id,
-      date: mostRecent?.date,
-      updated_at: mostRecent?.updated_at,
-      status: mostRecent?.status,
-    });
-
-    const existingSig = localStorage.getItem(`${storageKey}__sig`);
-    
-    // CRITICAL FIX: Always update in-memory cache FIRST
+    // CRITICAL: Always update in-memory cache immediately
     currentAnalyticsData = apiResponse;
-    
-    // Only skip localStorage update if signature is identical
-    if (existingSig === signature) {
-      console.log('📦 [ANALYTICS] Data signature unchanged, using new in-memory data');
-      return;
-    }
+    console.log('📦 [ANALYTICS] In-memory data updated');
     
     // Clear the warning flag when new data arrives
     sessionStorage.removeItem('analytics_brands_warning');
     
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(apiResponse));
-      localStorage.setItem(`${storageKey}__sig`, signature);
-      console.log('📦 [ANALYTICS] New data stored in localStorage for key:', storageKey);
-    } catch (e) {
-      console.error('Failed to store analytics data in localStorage:', e);
-    }
+    // NOTE: localStorage persistence is now handled in ResultsContext
+    // This function only updates the in-memory cache
   } else {
     console.error('Invalid analytics data format');
   }
@@ -622,12 +596,11 @@ export const setAnalyticsData = (apiResponse: any) => {
 
 // Clear analytics data for current user
 export const clearAnalyticsData = () => {
-  const storageKey = getStorageKey();
   currentAnalyticsData = null;
-  localStorage.removeItem(storageKey);
-  localStorage.removeItem(`${storageKey}__sig`);
   sessionStorage.removeItem('analytics_brands_warning');
-  console.log('📦 [ANALYTICS] Cached data cleared for key:', storageKey);
+  console.log('📦 [ANALYTICS] Cached data cleared from memory');
+  
+  // NOTE: localStorage clearing is now handled in storageKeys.ts
 };
 
 // Force refresh analytics data (bypasses cache)
@@ -639,7 +612,7 @@ export const forceRefreshAnalytics = () => {
 // Get sources data formatted for the comparison table
 export const getSourcesDataForTable = (): Array<{
   name: string;
-  [key: string]: any; // brand mentions will be added dynamically
+  [key: string]: any;
 }> => {
   const sourcesData = getSourcesData();
   const allBrands = getBrandInfoWithLogos().map(b => b.brand);
@@ -648,19 +621,15 @@ export const getSourcesDataForTable = (): Array<{
     return [];
   }
 
-  // Convert sources object to array format
   return Object.entries(sourcesData).map(([sourceName, sourceData]: [string, any]) => {
     const row: any = { name: sourceName };
     
-    // Extract mentions for each brand from the nested mentions object
     if (sourceData && sourceData.mentions && typeof sourceData.mentions === 'object') {
       allBrands.forEach(brand => {
         const brandMentionData = sourceData.mentions[brand];
-        // Get the count from the brand's mention data
         row[`${brand}Mentions`] = brandMentionData?.count || 0;
       });
     } else {
-      // If no mentions data, set all brands to 0
       allBrands.forEach(brand => {
         row[`${brand}Mentions`] = 0;
       });

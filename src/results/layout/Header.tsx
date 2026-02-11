@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Menu, X, User, LogOut, RefreshCw, Plus, Loader2, FileDown, FileText, Globe, Database, Sparkles, Brain } from "lucide-react";
+import { Menu, X, User, LogOut, RefreshCw, Plus, Loader2, FileDown, FileText, Globe, Database, Sparkles, Brain, History, Check, ChevronDown, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -45,7 +45,7 @@ const mobileNavItems = [
 ];
 
 // Analysis Animation Component
-const AnalyzingAnimation = () => {
+const AnalyzingAnimation = ({ hasError = false, hasCompleted = false }: { hasError?: boolean; hasCompleted?: boolean }) => {
   const [currentStep, setCurrentStep] = useState(0);
   
   const steps = [
@@ -58,12 +58,71 @@ const AnalyzingAnimation = () => {
   ];
 
   useEffect(() => {
+    if (hasError || hasCompleted) return; // Don't animate if there's an error or completed
+    
     const interval = setInterval(() => {
       setCurrentStep((prev) => (prev + 1) % steps.length);
     }, 1500);
     return () => clearInterval(interval);
-  }, []);
+  }, [hasError, hasCompleted]);
 
+  // Success state - using same style as analyzing steps
+  if (hasCompleted) {
+    const SuccessIcon = CheckCircle;
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/10 via-green-500/10 to-green-500/10 border border-green-500/20">
+        <div className="relative w-5 h-5 flex items-center justify-center">
+          <div className="absolute inset-0 animate-ping opacity-75">
+            <SuccessIcon className="w-5 h-5 text-green-500" />
+          </div>
+          <SuccessIcon className="w-5 h-5 relative z-10 text-green-500" />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold transition-all duration-300 text-green-500">
+            Analysis Completed
+          </span>
+          <div className="flex gap-0.5 mt-0.5">
+            {steps.map((_, idx) => (
+              <div
+                key={idx}
+                className="h-0.5 w-3 rounded-full bg-green-500"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state - using same style as analyzing steps
+  if (hasError) {
+    const ErrorIcon = AlertCircle;
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500/10 via-red-500/10 to-red-500/10 border border-red-500/20">
+        <div className="relative w-5 h-5 flex items-center justify-center">
+          <div className="absolute inset-0 animate-ping opacity-75">
+            <ErrorIcon className="w-5 h-5 text-red-500" />
+          </div>
+          <ErrorIcon className="w-5 h-5 relative z-10 text-red-500" />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold transition-all duration-300 text-red-500">
+            Analysis Failed
+          </span>
+          <div className="flex gap-0.5 mt-0.5">
+            {steps.map((_, idx) => (
+              <div
+                key={idx}
+                className="h-0.5 w-3 rounded-full bg-red-500"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal analyzing state
   const CurrentIcon = steps[currentStep].icon;
 
   return (
@@ -100,12 +159,24 @@ export const Header = () => {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState(false);
+  const [analysisCompleted, setAnalysisCompleted] = useState(false);
   
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, products } = useAuth();
   const { toast } = useToast();
-  const { setActiveTab, isLoading, dataReady, isAnalyzing } = useResults();
+  const { 
+    setActiveTab, 
+    isLoading, 
+    dataReady, 
+    isAnalyzing, 
+    analyticsList, 
+    isAnalyticsListLoading, 
+    isSwitchingAnalytics, 
+    selectedAnalyticsId, 
+    switchToAnalytics 
+  } = useResults();
   const { toggleSidebar } = useSidebar();
   const { isAnalyzing: analysisLocked, startAnalysis, completeAnalysis } = useAnalysisState();
 
@@ -116,7 +187,16 @@ export const Header = () => {
   useEffect(() => {
     if (dataReady && !isLoading && !isAnalyzing) {
       setIsRegenerating(false);
+      setAnalysisError(false);
+      setAnalysisCompleted(true);
       completeAnalysis();
+      
+      // Auto-clear completed state after 5 seconds
+      const timer = setTimeout(() => {
+        setAnalysisCompleted(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
   }, [dataReady, isLoading, isAnalyzing, completeAnalysis]);
 
@@ -165,6 +245,8 @@ export const Header = () => {
     if (actionsDisabled) return;
 
     setIsRegenerating(true);
+    setAnalysisError(false);
+    setAnalysisCompleted(false);
     startAnalysis(productId);
 
     try {
@@ -180,6 +262,8 @@ export const Header = () => {
 
       // NOTE: keep locked until dataReady becomes true (handled by useEffect)
     } catch (error) {
+      setAnalysisError(true);
+      
       toast({
         title: "Error",
         description: "Failed to regenerate analysis. Please try again.",
@@ -188,6 +272,11 @@ export const Header = () => {
 
       setIsRegenerating(false);
       completeAnalysis();
+      
+      // Auto-clear error state after 5 seconds
+      setTimeout(() => {
+        setAnalysisError(false);
+      }, 5000);
     }
   };
 
@@ -211,6 +300,18 @@ export const Header = () => {
       setIsGeneratingReport(false);
     }, 2000);
   }, [toast]);
+
+  // Format analytics date for dropdown
+  const formatAnalyticsLabel = (createdAt: string) => {
+    const date = new Date(createdAt);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <>
@@ -247,10 +348,53 @@ export const Header = () => {
 
           <div className="flex items-center gap-1.5 md:gap-3">
             {/* Analysis in Progress Animation - beside New Analysis button */}
-            {(isAnalysisInProgress || isRegenerating || analysisLocked) && (
+            {(isAnalysisInProgress || isRegenerating || analysisLocked || analysisError || analysisCompleted) && (
               <div className="flex items-center">
-                <AnalyzingAnimation />
+                <AnalyzingAnimation hasError={analysisError} hasCompleted={analysisCompleted} />
               </div>
+            )}
+            
+            {/* Previous Analytics Dropdown */}
+            {analyticsList && analyticsList.length > 1 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-[10px] md:text-sm px-2 py-1 md:px-4 md:py-2 gap-1 h-7 md:h-9"
+                    disabled={isAnalyticsListLoading || isSwitchingAnalytics}
+                  >
+                    {isSwitchingAnalytics ? (
+                      <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
+                    ) : (
+                      <History className="w-3 h-3 md:w-4 md:h-4" />
+                    )}
+                    <span className="hidden sm:inline">Previous Analytics</span>
+                    <span className="sm:hidden">Previous</span>
+                    <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 max-h-96 overflow-y-auto">
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    Previous analytics
+                  </div>
+                  {analyticsList.map((item) => (
+                    <DropdownMenuItem
+                      key={item.analytics_id}
+                      onClick={() => switchToAnalytics(item.analytics_id)}
+                      disabled={isSwitchingAnalytics}
+                      className="cursor-pointer flex items-center justify-between"
+                    >
+                      <span className="text-sm">
+                        {formatAnalyticsLabel(item.created_at)}
+                      </span>
+                      {selectedAnalyticsId === item.analytics_id && (
+                        <Check className="w-4 h-4 text-green-500" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             
             {/* New Analysis Button */}
