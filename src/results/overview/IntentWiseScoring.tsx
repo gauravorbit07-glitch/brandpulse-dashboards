@@ -469,16 +469,18 @@ export const IntentWiseScoring = () => {
   }, [analyticsAvailable, keywordsWithPrompts, brandInfo, brandName, llmData, analyticsVersion]);
 
   return (
-    <div className="bg-card rounded-2xl border border-border/60 p-5 md:p-6 overflow-hidden shadow-card hover:shadow-elevated transition-shadow duration-300">
+    <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 md:p-6 overflow-hidden hover:border-border/70 transition-all duration-300">
       {/* Header */}
-      <div className="mb-5">
+      <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
-          <Target className="w-5 h-5 text-primary" />
-          <h3 className="text-base font-semibold text-foreground">
+          <div className="p-1.5 rounded-lg bg-primary/10">
+            <Target className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">
             Brand Presence by Buyer Intent
           </h3>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[10px] text-muted-foreground ml-9">
           How often your brand appears in AI-generated answers across different buying stages
         </p>
       </div>
@@ -487,14 +489,14 @@ export const IntentWiseScoring = () => {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border/50">
-              <th className="text-left py-3 px-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>
+            <tr className="border-b border-border/40">
+              <th className="text-left py-2.5 px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>
                 INTENT
               </th>
-              <th className="text-left py-3 px-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '40%' }}>
+              <th className="text-left py-2.5 px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '40%' }}>
                 VISIBILITY
               </th>
-              <th className="text-left py-3 px-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>
+              <th className="text-left py-2.5 px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider" style={{ width: '20%' }}>
                 PRESENCE STRENGTH
               </th>
             </tr>
@@ -503,7 +505,7 @@ export const IntentWiseScoring = () => {
             {intentResults.map((result) => (
               <tr
                 key={result.intent}
-                className="border-b border-border/50 last:border-b-0 hover:bg-muted/30 transition-colors"
+                className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors"
               >
                 {/* Intent Column */}
                 <td className="py-4 px-4">
