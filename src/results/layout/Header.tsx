@@ -44,7 +44,7 @@ const mobileNavItems = [
   },
 ];
 
-// Analysis Animation Component - Figma-matching design
+// Analysis Animation Component - Figma-matching pill design
 const AnalyzingAnimation = ({ 
   hasError = false, 
   hasCompleted = false,
@@ -74,12 +74,12 @@ const AnalyzingAnimation = ({
 
   if (hasCompleted) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5">
-        <span className="relative flex h-2.5 w-2.5">
+      <div className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full border-2 border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950/40">
+        <span className="relative flex h-3 w-3">
           <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75 animate-ping" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
         </span>
-        <span className="text-xs font-medium text-green-600 dark:text-green-400">
+        <span className="text-sm font-semibold text-green-700 dark:text-green-400">
           Analysis Complete
         </span>
       </div>
@@ -88,18 +88,18 @@ const AnalyzingAnimation = ({
 
   if (hasError) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5">
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
+      <div className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full border-2 border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/40">
+        <span className="relative flex h-3 w-3">
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
         </span>
-        <span className="text-xs font-medium text-destructive">
+        <span className="text-sm font-semibold text-red-700 dark:text-red-400">
           Analysis Failed
         </span>
         {onRetry && (
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 px-2 text-[10px] text-destructive hover:text-destructive"
+            className="h-6 px-2 text-xs text-red-600 hover:text-red-700 dark:text-red-400"
             onClick={onRetry}
           >
             Retry
@@ -110,12 +110,12 @@ const AnalyzingAnimation = ({
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5">
-      <span className="relative flex h-2.5 w-2.5">
+    <div className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full border-2 border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950/40">
+      <span className="relative flex h-3 w-3">
         <span className="absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75 animate-ping" />
-        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+        <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500" />
       </span>
-      <span className="text-xs font-medium text-orange-600 dark:text-orange-400 transition-all duration-500">
+      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400 transition-all duration-500">
         {steps[currentStep]}
       </span>
     </div>

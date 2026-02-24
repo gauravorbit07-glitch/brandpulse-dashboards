@@ -457,8 +457,15 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
 
                   toastRef.current({
                     title: "Analysis Updated",
-                    description: `Analysis Snapshot\nPrompts executed:\t${promptsExecuted}\nAI models analyzed:\t${aiModelsAnalyzed}\nResponses processed:\t${responsesProcessed}\nCitations mapped:\t${citationsMapped}\nCompetitors detected:\t${competitorsDetected}`,
-                    duration: 15000,
+                    description: [
+                      "Analysis Snapshot",
+                      `Prompts executed:                    ${promptsExecuted}`,
+                      `AI models analyzed:                ${aiModelsAnalyzed}`,
+                      `Responses processed:             ${responsesProcessed}`,
+                      `Citations mapped:                    ${citationsMapped}`,
+                      `Competitors detected:              ${competitorsDetected}`,
+                    ].join("\n"),
+                    duration: 20000,
                   });
                   console.log("🎉 [POLL] Showing Analysis Updated notification");
                 } else {
