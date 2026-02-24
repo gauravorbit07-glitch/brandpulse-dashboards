@@ -1,36 +1,44 @@
 const ANALYTICS_STORAGE_KEY_PREFIX = 'geo_analytics_data';
 let currentAnalyticsData: any = null;
-let currentUserEmail: string | null = null;
+let currentUserId: string | null = null;
 
-// Get storage key for specific user email
-const getStorageKey = (email?: string): string => {
-  const userEmail = email || currentUserEmail || localStorage.getItem('user_email') || '';
-  if (userEmail) {
-    return `${ANALYTICS_STORAGE_KEY_PREFIX}_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+// Get storage key for specific user ID
+const getStorageKey = (userId?: string): string => {
+  const id = userId || currentUserId || localStorage.getItem('user_id') || '';
+  if (id) {
+    return `${ANALYTICS_STORAGE_KEY_PREFIX}_${id}`;
   }
   return ANALYTICS_STORAGE_KEY_PREFIX;
 };
 
-// Get current user email
-export const getCurrentUserEmail = (): string | null => {
-  return currentUserEmail || localStorage.getItem('user_email');
+// Get current user ID
+export const getCurrentUserId = (): string | null => {
+  return currentUserId || localStorage.getItem('user_id');
 };
 
-// Set current user email (call this on login)
-export const setCurrentUserEmail = (email: string) => {
-  currentUserEmail = email;
-  localStorage.setItem('user_email', email);
-  // Clear current data so it reloads for this user
+// Legacy alias
+export const getCurrentUserEmail = getCurrentUserId;
+
+// Set current user ID (call this on login)
+export const setCurrentUserId = (userId: string) => {
+  currentUserId = userId;
+  localStorage.setItem('user_id', userId);
   currentAnalyticsData = null;
-  console.log('👤 [ANALYTICS] User email set:', email);
+  console.log('👤 [ANALYTICS] User ID set:', userId);
 };
 
-// Clear user email (call on logout)
-export const clearCurrentUserEmail = () => {
-  currentUserEmail = null;
+// Legacy alias
+export const setCurrentUserEmail = setCurrentUserId;
+
+// Clear user ID (call on logout)
+export const clearCurrentUserId = () => {
+  currentUserId = null;
   currentAnalyticsData = null;
-  console.log('👤 [ANALYTICS] User email cleared from memory');
+  console.log('👤 [ANALYTICS] User ID cleared from memory');
 };
+
+// Legacy alias
+export const clearCurrentUserEmail = clearCurrentUserId;
 
 // Clear current analytics data (call when starting new analysis)
 export const clearCurrentAnalyticsData = () => {
@@ -50,18 +58,17 @@ export const formatLogoUrl = (domain: string): string => {
 // Load analytics from localStorage for current user
 export const loadAnalyticsFromStorage = (): boolean => {
   try {
-    // Try email-scoped key from LAST_ANALYSIS_DATA
-    const userEmail = getCurrentUserEmail();
-    if (userEmail) {
-      const sanitizedEmail = userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      const lastDataKey = `last_analysis_data_${sanitizedEmail}`;
+    // Try user-ID-scoped key from LAST_ANALYSIS_DATA
+    const userId = getCurrentUserId();
+    if (userId) {
+      const lastDataKey = `last_analysis_data_${userId}`;
       const stored = localStorage.getItem(lastDataKey);
       
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.analytics?.[0]) {
           currentAnalyticsData = parsed;
-          console.log('📦 [ANALYTICS] Data loaded from email-scoped key:', lastDataKey);
+          console.log('📦 [ANALYTICS] Data loaded from user-scoped key:', lastDataKey);
           return true;
         }
       }

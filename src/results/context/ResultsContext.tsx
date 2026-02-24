@@ -432,14 +432,30 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                 const analysisCompletedAfterPageLoad = analysisTimestamp > pageLoadTimestampRef.current;
                 
                 if (analysisCompletedAfterPageLoad) {
-                  // Analysis completed while user is on this page -> ask to refresh
+                  // Analysis completed while user is on this page
                   hasShownCompletionToastRef.current = true;
-                  toastRef.current({
-                    title: "Analysis Complete!",
-                    description: "Your analysis is ready. Refresh the page to see the latest data.",
-                    duration: 10000,
+
+                  // Compute snapshot stats from the analytics data
+                  const analyticsPayload = mostRecentAnalysis?.analytics?.[0]?.analytics ?? mostRecentAnalysis?.analytics ?? {};
+                  const searchKeywords = analyticsPayload?.search_keywords || {};
+                  let promptsExecuted = 0;
+                  Object.values(searchKeywords).forEach((kw: any) => {
+                    if (Array.isArray(kw?.prompts)) promptsExecuted += kw.prompts.length;
                   });
-                  console.log("🎉 [POLL] Showing refresh notification - analysis completed while on page");
+                  const llmData = analyticsPayload?.llm_wise_data || {};
+                  const aiModelsAnalyzed = Object.keys(llmData).length || (analyticsPayload?.models_used ? analyticsPayload.models_used.split(",").length : 0);
+                  const responsesProcessed = promptsExecuted * Math.max(aiModelsAnalyzed, 1);
+                  const sourcesData = analyticsPayload?.sources_and_content_impact || {};
+                  const citationsMapped = Object.keys(sourcesData).length;
+                  const brands = analyticsPayload?.brands || [];
+                  const competitorsDetected = Math.max(0, brands.length - 1);
+
+                  toastRef.current({
+                    title: "Analysis Updated",
+                    description: `Analysis Snapshot\nPrompts executed: ${promptsExecuted}\nAI models analyzed: ${aiModelsAnalyzed}\nResponses processed: ${responsesProcessed}\nCitations mapped: ${citationsMapped}\nCompetitors detected: ${competitorsDetected}`,
+                    duration: Infinity,
+                  });
+                  console.log("🎉 [POLL] Showing Analysis Updated notification");
                 } else {
                   // Page was refreshed AFTER analysis completed -> no notification needed
                   console.log("✅ [POLL] Page already refreshed after completion - no notification");
@@ -466,7 +482,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               if (!hasShownStartMessageRef.current && mountedRef.current) {
                 toastRef.current({
                   title: "Analysis in Progress",
-                  description: "Your new analysis has begun. We'll notify you when it's ready.",
+                  description: "Your new analysis has begun. You'll receive a notification on your email when it's ready.",
                   duration: 10000,
                 });
                 hasShownStartMessageRef.current = true;
@@ -487,7 +503,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               if (!hasShownStartMessageRef.current && mountedRef.current) {
                 toastRef.current({
                   title: "Analysis in Progress",
-                  description: "Your analysis has begun. We'll notify you when it's ready.",
+                  description: "Your analysis has begun. You'll receive a notification on your email when it's ready.",
                   duration: 10000,
                 });
                 hasShownStartMessageRef.current = true;

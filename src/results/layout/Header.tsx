@@ -45,8 +45,17 @@ const mobileNavItems = [
 ];
 
 // Analysis Animation Component
-const AnalyzingAnimation = ({ hasError = false, hasCompleted = false }: { hasError?: boolean; hasCompleted?: boolean }) => {
+const AnalyzingAnimation = ({ 
+  hasError = false, 
+  hasCompleted = false,
+  onRetry 
+}: { 
+  hasError?: boolean; 
+  hasCompleted?: boolean;
+  onRetry?: () => void;
+}) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [showRetryPrompt, setShowRetryPrompt] = useState(false);
   
   const steps = [
     { icon: FileText, text: "Gathering", color: "text-blue-500" },
@@ -65,6 +74,24 @@ const AnalyzingAnimation = ({ hasError = false, hasCompleted = false }: { hasErr
     }, 1500);
     return () => clearInterval(interval);
   }, [hasError, hasCompleted]);
+
+  // Show retry prompt when error occurs
+  useEffect(() => {
+    if (hasError) {
+      setShowRetryPrompt(true);
+    } else {
+      setShowRetryPrompt(false);
+    }
+  }, [hasError]);
+
+  const handleRetry = () => {
+    setShowRetryPrompt(false);
+    onRetry?.();
+  };
+
+  const handleDismiss = () => {
+    setShowRetryPrompt(false);
+  };
 
   // Success state - using same style as analyzing steps
   if (hasCompleted) {
@@ -98,26 +125,60 @@ const AnalyzingAnimation = ({ hasError = false, hasCompleted = false }: { hasErr
   if (hasError) {
     const ErrorIcon = AlertCircle;
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500/10 via-red-500/10 to-red-500/10 border border-red-500/20">
-        <div className="relative w-5 h-5 flex items-center justify-center">
-          <div className="absolute inset-0 animate-ping opacity-75">
-            <ErrorIcon className="w-5 h-5 text-red-500" />
+      <div className="relative">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500/10 via-red-500/10 to-red-500/10 border border-red-500/20">
+          <div className="relative w-5 h-5 flex items-center justify-center">
+            <div className="absolute inset-0 animate-ping opacity-75">
+              <ErrorIcon className="w-5 h-5 text-red-500" />
+            </div>
+            <ErrorIcon className="w-5 h-5 relative z-10 text-red-500" />
           </div>
-          <ErrorIcon className="w-5 h-5 relative z-10 text-red-500" />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-xs font-semibold transition-all duration-300 text-red-500">
-            Analysis Failed
-          </span>
-          <div className="flex gap-0.5 mt-0.5">
-            {steps.map((_, idx) => (
-              <div
-                key={idx}
-                className="h-0.5 w-3 rounded-full bg-red-500"
-              />
-            ))}
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold transition-all duration-300 text-red-500">
+              Analysis Failed
+            </span>
+            <div className="flex gap-0.5 mt-0.5">
+              {steps.map((_, idx) => (
+                <div
+                  key={idx}
+                  className="h-0.5 w-3 rounded-full bg-red-500"
+                />
+              ))}
+            </div>
           </div>
         </div>
+        
+        {/* Retry Prompt Notification */}
+        {showRetryPrompt && onRetry && (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+            {/* Arrow pointing up */}
+            <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-card mx-auto mb-0" />
+            
+            <div className="bg-card border border-border rounded-lg shadow-lg p-3 min-w-[200px]">
+              <p className="text-xs font-medium text-foreground mb-2">
+                Do you want to regenerate the analysis?
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="flex-1 h-7 text-xs"
+                  onClick={handleRetry}
+                >
+                  Yes
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-7 text-xs"
+                  onClick={handleDismiss}
+                >
+                  No
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -350,7 +411,11 @@ export const Header = () => {
             {/* Analysis in Progress Animation - beside New Analysis button */}
             {(isAnalysisInProgress || isRegenerating || analysisLocked || analysisError || analysisCompleted) && (
               <div className="flex items-center">
-                <AnalyzingAnimation hasError={analysisError} hasCompleted={analysisCompleted} />
+                <AnalyzingAnimation 
+                  hasError={analysisError} 
+                  hasCompleted={analysisCompleted}
+                  onRetry={handleRegenerateAnalysis}
+                />
               </div>
             )}
             

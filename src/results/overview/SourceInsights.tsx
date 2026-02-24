@@ -16,42 +16,40 @@ export const SourceInsights = () => {
   }
 
   return (
-    <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 md:p-6 overflow-hidden hover:border-border/70 transition-all duration-300">
+    <div className="bg-card rounded-xl border border-border p-4 md:p-6 overflow-hidden">
       <div className="flex items-center gap-2 mb-1">
-        <div className="p-1.5 rounded-lg bg-amber-500/10">
-          <Lightbulb className="w-4 h-4 text-amber-500" />
-        </div>
-        <h3 className="text-sm font-semibold text-foreground">Source Insights for {brandName}</h3>
+        <Lightbulb className="w-5 h-5 text-amber-500" />
+        <h3 className="text-lg font-semibold text-foreground">Source Insights for {brandName}</h3>
       </div>
-      <p className="text-[10px] text-muted-foreground mb-4 ml-9">Key insights from different source categories</p>
+      <p className="text-xs text-muted-foreground mb-4">Key insights from different source categories</p>
       
-      <div className="space-y-3">
-        {sources.map((item) => (
+      <div className="space-y-4">
+        {sources.map((item, index) => (
           <div 
             key={item.source}
-            className="p-3.5 rounded-xl bg-muted/20 border border-border/30 hover:border-primary/20 transition-colors"
+            className="p-4 rounded-lg bg-muted/30 border border-border hover:border-primary/30 transition-colors"
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <FileText className="w-3.5 h-3.5 text-primary" />
-                  <h4 className="font-semibold text-foreground text-xs">{item.source}</h4>
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  <h4 className="font-semibold text-foreground">{item.source}</h4>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{item.insight}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.insight}</p>
               </div>
             </div>
             
             {item.pagesUsed.length > 0 && (
-              <div className="mt-2.5 pt-2.5 border-t border-border/30">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <Link className="w-2.5 h-2.5 text-muted-foreground" />
-                  <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">Pages Used</span>
+              <div className="mt-3 pt-3 border-t border-border/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Link className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pages Used</span>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {item.pagesUsed.map((page: string, pageIdx: number) => (
                     <span 
                       key={pageIdx}
-                      className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/8 text-primary text-[10px] font-medium border border-primary/10"
+                      className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium"
                     >
                       {page}
                     </span>

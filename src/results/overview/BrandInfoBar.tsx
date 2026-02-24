@@ -19,14 +19,12 @@ const BrandInfoBar = () => {
   if (!brandName) return null;
   
   return (
-    <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-5 md:p-6 mb-6 overflow-hidden">
-      {/* Accent gradient line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-primary to-primary/60 rounded-t-2xl" />
-      
+    <div className="bg-card rounded-xl border border-border p-4 md:p-6 mb-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-start gap-3.5">
+        {/* Left: Brand logo, name, website and keywords */}
+        <div className="flex items-start gap-4">
           {brandLogo ? (
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-center p-2 flex-shrink-0">
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-black/5 flex items-center justify-center p-2 flex-shrink-0">
               <img 
                 src={brandLogo} 
                 alt={brandName} 
@@ -34,32 +32,32 @@ const BrandInfoBar = () => {
               />
             </div>
           ) : (
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-base font-bold text-primary">
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-lg font-bold text-primary">
                 {brandName.substring(0, 2).toUpperCase()}
               </span>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">{brandName}</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">{brandName}</h2>
             {brandWebsite && (
               <a 
                 href={brandWebsite} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors mt-0.5"
+                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
               >
                 <span className="truncate">{brandWebsite}</span>
-                <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
               </a>
             )}
+            {/* Keywords below website */}
             {keywords.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2.5">
+              <div className="flex flex-wrap gap-2 mt-2">
                 {keywords.map((keyword, idx) => (
                   <Badge 
                     key={idx} 
-                    className="bg-primary/8 text-primary border-primary/15 hover:bg-primary/12 text-[10px] font-medium px-2 py-0.5"
-                    variant="outline"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
                   >
                     {keyword}
                   </Badge>
@@ -67,18 +65,21 @@ const BrandInfoBar = () => {
               </div>
             )}
             
-            {/* Mobile: date + models */}
-            <div className="flex flex-col gap-1.5 mt-2.5 md:hidden">
+            {/* Analysis date and models - shown on mobile below keywords */}
+            <div className="flex flex-col gap-2 mt-3 md:hidden">
+              {/* Analysis Date */}
               {analysisDate && (
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <Calendar className="w-3 h-3" />
-                  <span>{analysisDate}</span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  <span>Analyzed: {analysisDate}</span>
                 </div>
               )}
+              
+              {/* LLM models */}
               {models.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground">Analyzed by:</span>
-                  <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Analyzed by:</span>
+                  <div className="flex items-center gap-2">
                     {models.map((model) => (
                       <LLMIcon key={model} platform={model} size="lg" />
                     ))}
@@ -89,18 +90,21 @@ const BrandInfoBar = () => {
           </div>
         </div>
         
-        {/* Desktop: date + models */}
-        <div className="hidden md:flex md:flex-col md:items-end gap-1.5">
+        {/* Right on desktop: Analysis date and LLM models (hidden on mobile) */}
+        <div className="hidden md:flex md:flex-col md:items-end gap-2">
+          {/* Analysis Date */}
           {analysisDate && (
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border/30">
-              <Calendar className="w-3 h-3" />
-              <span>{analysisDate}</span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>Analyzed: {analysisDate}</span>
             </div>
           )}
+          
+          {/* LLM models */}
           {models.length > 0 && (
-            <div className="flex flex-col items-end gap-0.5">
-              <span className="text-[10px] text-muted-foreground">Analyzed by</span>
-              <div className="flex items-center gap-1">
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-xs text-muted-foreground">Analyzed by</span>
+              <div className="flex items-center gap-2">
                 {models.map((model) => (
                   <LLMIcon key={model} platform={model} size="lg" />
                 ))}
