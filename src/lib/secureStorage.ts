@@ -2,7 +2,7 @@ import CryptoJS from "crypto-js";
 import SecureStorage from "secure-web-storage";
 
 const SECURE_STORAGE_SECRET =
-  import.meta.env.VITE_SECURE_STORAGE_SECRET || "georankers-secure-storage-2026";
+  import.meta.env.VITE_SALT || "georankers-salt-2024";
 
 const createSecureStorage = (storage: Storage) =>
   new SecureStorage(storage, {
@@ -26,9 +26,13 @@ const CRITICAL_LOCAL_KEYS = [
 const ACCESS_TOKEN_KEY = "access_token";
 
 const migrateLegacyLocalToSecureLocal = (key: string): string | null => {
-  const secureValue = secureLocalStorage.getItem(key);
-  if (secureValue !== null && secureValue !== undefined && secureValue !== "") {
-    return String(secureValue);
+  try {
+    const secureValue = secureLocalStorage.getItem(key);
+    if (secureValue !== null && secureValue !== undefined && secureValue !== "") {
+      return String(secureValue);
+    }
+  } catch {
+    try { secureLocalStorage.removeItem(key); } catch {}
   }
 
   const legacyValue = localStorage.getItem(key);
@@ -42,9 +46,13 @@ const migrateLegacyLocalToSecureLocal = (key: string): string | null => {
 };
 
 const migrateLegacyLocalToSecureSession = (key: string): string | null => {
-  const secureValue = secureSessionStorage.getItem(key);
-  if (secureValue !== null && secureValue !== undefined && secureValue !== "") {
-    return String(secureValue);
+  try {
+    const secureValue = secureSessionStorage.getItem(key);
+    if (secureValue !== null && secureValue !== undefined && secureValue !== "") {
+      return String(secureValue);
+    }
+  } catch {
+    try { secureSessionStorage.removeItem(key); } catch {}
   }
 
   const legacyValue = localStorage.getItem(key);
