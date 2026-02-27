@@ -180,15 +180,15 @@ const Billing = () => {
     <Layout>
       <div className="">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-6 space-y-6">
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={handleBack}
-            className="gap-1.5"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="inline">Back</span>
-          </Button>
+            <span className="flex items-center justify-center w-8 h-8 rounded-full border border-border bg-card group-hover:bg-muted transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+            </span>
+            <span className="font-medium">Back</span>
+          </button>
           {/* Back button + Page title */}
           <div className="flex items-center gap-3">
             <div>
@@ -207,7 +207,7 @@ const Billing = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-white shadow-elevated"
+              className="rounded-xl bg-primary p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-primary-foreground"
             >
               <div className="flex items-center gap-3">
                 <Zap className="w-6 h-6 flex-shrink-0" />
@@ -226,7 +226,7 @@ const Billing = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                className="bg-white text-purple-700 hover:bg-white/90 font-semibold"
+                className="bg-white text-primary hover:bg-white/90 font-semibold"
               >
                 Upgrade Now
               </Button>
@@ -240,7 +240,7 @@ const Billing = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="rounded-xl bg-gradient-to-r from-warning to-amber-700 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-white shadow-elevated"
+              className="rounded-xl bg-warning p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-warning-foreground"
             >
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-6 h-6 flex-shrink-0" />
@@ -256,7 +256,7 @@ const Billing = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                className="bg-white text-amber-700 hover:bg-white/90 font-semibold"
+                className="bg-white text-warning-foreground hover:bg-white/90 font-semibold"
               >
                 Renew Plan
               </Button>
@@ -352,7 +352,7 @@ const Billing = () => {
                       )}
                       {!isCurrent && plan.popular && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <Badge className="bg-gradient-to-r from-warning to-destructive text-white text-[11px] font-bold px-3 border-0">
+                          <Badge className="bg-primary text-primary-foreground text-[11px] font-bold px-3 border-0">
                             Most Popular
                           </Badge>
                         </div>
@@ -527,7 +527,7 @@ const Billing = () => {
                 </div>
                 <div className="flex items-center justify-between bg-muted/50 border border-border rounded-lg p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-6 bg-gradient-to-br from-amber-300 to-amber-500 rounded flex items-center justify-center text-[9px] font-bold text-amber-900">
+                    <div className="w-10 h-6 bg-primary/10 border border-primary/20 rounded flex items-center justify-center text-[9px] font-bold text-primary">
                       VISA
                     </div>
                     <div>
