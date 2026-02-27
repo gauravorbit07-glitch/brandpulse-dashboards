@@ -352,7 +352,7 @@ const Billing = () => {
                       )}
                       {!isCurrent && plan.popular && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <Badge className="bg-primary text-primary-foreground text-[11px] font-bold px-3 border-0">
+                          <Badge className="bg-success text-white text-[11px] font-bold px-3 border-0 hover:bg-success">
                             Most Popular
                           </Badge>
                         </div>
@@ -448,7 +448,7 @@ const Billing = () => {
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <Package className="w-4 h-4" />
                   Current Plan
-                  <Badge className="bg-success/10 text-success border-success/30 text-[11px]">
+                  <Badge className="bg-success text-white border-success hover:bg-success text-[11px]">
                     Active
                   </Badge>
                 </div>
@@ -504,9 +504,9 @@ const Billing = () => {
                     ⬆ Change Plan
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="destructive"
                     size="sm"
-                    className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                    className="bg-destructive text-white hover:bg-destructive/90 hover:text-white"
                   >
                     Cancel Subscription
                   </Button>
@@ -600,18 +600,17 @@ const Billing = () => {
                           </td>
                           <td className="py-3 pr-4">
                             <Badge
-                              variant="outline"
                               className={
                                 inv.status === "Paid"
-                                  ? "bg-success/10 text-success border-success/30"
-                                  : "bg-warning/10 text-warning border-warning/30"
+                                  ? "bg-success text-white border-success hover:bg-success"
+                                  : "bg-warning text-white border-warning hover:bg-warning"
                               }
                             >
                               {inv.status}
                             </Badge>
                           </td>
                           <td className="py-3">
-                            <button className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+                            <button className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors">
                               <Download className="w-3 h-3" />
                               Download
                             </button>
