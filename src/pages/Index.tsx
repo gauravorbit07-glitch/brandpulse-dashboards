@@ -21,6 +21,7 @@ import {
   Zap,
 } from "lucide-react";
 import { getProductsByApplication } from "@/apiHelpers";
+import { getSecureAccessToken, getSecureApplicationId } from "@/lib/secureStorage";
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -56,8 +57,8 @@ const Index = () => {
       setCheckingProduct(true);
 
       try {
-        const accessToken = localStorage.getItem("access_token") || "";
-        const applicationId = localStorage.getItem("application_id") || "";
+        const accessToken = getSecureAccessToken();
+        const applicationId = getSecureApplicationId();
         
         if (!applicationId) {
           setHasProduct(false);
@@ -115,8 +116,8 @@ const Index = () => {
     }
   
     try {
-      const accessToken = localStorage.getItem("access_token") || "";
-      const applicationId = localStorage.getItem("application_id") || "";
+      const accessToken = getSecureAccessToken();
+      const applicationId = getSecureApplicationId();
   
       if (!applicationId) {
         navigate("/input");
@@ -155,8 +156,8 @@ const Index = () => {
     }
 
     try {
-      const accessToken = localStorage.getItem("access_token") || "";
-      const applicationId = localStorage.getItem("application_id") || "";
+      const accessToken = getSecureAccessToken();
+      const applicationId = getSecureApplicationId();
   
       if (!applicationId) {
         // No application ID → go to input

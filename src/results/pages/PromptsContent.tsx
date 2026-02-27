@@ -33,13 +33,24 @@ const PromptsContent = () => {
   const brandInfo = getBrandInfoWithLogos();
   const keywordsWithPrompts = getSearchKeywordsWithPrompts();
   const [searchParams] = useSearchParams();
+  // Initialize with all keywords expanded by default
   const [expandedKeywords, setExpandedKeywords] = useState<Set<string>>(new Set());
+  const [initialExpandDone, setInitialExpandDone] = useState(false);
   const [viewType, setViewType] = useState<"category" | "model" | "brand">("model");
   const [selectedBrand, setSelectedBrand] = useState("");
   const llmData = getLlmData();
   const categories = ['Discovery', 'Comparison', 'Pricing', 'Use Case', 'Trust'];
   
-  // Check for expandAll query parameter on component load
+  // Expand all keywords by default on first load
+  useEffect(() => {
+    if (!initialExpandDone && keywordsWithPrompts.length > 0) {
+      const allKeywordIds = new Set(keywordsWithPrompts.map((k) => k.id));
+      setExpandedKeywords(allKeywordIds);
+      setInitialExpandDone(true);
+    }
+  }, [keywordsWithPrompts.length, initialExpandDone]);
+
+  // Check for query parameters on component load
   useEffect(() => {
     const expandAllParam = searchParams.get("expandAll");
     const selectedBrandParam = searchParams.get("selectBrand");

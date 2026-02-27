@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "./ScrollToTop";
 import NewResultsContainer from "./results/pages/NewResultsContainer";
+import Billing from "./pages/Billing";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/input" element={<InputPage />} />
             {/* <Route path="/results" element={<Results />} /> */}
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/billing" element={<Billing />} />
             <Route path="/results/*" element={<NewResultsContainer />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

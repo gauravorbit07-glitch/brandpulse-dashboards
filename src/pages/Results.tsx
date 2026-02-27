@@ -24,6 +24,7 @@ import { MessageSquare, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Printer, Plus } from "lucide-react";
+import { getSecureAccessToken } from "@/lib/secureStorage";
 
 interface InputStateAny {
   product?: { id: string; name?: string; website?: string };
@@ -219,7 +220,7 @@ export default function Results() {
   }, [previousAnalytics]);
 
   useEffect(() => {
-    accessTokenRef.current = localStorage.getItem("access_token") || "";
+    accessTokenRef.current = getSecureAccessToken();
   }, []);
 
   const handleNewAnalysis = () => {

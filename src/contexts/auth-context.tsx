@@ -9,6 +9,17 @@ import {
 import { setCurrentUserId, clearCurrentUserId } from "@/results/data/analyticsData";
 import { setAnalysisUserId, clearAnalysisUserId } from "@/hooks/useAnalysisState";
 import { STORAGE_KEYS, getUserScopedKey } from "@/lib/storageKeys";
+import {
+  getSecureAccessToken,
+  getSecureSessionId,
+  getSecureApplicationId,
+  getSecureFirstName,
+  setSecureUserId,
+  setSecureFirstName,
+  setSecureApplicationId,
+  getSecureUserId,
+  clearSecureAuthStorage,
+} from "@/lib/secureStorage";
 
 /* =====================
    TYPES
@@ -70,10 +81,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /* Restore state from localStorage on refresh */
   useEffect(() => {
-    const storedAppId = localStorage.getItem("application_id");
-    const storedToken = localStorage.getItem("access_token");
-    const storedSessionId = localStorage.getItem("session_id");
-    const storedFirstName = localStorage.getItem("first_name");
+    const storedAppId = getSecureApplicationId();
+    const storedToken = getSecureAccessToken();
+    const storedSessionId = getSecureSessionId();
+    const storedFirstName = getSecureFirstName();
     const storedApplications = localStorage.getItem("applications");
     const storedProducts = localStorage.getItem("products");
     
@@ -91,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // If we have a token and session ID, restore user state (user is logged in)
     if (storedToken && storedSessionId) {
-      const storedUserId = localStorage.getItem("user_id") || "restored";
+      const storedUserId = getSecureUserId() || "restored";
       setUser({ 
         id: storedUserId, 
         email: "user@restored.com", 
@@ -131,9 +142,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentUserId(userId);
         setAnalysisUserId(userId);
 
-        // Save user ID and first name to localStorage
-        localStorage.setItem("user_id", userId);
-        localStorage.setItem("first_name", extendedUser.first_name);
+        // Save user ID and first name securely
+        setSecureUserId(userId);
+        setSecureFirstName(extendedUser.first_name);
 
         // Store applications and products from response
         const appsFromResponse = (res as any).applications || [];
@@ -173,6 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (appId) {
           setApplicationId(appId);
+          setSecureApplicationId(appId);
         }
 
         return true;
@@ -215,11 +227,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.application?.id) {
         setApplicationId(response.application.id);
-        localStorage.setItem("application_id", response.application.id);
+        setSecureApplicationId(response.application.id);
       }
 
-      // Save first name to localStorage
-      localStorage.setItem("first_name", firstName);
+      // Save first name securely
+      setSecureFirstName(firstName);
           } finally {
       setIsLoading(false);
     }
@@ -232,18 +244,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Clear user ID references (but keep user-scoped data)
     clearAnalysisUserId();
     clearCurrentUserId();
+
+    // Clear secure auth storage (token + critical identity keys)
+    clearSecureAuthStorage();
     
-    // Clear only session-related items, NOT analytics data or analysis state
+    // Clear only non-critical session-related items, NOT analytics data or analysis state
     const sessionItems = [
-      'access_token',
       'refresh_token',
-      'session_id',
-      'application_id',
       'applications',
       'products',
-      'first_name',
       'product_id',
-      // Note: 'user_id' is kept in localStorage to help restore state on login
+      'pending_verification_email',
+      // legacy cleanup (migrated to secure storage)
+      'access_token',
+      'session_id',
+      'application_id',
+      'first_name',
+      'user_id',
     ];
     
     sessionItems.forEach(key => {

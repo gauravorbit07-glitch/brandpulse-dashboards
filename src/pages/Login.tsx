@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { getProductsByApplication } from "@/apiHelpers";
+import { getSecureAccessToken, getSecureApplicationId } from "@/lib/secureStorage";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -48,8 +49,8 @@ const Login = () => {
       });
 
       // Use the same logic as Index page
-      const accessToken = localStorage.getItem("access_token") || "";
-      const applicationId = localStorage.getItem("application_id") || "";
+      const accessToken = getSecureAccessToken();
+      const applicationId = getSecureApplicationId();
   
       if (!applicationId) {
         sessionStorage.setItem("app_initialized", "true");

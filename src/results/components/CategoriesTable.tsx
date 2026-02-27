@@ -50,7 +50,7 @@ const CategoriesTable = ({
   };
 
   // Group prompts by category
-  // If prompt has a category field, use it; otherwise, assign to "Other" or infer from query
+  // If prompt has a category field, use it (case-insensitive); otherwise infer from query text
   const groupPromptsByCategory = () => {
     const grouped: Record<string, Prompt[]> = {};
 
@@ -61,34 +61,62 @@ const CategoriesTable = ({
     grouped["Other"] = [];
 
     prompts.forEach((prompt) => {
-      // If prompt has a category field, use it
-      if (prompt.category && grouped[prompt.category]) {
-        grouped[prompt.category].push(prompt);
+      // Case-insensitive match against known categories
+      if (prompt.category) {
+        const trimmed = prompt.category.trim();
+        const matched = categories.find(
+          (cat) => cat.toLowerCase() === trimmed.toLowerCase()
+        );
+        if (matched) {
+          grouped[matched].push(prompt);
+          return;
+        }
+      }
+
+      // Fallback: infer category from query text with expanded patterns
+      // Order matters — check more specific signals first
+      const q = prompt.query.toLowerCase();
+
+      if (
+        q.includes("affordable") || q.includes("free trial") ||
+        q.includes("pricing") || q.includes("price") ||
+        q.includes("cost-effective") || q.includes("cheap") ||
+        q.includes("budget") || q.includes("expensive")
+      ) {
+        grouped["Pricing"].push(prompt);
+      } else if (
+        q.includes(" vs ") || q.includes(" vs.") ||
+        q.includes("compare") || q.includes("alternative") ||
+        q.includes("alternatives") || q.includes("difference between") ||
+        q.includes("switch from") || q.includes("better than")
+      ) {
+        grouped["Comparison"].push(prompt);
+      } else if (
+        q.includes("most reliable") || q.includes("most trusted") ||
+        q.includes("reliable") || q.includes("trusted") ||
+        q.includes("trust") || q.includes("review") ||
+        q.includes("rating") || q.includes("secure") || q.includes("safe")
+      ) {
+        grouped["Trust"].push(prompt);
+      } else if (
+        q.includes("how to") || q.includes("how do i") ||
+        q.includes("use case") || q.includes("for startups") ||
+        q.includes("for startup") || q.includes("for enterprises") ||
+        q.includes("for enterprise") || q.includes("for small business") ||
+        q.includes("for mobile") || q.includes("for teams")
+      ) {
+        grouped["Use Case"].push(prompt);
+      } else if (
+        q.includes("best") || q.includes("top-rated") ||
+        q.includes("top rated") || q.startsWith("top ") ||
+        q.includes(" top ") || q.includes("discover") ||
+        q.includes("find") || q.includes("what is") ||
+        q.includes("leading") || q.includes("popular") ||
+        q.includes("recommended")
+      ) {
+        grouped["Discovery"].push(prompt);
       } else {
-        // Try to infer category from query (simple keyword matching)
-        const queryLower = prompt.query.toLowerCase();
-        let assigned = false;
-
-        if (queryLower.includes("discover") || queryLower.includes("find") || queryLower.includes("what is") || queryLower.includes("best")) {
-          grouped["Discovery"].push(prompt);
-          assigned = true;
-        } else if (queryLower.includes("compare") || queryLower.includes("vs") || queryLower.includes("difference") || queryLower.includes("better")) {
-          grouped["Comparison"].push(prompt);
-          assigned = true;
-        } else if (queryLower.includes("price") || queryLower.includes("cost") || queryLower.includes("cheap") || queryLower.includes("expensive")) {
-          grouped["Pricing"].push(prompt);
-          assigned = true;
-        } else if (queryLower.includes("use") || queryLower.includes("how to") || queryLower.includes("example") || queryLower.includes("case")) {
-          grouped["Use Case"].push(prompt);
-          assigned = true;
-        } else if (queryLower.includes("trust") || queryLower.includes("safe") || queryLower.includes("reliable") || queryLower.includes("secure")) {
-          grouped["Trust"].push(prompt);
-          assigned = true;
-        }
-
-        if (!assigned) {
-          grouped["Other"].push(prompt);
-        }
+        grouped["Other"].push(prompt);
       }
     });
 

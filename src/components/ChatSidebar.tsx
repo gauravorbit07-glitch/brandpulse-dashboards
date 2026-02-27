@@ -24,6 +24,7 @@ import {
   ChatMessage,
   ChatbotResponse
 } from '@/apiHelpers';
+import { getSecureAccessToken } from '@/lib/secureStorage';
 
 interface ChatSidebarProps {
   productId: string;
@@ -54,7 +55,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ productId, className, 
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const accessToken = localStorage.getItem("access_token") || "";
+  const accessToken = getSecureAccessToken();
 
   // Load chat history and suggested questions on mount
   useEffect(() => {

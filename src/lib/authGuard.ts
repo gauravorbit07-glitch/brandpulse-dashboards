@@ -1,13 +1,13 @@
 // Auth guard utility for handling JWT expiration across the app
+import { clearSecureAuthStorage } from "./secureStorage";
 
 export const handleUnauthorized = () => {
   console.log("🔒 [AUTH] Unauthorized - clearing session and redirecting to login");
-  
-  // Clear all auth-related localStorage
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("session_id");
-  localStorage.removeItem("application_id");
-  localStorage.removeItem("first_name");
+
+  // Clear secure auth storage first
+  clearSecureAuthStorage();
+
+  // Clear non-critical localStorage/sessionStorage keys
   localStorage.removeItem("keywords");
   localStorage.removeItem("keyword_count");
   localStorage.removeItem("product_id");
@@ -17,7 +17,7 @@ export const handleUnauthorized = () => {
   localStorage.removeItem("last_analysis_data");
   localStorage.removeItem("last_analysis_date");
   sessionStorage.removeItem("app_initialized");
-  
+
   // Redirect to login
   window.location.href = "/login";
 };

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Menu, X, User, LogOut, RefreshCw, Plus, Loader2, FileDown, History, Check, ChevronDown } from "lucide-react";
+import { Menu, X, User, LogOut, RefreshCw, Plus, Loader2, FileDown, History, Check, ChevronDown, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { PanelLeft } from "lucide-react";
 import { generateReport } from '@/results/layout/downloadReport';
 import { getBrandName } from '@/results/data/analyticsData';
+import { getSecureAccessToken } from '@/lib/secureStorage';
 
 const mobileNavItems = [
   { label: "Overview", path: "/results", tab: "overview" as TabType },
@@ -219,7 +220,7 @@ export const Header = () => {
     startAnalysis(productId);
 
     try {
-      const accessToken = localStorage.getItem("access_token") || "";
+      const accessToken = getSecureAccessToken();
       await regenerateAnalysis(productId, accessToken);
 
       toast({
@@ -444,6 +445,13 @@ export const Header = () => {
                       </DropdownMenuItem>
                     </>
                   )}
+                  <DropdownMenuItem
+                    onClick={() => navigate("/billing", { state: { from: location.pathname } })}
+                    className="flex items-center space-x-2"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Billing & Plans</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="flex items-center space-x-2 text-destructive focus:text-destructive"

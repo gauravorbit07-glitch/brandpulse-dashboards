@@ -3,6 +3,14 @@ import axios, { AxiosResponse } from "axios";
 import { API_ENDPOINTS } from "./api";
 import { handleUnauthorized, isUnauthorizedError } from "./lib/authGuard";
 import { encryptPassword } from "./lib/encryption";
+import {
+  getSecureAccessToken,
+  getSecureSessionId,
+  getSecureApplicationId,
+  setSecureAccessToken,
+  setSecureSessionId,
+  setSecureApplicationId,
+} from "./lib/secureStorage";
 
 /* =====================
    TYPES
@@ -73,8 +81,8 @@ const API = axios.create({
 
 // Request interceptor - add auth token and session ID
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
-  const sessionId = localStorage.getItem("session_id");
+  const token = getSecureAccessToken();
+  const sessionId = getSecureSessionId();
   
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -118,18 +126,17 @@ export const login = async (payload: LoginRequest): Promise<LoginResponse> => {
   
   const res: AxiosResponse<LoginResponse> = await API.post(API_ENDPOINTS.login, encryptedPayload);
 
-  // Save the access token and session ID if present
+  // Save token and critical identity values securely
   if (res.data.access_token && res.data.access_token.trim() !== "") {
-    localStorage.setItem("access_token", res.data.access_token);
+    setSecureAccessToken(res.data.access_token);
 
-    // Store session ID
     if (res.data.sid) {
-      localStorage.setItem("session_id", res.data.sid);
+      setSecureSessionId(res.data.sid);
     }
 
     const appId = res.data.user?.owned_applications?.[0]?.id;
     if (appId) {
-      localStorage.setItem("application_id", appId);
+      setSecureApplicationId(appId);
     }
   } else {
     console.log('No access token in response - email verification may be pending');
@@ -153,12 +160,12 @@ export const register = async (
       encryptedPayload
     );
 
-    // Store tokens if registration successful
+    // Store token + application id securely if registration successful
     if (res.data.access_token) {
-      localStorage.setItem("access_token", res.data.access_token);
+      setSecureAccessToken(res.data.access_token);
     }
     if (res.data.application?.id) {
-      localStorage.setItem("application_id", res.data.application.id);
+      setSecureApplicationId(res.data.application.id);
     }
 
     return res.data;
@@ -218,7 +225,7 @@ export const verifyEmail = async (token: string): Promise<any> => {
    ===================== */
 export const createProductWithKeywords = async (payload: ProductPayload): Promise<any> => {
   try {
-    const appId = payload.application_id || localStorage.getItem("application_id") || "";
+    const appId = payload.application_id || getSecureApplicationId() || "";
 
     let body;
     if ((payload as any).brand) {
@@ -578,15 +585,7 @@ export interface SearchResultsResponse {
   keywords: KeywordData[];
 }
 
-// Auth interceptor
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  config.headers["Content-Type"] = "application/json";
-  return config;
-});
+// Duplicate auth interceptor removed: token/session headers are already set by the primary interceptor above.
 
 /* =====================
    HELPER

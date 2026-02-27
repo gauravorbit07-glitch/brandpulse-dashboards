@@ -10,6 +10,7 @@ import AnalysisPipelineScreen from "@/results/loading/AnalysisPipelineScreen";
 import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { getUserScopedKey, STORAGE_KEYS } from "@/lib/storageKeys";
+import { getSecureAccessToken } from "@/lib/secureStorage";
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -99,7 +100,7 @@ const NewResultsContainer = () => {
 
   useEffect(() => {
     console.log("🎬 [NewResultsContainer] Mount - checking auth");
-    const accessToken = localStorage.getItem("access_token");
+    const accessToken = getSecureAccessToken();
     if (!accessToken) {
       console.log("🔒 [NewResultsContainer] No token - will redirect in context");
     }
