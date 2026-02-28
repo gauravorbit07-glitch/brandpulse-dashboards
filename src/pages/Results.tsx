@@ -24,7 +24,7 @@ import { MessageSquare, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Printer, Plus } from "lucide-react";
-import { getSecureAccessToken } from "@/lib/secureStorage";
+import { getSecureAccessToken, setSecureProductId, setSecureKeywords, setSecureKeywordCount } from "@/lib/secureStorage";
 
 interface InputStateAny {
   product?: { id: string; name?: string; website?: string };
@@ -355,18 +355,15 @@ export default function Results() {
               mostRecentAnalysis.updated_at ||
               mostRecentAnalysis.created_at;
 
-            // Save to localStorage (outside state updates to avoid re-renders)
+            // Save to secure storage (outside state updates to avoid re-renders)
             if (res.product_id) {
-              localStorage.setItem("product_id", res.product_id);
+              setSecureProductId(res.product_id);
             }
             if (mostRecentAnalysis.analytics?.search_keywords) {
               const keywordsObj = mostRecentAnalysis.analytics.search_keywords;
               const keywords = Object.values(keywordsObj).map((kw: { name: string; prompts: string[] }) => kw.name);
-              localStorage.setItem(
-                "keywords",
-                JSON.stringify(keywords.map((k) => ({ keyword: k })))
-              );
-              localStorage.setItem("keyword_count", keywords.length.toString());
+              setSecureKeywords(keywords.map((k) => ({ keyword: k })));
+              setSecureKeywordCount(keywords.length.toString());
             }
 
             const prevAnalytics = previousAnalyticsRef.current;

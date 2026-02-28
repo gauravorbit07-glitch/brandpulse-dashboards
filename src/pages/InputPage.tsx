@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { fetchProductsWithKeywords } from "@/apiHelpers";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
+import { getSecureKeywords, getSecureKeywordCount, setSecureProductId, setSecureKeywords, setSecureKeywordCount } from "@/lib/secureStorage";
 
 /* =====================
    HELPERS
@@ -46,11 +47,11 @@ const isValidKeyword = (keyword: string) => {
 
 // ✅ Save keywords only once
 const saveKeywordsOnce = (data: any) => {
+  const existingKeywords = getSecureKeywords();
+  const existingCount = getSecureKeywordCount();
   if (
-    localStorage.getItem("keywords") &&
-    localStorage.getItem("keywords") !== "[]" &&
-    localStorage.getItem("keyword_count") &&
-    localStorage.getItem("keyword_count") !== "0"
+    existingKeywords.length > 0 &&
+    existingCount !== "0"
   ) {
     return;
   }
@@ -62,8 +63,8 @@ const saveKeywordsOnce = (data: any) => {
       keyword: kw.keyword,
     }));
 
-  localStorage.setItem("keywords", JSON.stringify(validKeywords));
-  localStorage.setItem("keyword_count", validKeywords.length.toString());
+  setSecureKeywords(validKeywords);
+  setSecureKeywordCount(validKeywords.length.toString());
 };
 
 export default function InputPage() {
@@ -213,12 +214,12 @@ export default function InputPage() {
         const { generateWithKeywords } = await import("@/apiHelpers");
         const data = await generateWithKeywords(productId, keywords);
               
-        // Update localStorage with latest data
+        // Update secure storage with latest data
         if (productId) {
-          localStorage.setItem("product_id", productId);
+          setSecureProductId(productId);
         }
-        localStorage.setItem("keywords", JSON.stringify(keywords.map(k => ({ keyword: k }))));
-        localStorage.setItem("keyword_count", keywords.length.toString());
+        setSecureKeywords(keywords.map(k => ({ keyword: k })));
+        setSecureKeywordCount(keywords.length.toString());
 
         setTimeout(() => {
           toast({
@@ -255,7 +256,7 @@ export default function InputPage() {
         // Start analysis state tracking after we have product ID
         if (data.product?.id) {
           startAnalysis(data.product.id);
-          localStorage.setItem("product_id", data.product.id);
+          setSecureProductId(data.product.id);
         }
 
         // Save keywords once

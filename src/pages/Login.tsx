@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { getProductsByApplication } from "@/apiHelpers";
-import { getSecureAccessToken, getSecureApplicationId } from "@/lib/secureStorage";
+import { getSecureAccessToken, getSecureApplicationId, setSecureProductId, setSecureKeywords, setSecureKeywordCount } from "@/lib/secureStorage";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -64,9 +64,9 @@ const Login = () => {
         const firstProduct = products[0];
   
         // Store product id and keywords
-        localStorage.setItem("product_id", firstProduct.id);
-        localStorage.setItem("keywords", JSON.stringify(firstProduct.search_keywords || []));
-        localStorage.setItem("keyword_count", (firstProduct.search_keywords || []).length.toString());
+        setSecureProductId(firstProduct.id);
+        setSecureKeywords(firstProduct.search_keywords || []);
+        setSecureKeywordCount((firstProduct.search_keywords || []).length.toString());
         
         // Mark app as initialized to prevent auto-redirect on logo click
         sessionStorage.setItem("app_initialized", "true");

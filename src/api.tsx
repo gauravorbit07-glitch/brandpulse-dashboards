@@ -43,4 +43,9 @@ export const API_ENDPOINTS = {
 
   getProductSearchResults: (productId: string) =>
     `${BASE_URL}/api/v1/products/search/${productId}`,
+
+  // Invitations
+  sendInvitation: `${BASE_URL}/api/v1/invitations`,
+  acceptInvitation: (token: string) =>
+    `${BASE_URL}/api/v1/users/invitations/accept/${token}`,
 };

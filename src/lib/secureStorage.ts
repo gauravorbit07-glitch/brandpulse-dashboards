@@ -117,3 +117,98 @@ export const clearSecureAuthStorage = () => {
     localStorage.removeItem(key);
   });
 };
+
+// ── Product ID ──
+export const setSecureProductId = (productId: string) => {
+  secureLocalStorage.setItem("product_id", productId);
+};
+
+export const getSecureProductId = (): string => {
+  return migrateLegacyLocalToSecureLocal("product_id") || "";
+};
+
+export const clearSecureProductId = () => {
+  secureLocalStorage.removeItem("product_id");
+  localStorage.removeItem("product_id");
+};
+
+// ── Keywords ──
+export const setSecureKeywords = (keywords: any) => {
+  secureLocalStorage.setItem("keywords", JSON.stringify(keywords));
+};
+
+export const getSecureKeywords = (): any[] => {
+  try {
+    const raw = migrateLegacyLocalToSecureLocal("keywords");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const clearSecureKeywords = () => {
+  secureLocalStorage.removeItem("keywords");
+  localStorage.removeItem("keywords");
+};
+
+// ── Keyword Count ──
+export const setSecureKeywordCount = (count: string) => {
+  secureLocalStorage.setItem("keyword_count", count);
+};
+
+export const getSecureKeywordCount = (): string => {
+  return migrateLegacyLocalToSecureLocal("keyword_count") || "0";
+};
+
+export const clearSecureKeywordCount = () => {
+  secureLocalStorage.removeItem("keyword_count");
+  localStorage.removeItem("keyword_count");
+};
+
+// ── Applications (JSON) ──
+export const setSecureApplications = (apps: any) => {
+  secureLocalStorage.setItem("applications", JSON.stringify(apps));
+};
+
+export const getSecureApplications = (): any[] => {
+  try {
+    const raw = migrateLegacyLocalToSecureLocal("applications");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const clearSecureApplications = () => {
+  secureLocalStorage.removeItem("applications");
+  localStorage.removeItem("applications");
+};
+
+// ── Products (JSON) ──
+export const setSecureProducts = (products: any) => {
+  secureLocalStorage.setItem("products", JSON.stringify(products));
+};
+
+export const getSecureProducts = (): any[] => {
+  try {
+    const raw = migrateLegacyLocalToSecureLocal("products");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const clearSecureProducts = () => {
+  secureLocalStorage.removeItem("products");
+  localStorage.removeItem("products");
+};
+
+// ── Clear all sensitive data (used on logout) ──
+export const clearAllSecureData = () => {
+  clearSecureAuthStorage();
+  clearSecureProductId();
+  clearSecureKeywords();
+  clearSecureKeywordCount();
+  clearSecureApplications();
+  clearSecureProducts();
+};
