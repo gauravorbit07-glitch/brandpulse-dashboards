@@ -608,3 +608,57 @@ export const getProductSearchResults = async (
     throw new Error(message);
   }
 };
+
+/* =====================
+   INVITATION HELPERS
+   ===================== */
+export interface SendInvitationRequest {
+  email: string;
+  role: string;
+}
+
+export const sendInvitation = async (
+  payload: SendInvitationRequest
+): Promise<any> => {
+  try {
+    const res = await API.post(API_ENDPOINTS.sendInvitation, payload);
+    return res.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to send invitation";
+    throw new Error(message);
+  }
+};
+
+export interface AcceptInvitationRequest {
+  password: string;
+  first_name: string;
+  last_name: string;
+}
+
+export const acceptInvitation = async (
+  token: string,
+  payload: AcceptInvitationRequest
+): Promise<any> => {
+  try {
+    const encryptedPayload = {
+      ...payload,
+      password: encryptPassword(payload.password),
+    };
+    const res = await API.post(
+      API_ENDPOINTS.acceptInvitation(token),
+      encryptedPayload
+    );
+    return res.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to accept invitation";
+    throw new Error(message);
+  }
+};

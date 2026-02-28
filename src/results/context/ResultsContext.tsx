@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { handleUnauthorized, isUnauthorizedError } from "@/lib/authGuard";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
 import { getEmailScopedKey, STORAGE_KEYS } from "@/lib/storageKeys";
-import { getSecureAccessToken } from "@/lib/secureStorage";
+import { getSecureAccessToken, getSecureProductId } from "@/lib/secureStorage";
 
 interface AnalyticsData {
   id?: string;
@@ -750,7 +750,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
         website: products[0].website || "",
       });
     } else {
-      const storedProductId = localStorage.getItem("product_id");
+      const storedProductId = getSecureProductId();
       if (storedProductId) {
         setProductData({
           id: storedProductId,

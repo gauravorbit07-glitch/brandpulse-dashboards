@@ -19,6 +19,11 @@ import {
   setSecureApplicationId,
   getSecureUserId,
   clearSecureAuthStorage,
+  setSecureApplications,
+  getSecureApplications,
+  setSecureProducts,
+  getSecureProducts,
+  clearAllSecureData,
 } from "@/lib/secureStorage";
 
 /* =====================
@@ -85,19 +90,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedToken = getSecureAccessToken();
     const storedSessionId = getSecureSessionId();
     const storedFirstName = getSecureFirstName();
-    const storedApplications = localStorage.getItem("applications");
-    const storedProducts = localStorage.getItem("products");
+    const storedApplications = getSecureApplications();
+    const storedProducts = getSecureProducts();
     
     if (storedAppId) {
       setApplicationId(storedAppId);
     }
     
-    if (storedApplications) {
-      setApplications(JSON.parse(storedApplications));
+    if (storedApplications.length > 0) {
+      setApplications(storedApplications);
     }
     
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
+    if (storedProducts.length > 0) {
+      setProducts(storedProducts);
     }
     
     // If we have a token and session ID, restore user state (user is logged in)
@@ -149,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Store applications and products from response
         const appsFromResponse = (res as any).applications || [];
         setApplications(appsFromResponse);
-        localStorage.setItem("applications", JSON.stringify(appsFromResponse));
+        setSecureApplications(appsFromResponse);
 
         // Extract products from applications
         const allProducts: Product[] = [];
@@ -159,7 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         });
         setProducts(allProducts);
-        localStorage.setItem("products", JSON.stringify(allProducts));
+        setSecureProducts(allProducts);
 
         // Set first_analysis flag: "1" if no products exist yet (first time user)
         const firstAnalysisKey = getUserScopedKey(STORAGE_KEYS.FIRST_ANALYSIS, userId);
@@ -245,15 +250,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearAnalysisUserId();
     clearCurrentUserId();
 
-    // Clear secure auth storage (token + critical identity keys)
-    clearSecureAuthStorage();
+    // Clear ALL secure storage (token, identity, product, keywords, applications, products)
+    clearAllSecureData();
     
     // Clear only non-critical session-related items, NOT analytics data or analysis state
     const sessionItems = [
       'refresh_token',
-      'applications',
-      'products',
-      'product_id',
       'pending_verification_email',
       // legacy cleanup (migrated to secure storage)
       'access_token',
@@ -261,6 +263,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       'application_id',
       'first_name',
       'user_id',
+      'product_id',
+      'keywords',
+      'keyword_count',
+      'applications',
+      'products',
     ];
     
     sessionItems.forEach(key => {
@@ -270,9 +277,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // ignore
       }
     });
-    
-    // Do NOT clear sessionStorage - analysis state is stored there per email
-    // sessionStorage.clear(); // REMOVED - this was wiping analysis state
     
     // Reset state
     setUser(null);

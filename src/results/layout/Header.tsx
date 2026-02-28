@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { regenerateAnalysis } from "@/apiHelpers";
 import { useToast } from "@/hooks/use-toast";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
+import { getSecureProductId } from "@/lib/secureStorage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -173,8 +174,8 @@ export const Header = () => {
   const actionsDisabled = isAnalysisInProgress || isRegenerating || analysisLocked;
 
   useEffect(() => {
-    const storedProductId = localStorage.getItem("product_id");
-    setProductId(storedProductId);
+    const storedProductId = getSecureProductId();
+    setProductId(storedProductId || null);
   }, [location]);
 
   // Handle mobile menu body scroll lock

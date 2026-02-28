@@ -11,6 +11,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { PanelLeft } from "lucide-react";
+import { getSecureProductId } from "@/lib/secureStorage";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -70,7 +71,7 @@ const ChatBubbleButton = ({
 
 export const Layout = ({ children, hideNav }: LayoutProps) => {
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
-  const productId = localStorage.getItem("product_id") || "";
+  const productId = getSecureProductId() || "";
 
   const handleCloseMobileChat = useCallback(() => {
     setIsMobileChatOpen(false);

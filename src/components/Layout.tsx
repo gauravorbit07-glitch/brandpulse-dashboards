@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut, CreditCard, MailPlus } from "lucide-react";
+import { getSecureProductId } from "@/lib/secureStorage";
 import { useState, useEffect } from "react";
 import { regenerateAnalysis } from "@/apiHelpers";
 import { useToast } from "@/hooks/use-toast";
@@ -29,8 +30,8 @@ export const Layout = ({ children, showNavigation = true, sidebarTrigger }: Layo
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedProductId = localStorage.getItem("product_id");
-    setProductId(storedProductId);
+    const storedProductId = getSecureProductId();
+    setProductId(storedProductId || null);
   }, [location]);
 
   const handleLogout = () => {

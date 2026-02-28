@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useNavigate } from "react-router-dom";
+import { sendInvitation } from "@/apiHelpers";
 
 // ─── Role definitions ───────────────────────────────────────────────
 const ROLES = {
@@ -175,17 +176,26 @@ export default function TeamMembers() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleInvite = () => {
+  const handleInvite = async () => {
     if (!inviteEmail.includes("@")) return showToast("Enter a valid email", "error");
     if (members.find(m => m.email === inviteEmail)) return showToast("Already in workspace", "error");
-    setMembers(prev => [...prev, {
-      id: Date.now().toString(), name: inviteEmail.split("@")[0], email: inviteEmail,
-      role: inviteRole, status: "pending",
-      initials: inviteEmail.slice(0, 2).toUpperCase(),
-      invitedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-    }]);
-    setInviteEmail("");
-    showToast(`Invite sent to ${inviteEmail}`);
+    
+    try {
+      // Map frontend role to backend role format
+      const roleMap: Record<string, string> = { admin: "admin", analyst: "member", viewer: "viewer" };
+      await sendInvitation({ email: inviteEmail, role: roleMap[inviteRole] || "member" });
+      
+      setMembers(prev => [...prev, {
+        id: Date.now().toString(), name: inviteEmail.split("@")[0], email: inviteEmail,
+        role: inviteRole, status: "pending",
+        initials: inviteEmail.slice(0, 2).toUpperCase(),
+        invitedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      }]);
+      setInviteEmail("");
+      showToast(`Invite sent to ${inviteEmail}`);
+    } catch (error: any) {
+      showToast(error.message || "Failed to send invite", "error");
+    }
   };
 
   const handleAction = (id: string, action: string) => {
