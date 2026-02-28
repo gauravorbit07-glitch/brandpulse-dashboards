@@ -7,11 +7,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, CreditCard } from "lucide-react";
+import { User, LogOut, CreditCard, MailPlus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { regenerateAnalysis } from "@/apiHelpers";
 import { useToast } from "@/hooks/use-toast";
 import { getSecureAccessToken } from "@/lib/secureStorage";
+import { Mail } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -114,6 +115,13 @@ export const Layout = ({ children, showNavigation = true, sidebarTrigger }: Layo
                       >
                         <CreditCard className="w-4 h-4" />
                         <span>Billing &amp; Plans</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => navigate("/invite", { state: { from: location.pathname } })}
+                        className="flex items-center space-x-2"
+                      >
+                        <MailPlus className="w-4 h-4" />
+                        <span>Invite &amp; Users</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleLogout}

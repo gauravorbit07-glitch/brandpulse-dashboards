@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Menu, X, User, LogOut, RefreshCw, Plus, Loader2, FileDown, History, Check, ChevronDown, CreditCard } from "lucide-react";
+import { Menu, X, User, LogOut, RefreshCw, Plus, Loader2, FileDown, History, Check, ChevronDown, CreditCard, MailPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -404,12 +404,6 @@ export const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 bg-card border-border" align="end" forceMount>
-                  <DropdownMenuItem className="flex items-center space-x-2">
-                    <User className="w-4 h-4" />
-                    <span>
-                      {user.first_name} {user.last_name}
-                    </span>
-                  </DropdownMenuItem>
                   {productId && (
                     <>
                       <DropdownMenuItem
@@ -452,6 +446,13 @@ export const Header = () => {
                     <CreditCard className="w-4 h-4" />
                     <span>Billing & Plans</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                        onClick={() => navigate("/invite", { state: { from: location.pathname } })}
+                        className="flex items-center space-x-2"
+                      >
+                        <MailPlus className="w-4 h-4" />
+                        <span>Invite &amp; Users</span>
+                      </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="flex items-center space-x-2 text-destructive focus:text-destructive"
