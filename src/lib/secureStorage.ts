@@ -203,6 +203,39 @@ export const clearSecureProducts = () => {
   localStorage.removeItem("products");
 };
 
+// ── Pricing Plan ──
+export const setSecurePricingPlan = (plan: string) => {
+  secureLocalStorage.setItem("pricing_plan", plan);
+};
+
+export const getSecurePricingPlan = (): string => {
+  return migrateLegacyLocalToSecureLocal("pricing_plan") || "free";
+};
+
+export const clearSecurePricingPlan = () => {
+  secureLocalStorage.removeItem("pricing_plan");
+  localStorage.removeItem("pricing_plan");
+};
+
+// ── Collaborators (JSON) ──
+export const setSecureCollaborators = (collaborators: any) => {
+  secureLocalStorage.setItem("collaborators", JSON.stringify(collaborators));
+};
+
+export const getSecureCollaborators = (): any[] => {
+  try {
+    const raw = migrateLegacyLocalToSecureLocal("collaborators");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const clearSecureCollaborators = () => {
+  secureLocalStorage.removeItem("collaborators");
+  localStorage.removeItem("collaborators");
+};
+
 // ── Clear all sensitive data (used on logout) ──
 export const clearAllSecureData = () => {
   clearSecureAuthStorage();
@@ -211,4 +244,6 @@ export const clearAllSecureData = () => {
   clearSecureKeywordCount();
   clearSecureApplications();
   clearSecureProducts();
+  clearSecurePricingPlan();
+  clearSecureCollaborators();
 };
