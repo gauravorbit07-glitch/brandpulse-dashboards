@@ -8,8 +8,9 @@ import {
   Trash2, Send, Copy, Link2, Info, ArrowLeft,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { sendInvitation } from "@/apiHelpers";
+import { useAuth } from "@/contexts/auth-context";
 
 // ─── Role definitions ───────────────────────────────────────────────
 const ROLES = {
@@ -155,6 +156,8 @@ function PortalDropdown({
 // ─── Main Page ────────────────────────────────────────────────────────
 export default function TeamMembers() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, collaborators: authCollaborators, pricingPlan } = useAuth();
   const [members, setMembers]             = useState<Member[]>(INITIAL_MEMBERS);
   const [inviteEmail, setInviteEmail]     = useState("");
   const [inviteRole, setInviteRole]       = useState<RoleKey>("analyst");
@@ -236,23 +239,31 @@ export default function TeamMembers() {
         <div className="relative max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-8">
 
           {/* ── Back ── */}
-          <motion.button onClick={() => navigate(-1)}
+          <motion.button onClick={() => {
+            const from = (window.history.state?.usr?.from) as string | undefined;
+            const loopPages = ["/billing", "/invite"];
+            if (from && !loopPages.includes(from)) {
+              navigate(from);
+            } else {
+              navigate("/results");
+            }
+          }}
             initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
             className="group flex items-center gap-2.5"
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 bg-white shadow-sm text-gray-500 group-hover:border-blue-300 group-hover:text-blue-600 group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] transition-all duration-200">
+            <span className="flex items-center justify-center w-9 h-9 rounded-xl border border-border bg-card shadow-sm text-muted-foreground group-hover:border-primary/40 group-hover:text-primary group-hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-200">
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 duration-200" />
             </span>
-            <span className="text-sm font-medium text-gray-500 group-hover:text-gray-800 transition-colors">Back</span>
+            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Back</span>
           </motion.button>
 
           {/* ── Header ── */}
           <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible"
             className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Team Members</h1>
-              <p className="text-sm text-gray-500 mt-1">Manage who has access to your GeoRankers workspace</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Team Members</h1>
+              <p className="text-sm md:text-base text-muted-foreground mt-1">Manage who has access to your GeoRankers workspace</p>
             </div>
             <button onClick={() => setRoleInfoOpen(v => !v)}
               className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
@@ -565,9 +576,9 @@ export default function TeamMembers() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-800">Seat usage</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   {counts.active} of 3 seats used on the{" "}
-                  <span className="text-blue-600 font-semibold">Grow</span> plan
+                  <span className="text-primary font-semibold capitalize">{pricingPlan}</span> plan
                 </p>
               </div>
             </div>

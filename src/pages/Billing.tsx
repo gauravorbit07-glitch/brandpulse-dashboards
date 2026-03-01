@@ -141,7 +141,7 @@ const invoices = [
 const Billing = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { products } = useAuth();
+  const { products, pricingPlan } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">(
     "monthly"
   );
@@ -150,19 +150,17 @@ const Billing = () => {
   const [checkoutPrice, setCheckoutPrice] = useState("");
   const [successOpen, setSuccessOpen] = useState(false);
   const planState = "trial" as PlanState;
-  const currentPlan = "Grow";
+  const currentPlan = pricingPlan === "free" ? null : plans.find(p => p.name.toLowerCase() === pricingPlan)?.name || "Grow";
 
   const handleBack = () => {
     const from = location.state?.from;
-    if (from) {
+    // Avoid loop: don't navigate back to billing or invite
+    const loopPages = ["/billing", "/invite"];
+    if (from && !loopPages.includes(from)) {
       navigate(from);
     } else {
       const hasProduct = products && products.length > 0;
-      if (hasProduct) {
-        navigate("/results");
-      } else {
-        navigate("/input");
-      }
+      navigate(hasProduct ? "/results" : "/input");
     }
   };
 
@@ -199,10 +197,10 @@ const Billing = () => {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="group flex items-center gap-2.5"
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 bg-white shadow-sm text-gray-500 group-hover:border-blue-300 group-hover:text-blue-600 group-hover:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] transition-all duration-200">
+            <span className="flex items-center justify-center w-9 h-9 rounded-xl border border-border bg-card shadow-sm text-muted-foreground group-hover:border-primary/40 group-hover:text-primary group-hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-200">
               <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
             </span>
-            <span className="text-sm font-medium text-gray-500 group-hover:text-gray-800 transition-colors duration-200">
+            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-200">
               Back
             </span>
           </motion.button>
@@ -214,10 +212,10 @@ const Billing = () => {
             initial="hidden"
             animate="visible"
           >
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
               Billing & Plans
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm md:text-base text-muted-foreground mt-1">
               Manage your subscription, usage, and payment details
             </p>
           </motion.div>
@@ -624,10 +622,10 @@ const Billing = () => {
                 <div className="p-6 space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {[
-                      { label: "Plan", value: "Grow", highlight: true },
+                      { label: "Plan", value: pricingPlan === "free" ? "Free" : pricingPlan.charAt(0).toUpperCase() + pricingPlan.slice(1), highlight: true },
                       { label: "Billing Cycle", value: "Monthly" },
-                      { label: "Next Billing", value: "Jan 16, 2026" },
-                      { label: "Amount", value: "$159 / mo" },
+                      { label: "Next Billing", value: "—" },
+                      { label: "Amount", value: pricingPlan === "free" ? "Free" : "$159 / mo" },
                     ].map((item) => (
                       <div key={item.label} className="space-y-1">
                         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">

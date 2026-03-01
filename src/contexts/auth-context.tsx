@@ -23,6 +23,10 @@ import {
   getSecureApplications,
   setSecureProducts,
   getSecureProducts,
+  setSecurePricingPlan,
+  getSecurePricingPlan,
+  setSecureCollaborators,
+  getSecureCollaborators,
   clearAllSecureData,
 } from "@/lib/secureStorage";
 
@@ -57,11 +61,29 @@ interface ExtendedUser extends NonNullable<LoginResponse["user"]> {
   owned_applications?: { id: string; company_name: string; project_token: string }[];
 }
 
+interface Collaborator {
+  id: string;
+  application_id: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    is_active: boolean;
+  };
+}
+
 interface AuthContextType {
   user: ExtendedUser | null;
   applicationId: string | null;
   applications: Application[];
   products: Product[];
+  pricingPlan: string;
+  collaborators: Collaborator[];
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean | 'email_not_verified'>;
   register: (
@@ -82,6 +104,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [pricingPlan, setPricingPlan] = useState<string>("free");
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   /* Restore state from localStorage on refresh */
@@ -104,6 +128,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedProducts.length > 0) {
       setProducts(storedProducts);
     }
+
+    // Restore pricing plan and collaborators
+    const storedPlan = getSecurePricingPlan();
+    if (storedPlan) setPricingPlan(storedPlan);
+    const storedCollabs = getSecureCollaborators();
+    if (storedCollabs.length > 0) setCollaborators(storedCollabs);
     
     // If we have a token and session ID, restore user state (user is logged in)
     if (storedToken && storedSessionId) {
@@ -165,6 +195,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         setProducts(allProducts);
         setSecureProducts(allProducts);
+
+        // Extract pricing_plan from first application
+        const plan = appsFromResponse[0]?.pricing_plan || "free";
+        setPricingPlan(plan);
+        setSecurePricingPlan(plan);
+
+        // Extract collaborators from first application
+        const collabs = appsFromResponse[0]?.collaborators || [];
+        setCollaborators(collabs);
+        setSecureCollaborators(collabs);
 
         // Set first_analysis flag: "1" if no products exist yet (first time user)
         const firstAnalysisKey = getUserScopedKey(STORAGE_KEYS.FIRST_ANALYSIS, userId);
@@ -283,11 +323,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setApplicationId(null);
     setApplications([]);
     setProducts([]);
+    setPricingPlan("free");
+    setCollaborators([]);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, applicationId, applications, products, isLoading, login, register, logout }}
+      value={{ user, applicationId, applications, products, pricingPlan, collaborators, isLoading, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>
