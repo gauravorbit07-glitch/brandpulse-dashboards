@@ -297,27 +297,27 @@ export default function InputPage() {
      ===================== */
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-muted">
         <main className="container mx-auto px-4 py-20">
           <div className="max-w-2xl mx-auto text-center space-y-8">
             {/* Hero Section */}
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl font-bold text-blue-600">
+              <h1 className="text-4xl md:text-5xl font-bold text-primary">
                 Check your AI search visibility
               </h1>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-muted-foreground">
                 Enter your website URL and up to 3 keywords to see how AI
                 assistants mention you.
               </p>
             </div>
 
             {/* Form Card */}
-            <Card className="text-left bg-white border shadow-lg">
+            <Card className="text-left bg-card border shadow-lg">
               <CardHeader>
-                <CardTitle className="text-gray-900 text-center">
+                <CardTitle className="text-foreground text-center">
                   Website Visibility Analysis
                 </CardTitle>
-                <CardDescription className="text-gray-600 text-center">
+                <CardDescription className="text-muted-foreground text-center">
                   Get insights into how AI assistants present your website in
                   search results
                 </CardDescription>
@@ -328,7 +328,7 @@ export default function InputPage() {
                   <div className="space-y-2">
                     <Label htmlFor="website">Website URL</Label>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
                         id="website"
                         type="text"
@@ -336,7 +336,7 @@ export default function InputPage() {
                         value={brand}
                         onChange={(e) => handleWebsiteChange(e.target.value)}
                         maxLength={100}
-                        className="pl-11 pr-11 bg-white"
+                        className="pl-11 pr-11 bg-card"
                         autoComplete="url"
                         disabled={isWebsiteDisabled}
                       />
@@ -360,7 +360,7 @@ export default function InputPage() {
                     <Label htmlFor="keywords">Keywords (up to 3)</Label>
                     <div className="space-y-3">
                       <div className="flex gap-2 relative">
-                        <Tags className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Tags className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <Input
                           id="keywords"
                           type="text"
@@ -370,7 +370,7 @@ export default function InputPage() {
                           onKeyPress={handleKeyPress}
                           maxLength={60}
                           disabled={keywords.length >= 3}
-                          className="pl-11 bg-white"
+                          className="pl-11 bg-card"
                           autoComplete="off"
                         />
                         <Button
@@ -402,7 +402,7 @@ export default function InputPage() {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-4 w-4 ml-2 hover:bg-red-500 hover:text-white"
+                                className="h-4 w-4 ml-2 hover:bg-destructive hover:text-destructive-foreground"
                                 onClick={() => removeKeyword(index)}
                               >
                                 <X className="h-3 w-3" />
@@ -411,7 +411,7 @@ export default function InputPage() {
                           ))}
                         </div>
                       )}
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {keywords.length} of 3 keywords added
                       </p>
                     </div>

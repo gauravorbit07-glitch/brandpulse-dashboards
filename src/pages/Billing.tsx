@@ -189,20 +189,16 @@ const Billing = () => {
         />
 
         <div className="relative max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-8">
-          {/* ── Premium Back Button ── */}
+          {/* ── Back Button ── */}
           <motion.button
             onClick={handleBack}
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="group flex items-center gap-2.5"
+            className="group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-border bg-card shadow-sm text-muted-foreground hover:border-primary/40 hover:text-primary hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-200"
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-xl border border-border bg-card shadow-sm text-muted-foreground group-hover:border-primary/40 group-hover:text-primary group-hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-200">
-              <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
-            </span>
-            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-200">
-              Back
-            </span>
+            <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-0.5" />
+            <span className="text-sm font-semibold">Back</span>
           </motion.button>
 
           {/* ── Page Header ── */}
@@ -212,10 +208,10 @@ const Billing = () => {
             initial="hidden"
             animate="visible"
           >
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
               Billing & Plans
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1">
+            <p className="text-base md:text-lg text-muted-foreground mt-2">
               Manage your subscription, usage, and payment details
             </p>
           </motion.div>
@@ -305,22 +301,22 @@ const Billing = () => {
 
           {/* ── Tabs ── */}
           <Tabs defaultValue="plans" className="w-full">
-            <TabsList className="bg-gray-100/80 border border-gray-200 h-10 p-1 mb-8 rounded-xl">
+            <TabsList className="bg-muted/80 border border-border h-11 p-1 mb-8 rounded-xl">
               <TabsTrigger
                 value="plans"
-                className="rounded-lg text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 text-gray-500"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground"
               >
                 Plans
               </TabsTrigger>
               <TabsTrigger
                 value="billing"
-                className="rounded-lg text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 text-gray-500"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground"
               >
                 Billing Details
               </TabsTrigger>
               <TabsTrigger
                 value="invoices"
-                className="rounded-lg text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 text-gray-500"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground"
               >
                 Invoices
               </TabsTrigger>
@@ -337,20 +333,20 @@ const Billing = () => {
                 className="flex items-center justify-between flex-wrap gap-3"
               >
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-foreground">
                     Choose a Plan
                   </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     All plans include a 14-day free trial
                   </p>
                 </div>
-                <div className="flex items-center bg-gray-100 border border-gray-200 rounded-full p-1 gap-0.5">
+                <div className="flex items-center bg-muted border border-border rounded-full p-1 gap-0.5">
                   <button
                     onClick={() => setBillingCycle("monthly")}
                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
                       billingCycle === "monthly"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Monthly
@@ -359,8 +355,8 @@ const Billing = () => {
                     onClick={() => setBillingCycle("quarterly")}
                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                       billingCycle === "quarterly"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Quarterly
@@ -396,17 +392,13 @@ const Billing = () => {
                           : "0 12px 36px rgba(0,0,0,0.14)",
                         transition: { duration: 0.18, ease: "easeOut" },
                       }}
-                      className="relative flex flex-col rounded-2xl bg-white cursor-pointer"
-                      style={{
-                        border: isPopular
-                          ? "2px solid #2563eb"
+                      className={`relative flex flex-col rounded-2xl bg-card cursor-pointer border-2 ${
+                        isPopular
+                          ? "border-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.08),0_8px_24px_hsl(var(--primary)/0.12)]"
                           : isCurrent
-                          ? "2px solid #10b981"
-                          : "1px solid #e5e7eb",
-                        boxShadow: isPopular
-                          ? "0 0 0 3px rgba(37,99,235,0.08), 0 8px 24px rgba(37,99,235,0.12)"
-                          : "0 1px 4px rgba(0,0,0,0.06)",
-                      }}
+                          ? "border-success"
+                          : "border-border shadow-card"
+                      }`}
                     >
                       {/* Popular: thin amber top accent stripe */}
                       {/* {isPopular && (
@@ -450,14 +442,14 @@ const Billing = () => {
                         <div className="flex items-center gap-2.5 mb-4">
                           <span className="text-xl">{plan.icon}</span>
                           <div>
-                            <p
+                          <p
                               className={`text-xs font-semibold uppercase tracking-widest ${
-                                isPopular ? "text-blue-600" : "text-gray-400"
+                                isPopular ? "text-primary" : "text-muted-foreground"
                               }`}
                             >
                               {plan.name}
                             </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {plan.description}
                             </p>
                           </div>
@@ -467,15 +459,15 @@ const Billing = () => {
                         <div className="mb-1">
                           {price ? (
                             <div className="flex items-end gap-1">
-                              <span className="text-4xl font-bold text-gray-900 tracking-tight">
+                              <span className="text-4xl font-bold text-foreground tracking-tight">
                                 ${price}
                               </span>
-                              <span className="text-sm text-gray-400 mb-1.5 font-medium">
+                              <span className="text-sm text-muted-foreground mb-1.5 font-medium">
                                 / mo
                               </span>
                             </div>
                           ) : (
-                            <div className="text-4xl font-bold text-gray-900 tracking-tight">
+                            <div className="text-4xl font-bold text-foreground tracking-tight">
                               Custom
                             </div>
                           )}
@@ -483,7 +475,7 @@ const Billing = () => {
 
                         <p
                           className={`text-xs font-medium mb-5 ${
-                            price ? "text-emerald-600" : "text-gray-400"
+                            price ? "text-success" : "text-muted-foreground"
                           }`}
                         >
                           {price
@@ -541,18 +533,18 @@ const Billing = () => {
                             >
                               <span
                                 className={`flex-shrink-0 w-4 h-4 mt-0.5 rounded-full flex items-center justify-center ${
-                                  isPopular ? "bg-blue-100" : "bg-emerald-100"
+                               isPopular ? "bg-primary/10" : "bg-success/10"
                                 }`}
                               >
                                 <Check
                                   className={`w-2.5 h-2.5 ${
                                     isPopular
-                                      ? "text-blue-600"
-                                      : "text-emerald-600"
+                                      ? "text-primary"
+                                      : "text-success"
                                   }`}
                                 />
                               </span>
-                              <span className="text-gray-600">{f}</span>
+                              <span className="text-muted-foreground">{f}</span>
                             </li>
                           ))}
                         </ul>
@@ -568,21 +560,21 @@ const Billing = () => {
                 variants={fadeUp}
                 initial="hidden"
                 animate="visible"
-                className="flex items-center gap-6 py-4 border-t border-gray-100 flex-wrap"
+                className="flex items-center gap-6 py-4 border-t border-border flex-wrap"
               >
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Shield className="w-3.5 h-3.5 text-gray-400" />
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Shield className="w-3.5 h-3.5" />
                   SSL encrypted
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-success" />
                   Cancel anytime
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <TrendingUp className="w-3.5 h-3.5" />
                   No setup fees
                 </div>
-                <p className="text-xs text-gray-400 ml-auto">
+                <p className="text-xs text-muted-foreground ml-auto">
                   * Perplexity coming soon. Integrations include Google
                   Analytics & Google Search Console.
                 </p>
@@ -597,18 +589,18 @@ const Billing = () => {
                 variants={fadeUp}
                 initial="hidden"
                 animate="visible"
-                className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
               >
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <Package className="w-4 h-4 text-blue-600" />
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-foreground">
                         Current Plan
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         Your active subscription
                       </p>
                     </div>
@@ -622,18 +614,18 @@ const Billing = () => {
                 <div className="p-6 space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {[
-                      { label: "Plan", value: pricingPlan === "free" ? "Free" : pricingPlan.charAt(0).toUpperCase() + pricingPlan.slice(1), highlight: true },
+                      { label: "Plan", value: pricingPlan === "free" ? "Free" : pricingPlan.charAt(0).toUpperCase() + pricingPlan.slice(1), highlight: true as boolean },
                       { label: "Billing Cycle", value: "Monthly" },
                       { label: "Next Billing", value: "—" },
                       { label: "Amount", value: pricingPlan === "free" ? "Free" : "$159 / mo" },
                     ].map((item) => (
                       <div key={item.label} className="space-y-1">
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
                           {item.label}
                         </p>
                         <p
                           className={`text-sm font-semibold ${
-                            item.highlight ? "text-blue-600" : "text-gray-800"
+                            item.highlight ? "text-primary" : "text-foreground"
                           }`}
                         >
                           {item.value}
@@ -644,7 +636,7 @@ const Billing = () => {
 
                   {/* Usage Meters */}
                   <div className="space-y-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                       Usage This Cycle
                     </p>
                     {[
@@ -652,7 +644,7 @@ const Billing = () => {
                         label: "AI Prompts Used",
                         current: 32,
                         max: 50,
-                        color: "bg-blue-500",
+                        color: "bg-primary",
                       },
                       {
                         label: "GEO Conversations Today",
@@ -671,18 +663,18 @@ const Billing = () => {
                       return (
                         <div key={usage.label} className="space-y-1.5">
                           <div className="flex justify-between text-xs">
-                            <span className="text-gray-600 font-medium">
+                            <span className="text-muted-foreground font-medium">
                               {usage.label}
                             </span>
-                            <span className="font-semibold text-gray-700">
+                            <span className="font-semibold text-foreground">
                               {usage.current}
-                              <span className="text-gray-400">
+                              <span className="text-muted-foreground">
                                 {" "}
                                 / {usage.max}
                               </span>
                             </span>
                           </div>
-                          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-700 ${usage.color}`}
                               style={{ width: `${pct}%` }}
@@ -694,10 +686,10 @@ const Billing = () => {
                   </div>
 
                   <div className="flex gap-2 pt-1">
-                    <button className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                    <button className="px-4 py-2 rounded-xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted transition-all">
                       ⬆ Change Plan
                     </button>
-                    <button className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 transition-all">
+                    <button className="px-4 py-2 rounded-xl text-sm font-semibold bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive/20 transition-all">
                       Cancel Subscription
                     </button>
                   </div>
@@ -710,22 +702,22 @@ const Billing = () => {
                 variants={fadeUp}
                 initial="hidden"
                 animate="visible"
-                className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
               >
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <CreditCard className="w-4 h-4 text-gray-500" />
+                <div className="px-6 py-4 border-b border-border flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                    <CreditCard className="w-4 h-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-foreground">
                       Payment Method
                     </p>
-                    <p className="text-xs text-gray-400">Your saved card</p>
+                    <p className="text-xs text-muted-foreground">Your saved card</p>
                   </div>
                 </div>
 
                 <div className="p-6">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted border border-border">
                     <div className="flex items-center gap-4">
                       <div
                         className="w-12 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
@@ -739,15 +731,15 @@ const Billing = () => {
                         VISA
                       </div>
                       <div>
-                        <p className="text-sm font-mono tracking-widest text-gray-800">
+                        <p className="text-sm font-mono tracking-widest text-foreground">
                           •••• •••• •••• 4242
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           Expires 08 / 27
                         </p>
                       </div>
                     </div>
-                    <button className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted transition-colors">
                       Update
                     </button>
                   </div>
@@ -762,23 +754,23 @@ const Billing = () => {
                 variants={fadeUp}
                 initial="hidden"
                 animate="visible"
-                className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+                className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
               >
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <Receipt className="w-4 h-4 text-gray-500" />
+                <div className="px-6 py-4 border-b border-border flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                    <Receipt className="w-4 h-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-foreground">
                       Invoice History
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       {invoices.length} invoices
                     </p>
                   </div>
                 </div>
 
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-border">
                   {invoices.map((inv, i) => (
                     <motion.div
                       key={inv.id}
@@ -786,24 +778,24 @@ const Billing = () => {
                       variants={fadeUp}
                       initial="hidden"
                       animate="visible"
-                      className="flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors group"
+                      className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors group"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
-                          <Receipt className="w-4 h-4 text-gray-400" />
+                        <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                          <Receipt className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">
+                          <p className="text-sm font-semibold text-foreground">
                             {inv.plan}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5 font-mono">
+                          <p className="text-xs text-muted-foreground mt-0.5 font-mono">
                             {inv.id} · {inv.date}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <p className="text-sm font-bold text-gray-800">
+                        <p className="text-sm font-bold text-foreground">
                           {inv.amount}
                         </p>
                         <span
@@ -822,7 +814,7 @@ const Billing = () => {
                           />
                           {inv.status}
                         </span>
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all opacity-0 group-hover:opacity-100">
+                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground transition-all opacity-0 group-hover:opacity-100">
                           <Download className="w-3 h-3" />
                           PDF
                         </button>
