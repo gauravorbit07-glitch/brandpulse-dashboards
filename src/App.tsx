@@ -22,6 +22,7 @@ import TeamMembers from "./pages/Invitation"
 
 const queryClient = new QueryClient();
 
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
