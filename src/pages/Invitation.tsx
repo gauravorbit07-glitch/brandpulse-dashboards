@@ -144,7 +144,7 @@ function PortalDropdown({
         transition={{ duration: 0.13, ease: "easeOut" }}
         style={dropStyle}
         onClick={e => e.stopPropagation()}
-        className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+        className="bg-card rounded-2xl border border-border overflow-hidden"
       >
         {children}
       </motion.div>
@@ -230,7 +230,7 @@ export default function TeamMembers() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50/40">
+      <div className="min-h-screen bg-muted/40">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse 70% 35% at 50% -5%, rgba(99,102,241,0.05) 0%, transparent 70%)" }}
@@ -250,24 +250,22 @@ export default function TeamMembers() {
           }}
             initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="group flex items-center gap-2.5"
+            className="group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-border bg-card shadow-sm text-muted-foreground hover:border-primary/40 hover:text-primary hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-200"
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-xl border border-border bg-card shadow-sm text-muted-foreground group-hover:border-primary/40 group-hover:text-primary group-hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-200">
-              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 duration-200" />
-            </span>
-            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Back</span>
+            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5 duration-200" />
+            <span className="text-sm font-semibold">Back</span>
           </motion.button>
 
           {/* ── Header ── */}
           <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible"
             className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Team Members</h1>
-              <p className="text-sm md:text-base text-muted-foreground mt-1">Manage who has access to your GeoRankers workspace</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">Team Members</h1>
+              <p className="text-base md:text-lg text-muted-foreground mt-2">Manage who has access to your GeoRankers workspace</p>
             </div>
             <button onClick={() => setRoleInfoOpen(v => !v)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
-              <Info className="w-4 h-4 text-gray-400" />
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:bg-muted transition-all shadow-sm">
+              <Info className="w-4 h-4 text-muted-foreground" />
               Role permissions
             </button>
           </motion.div>
@@ -277,15 +275,15 @@ export default function TeamMembers() {
             {roleInfoOpen && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-                <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-900">Role Permissions Overview</p>
+                <div className="rounded-2xl border border-border bg-card shadow-sm">
+                  <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+                    <p className="text-sm font-semibold text-foreground">Role Permissions Overview</p>
                     <button onClick={() => setRoleInfoOpen(false)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">
-                      <X className="w-4 h-4 text-gray-400" />
+                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors">
+                      <X className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
                     {Object.values(ROLES).map(role => {
                       const Icon = role.icon;
                       return (
@@ -296,12 +294,12 @@ export default function TeamMembers() {
                             </span>
                             <div>
                               <p className={`text-sm font-bold ${role.color}`}>{role.label}</p>
-                              <p className="text-[11px] text-gray-400">{role.description}</p>
+                              <p className="text-[11px] text-muted-foreground">{role.description}</p>
                             </div>
                           </div>
                           <ul className="space-y-1.5">
                             {role.permissions.map(p => (
-                              <li key={p} className="flex items-start gap-2 text-xs text-gray-600">
+                              <li key={p} className="flex items-start gap-2 text-xs text-muted-foreground">
                                 <Check className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
                                 {p}
                               </li>
@@ -318,44 +316,44 @@ export default function TeamMembers() {
 
           {/* ── Invite Card ── (no overflow-hidden so invite role dropdown can show) */}
           <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible"
-            className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <UserPlus className="w-4 h-4 text-blue-600" />
+            className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="px-6 py-4 border-b border-border flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <UserPlus className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">Invite a team member</p>
-                <p className="text-xs text-gray-400">They'll get an email with a link to join your workspace</p>
+                <p className="text-sm font-semibold text-foreground">Invite a team member</p>
+                <p className="text-xs text-muted-foreground">They'll get an email with a link to join your workspace</p>
               </div>
             </div>
             <div className="p-6 space-y-3">
               <div className="flex gap-3 flex-wrap md:flex-nowrap">
                 {/* Email input */}
                 <div className="relative flex-1 min-w-0">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input type="email" value={inviteEmail}
                     onChange={e => setInviteEmail(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleInvite()}
                     placeholder="colleague@company.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-50 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                   />
                 </div>
                 {/* Role picker — opens PORTAL dropdown */}
                 <button
                   ref={inviteRoleRef}
                   onClick={() => setRoleDropOpen(v => !v)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all min-w-[140px] justify-between flex-shrink-0"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-all min-w-[140px] justify-between flex-shrink-0"
                 >
                   <span className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${ROLES[inviteRole].dot}`} />
                     {ROLES[inviteRole].label}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
                 {/* Send button */}
                 <button onClick={handleInvite}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white flex-shrink-0 transition-all hover:brightness-110 active:scale-[0.98]"
-                  style={{ background: "linear-gradient(135deg,#1d4ed8,#2563eb)", boxShadow: "0 3px 10px rgba(37,99,235,0.3)" }}>
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground flex-shrink-0 transition-all hover:brightness-110 active:scale-[0.98] bg-primary shadow-elevated"
+                >
                   <Send className="w-4 h-4" />
                   Send Invite
                 </button>
@@ -365,24 +363,24 @@ export default function TeamMembers() {
 
           {/* ── Members List ── NOTE: NO overflow-hidden here */}
           <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible"
-            className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+            className="rounded-2xl border border-border bg-card shadow-sm">
 
             {/* List header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="px-6 py-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-gray-500" />
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <Users className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Workspace Members</p>
-                  <p className="text-xs text-gray-400">{members.length} total · {counts.active} active</p>
+                  <p className="text-sm font-semibold text-foreground">Workspace Members</p>
+                  <p className="text-xs text-muted-foreground">{members.length} total · {counts.active} active</p>
                 </div>
               </div>
               <div className="relative w-full sm:w-56">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <input value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="Search members…"
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-50 transition-all" />
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all" />
               </div>
             </div>
 
@@ -391,21 +389,21 @@ export default function TeamMembers() {
               {(["all", "active", "pending", "declined", "blocked"] as const).map(s => (
                 <button key={s} onClick={() => setFilterStatus(s)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                    filterStatus === s ? "bg-gray-900 text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                    filterStatus === s ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}>
                   {s === "all" ? "All members" : STATUS_CONFIG[s].label}
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                    filterStatus === s ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
+                    filterStatus === s ? "bg-background/20 text-background" : "bg-muted text-muted-foreground"
                   }`}>{counts[s]}</span>
                 </button>
               ))}
             </div>
 
             {/* Member rows */}
-            <div className="divide-y divide-gray-50 mt-1 pb-2">
+            <div className="divide-y divide-border/50 mt-1 pb-2">
               <AnimatePresence>
                 {filtered.length === 0 ? (
-                  <div className="py-16 text-center text-sm text-gray-400">No members match your filter</div>
+                  <div className="py-16 text-center text-sm text-muted-foreground">No members match your filter</div>
                 ) : filtered.map((member, i) => {
                   const role   = ROLES[member.role];
                   const status = STATUS_CONFIG[member.status];
@@ -417,7 +415,7 @@ export default function TeamMembers() {
                       initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ delay: i * 0.04, duration: 0.22 }}
-                      className={`flex items-center gap-4 px-6 py-4 hover:bg-gray-50/70 transition-colors ${member.status === "blocked" ? "opacity-55" : ""}`}
+                      className={`flex items-center gap-4 px-6 py-4 hover:bg-muted/50 transition-colors ${member.status === "blocked" ? "opacity-55" : ""}`}
                     >
                       {/* Avatar */}
                       <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm`}>
@@ -427,13 +425,13 @@ export default function TeamMembers() {
                       {/* Name + email */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-800 truncate">{member.name}</span>
+                          <span className="text-sm font-semibold text-foreground truncate">{member.name}</span>
                           {member.isYou && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0">You</span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 flex-shrink-0">You</span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-400 truncate mt-0.5">{member.email}</p>
-                        <p className="text-[10px] text-gray-300 mt-0.5">
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{member.email}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                           {member.status === "active"   && member.joinedAt  && `Joined ${member.joinedAt}`}
                           {member.status !== "active"   && member.invitedAt && `Invited ${member.invitedAt}`}
                         </p>
@@ -472,7 +470,7 @@ export default function TeamMembers() {
                         <button
                           ref={el => { menuRefs.current[member.id] = el; }}
                           onClick={() => setOpenMenuId(prev => prev === member.id ? null : member.id)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors flex-shrink-0"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
                         >
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
@@ -488,21 +486,21 @@ export default function TeamMembers() {
                             align="right"
                             width={244}
                           >
-                            <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Change role</p>
+                            <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Change role</p>
                             {Object.values(ROLES).map(r => {
                               const RI = r.icon;
                               return (
                                 <button key={r.key}
                                   onClick={() => handleRoleChange(member.id, r.key as RoleKey)}
-                                  className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left ${member.role === r.key ? "bg-gray-50" : ""}`}>
+                                  className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left ${member.role === r.key ? "bg-muted" : ""}`}>
                                   <span className={`w-7 h-7 rounded-lg ${r.bg} flex items-center justify-center flex-shrink-0`}>
                                     <RI className={`w-3.5 h-3.5 ${r.color}`} />
                                   </span>
                                   <div className="flex-1">
-                                    <p className="text-xs font-semibold text-gray-800">{r.label}</p>
-                                    <p className="text-[10px] text-gray-400">{r.description}</p>
+                                    <p className="text-xs font-semibold text-foreground">{r.label}</p>
+                                    <p className="text-[10px] text-muted-foreground">{r.description}</p>
                                   </div>
-                                  {member.role === r.key && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                                  {member.role === r.key && <Check className="w-3.5 h-3.5 text-primary" />}
                                 </button>
                               );
                             })}
@@ -569,13 +567,13 @@ export default function TeamMembers() {
 
           {/* ── Seat usage ── */}
           <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible"
-            className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5 flex items-center justify-between gap-4 flex-wrap">
+            className="rounded-2xl border border-border bg-card shadow-sm p-5 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Users className="w-4 h-4 text-blue-600" />
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Users className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-800">Seat usage</p>
+                <p className="text-sm font-semibold text-foreground">Seat usage</p>
                 <p className="text-xs text-muted-foreground">
                   {counts.active} of 3 seats used on the{" "}
                   <span className="text-primary font-semibold capitalize">{pricingPlan}</span> plan
@@ -583,13 +581,13 @@ export default function TeamMembers() {
               </div>
             </div>
             <div className="flex items-center gap-3 flex-1 max-w-xs">
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full rounded-full bg-blue-500 transition-all duration-700"
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full rounded-full bg-primary transition-all duration-700"
                   style={{ width: `${Math.min((counts.active / 3) * 100, 100)}%` }} />
               </div>
-              <span className="text-xs font-bold text-gray-600 whitespace-nowrap">{counts.active} / 3</span>
+              <span className="text-xs font-bold text-foreground whitespace-nowrap">{counts.active} / 3</span>
             </div>
-            <button className="px-4 py-2 rounded-xl text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors flex-shrink-0">
+            <button className="px-4 py-2 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted transition-colors flex-shrink-0">
               Upgrade for more seats →
             </button>
           </motion.div>
@@ -611,17 +609,17 @@ export default function TeamMembers() {
                 return (
                   <button key={role.key}
                     onClick={() => { setInviteRole(role.key as RoleKey); setRoleDropOpen(false); }}
-                    className={`w-full flex items-start gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left ${inviteRole === role.key ? "bg-gray-50" : ""}`}>
+                    className={`w-full flex items-start gap-3 px-4 py-3.5 hover:bg-muted transition-colors text-left ${inviteRole === role.key ? "bg-muted" : ""}`}>
                     <span className={`w-8 h-8 rounded-lg ${role.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <Icon className={`w-4 h-4 ${role.color}`} />
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-800">{role.label}</span>
-                        {inviteRole === role.key && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                        <span className="text-sm font-semibold text-foreground">{role.label}</span>
+                        {inviteRole === role.key && <Check className="w-3.5 h-3.5 text-primary" />}
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">{role.description}</p>
-                      <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                      <p className="text-xs text-muted-foreground mt-0.5">{role.description}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
                         {role.permissions.slice(0, 3).join(" · ")}
                         {role.permissions.length > 3 && ` · +${role.permissions.length - 3} more`}
                       </p>
