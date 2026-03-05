@@ -66,14 +66,14 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<PricingPlanName, PlanLimits> = {
   free: {
-    maxKeywords: 0,
-    allowedModels: [],
-    maxConversationsPerDay: 0,
+    maxKeywords: 3,
+    allowedModels: ["openai"],
+    maxConversationsPerDay: 10,
     overageChargeUSD: 0,
-    maxUsers: 0,
-    analyticsCooldownHrs: 0,
+    maxUsers: 1,
+    analyticsCooldownHrs: 48,
     canExportReport: false,
-    maxAnalyticsHistory: 0,
+    maxAnalyticsHistory: 2,
   },
   launch: {
     maxKeywords: 3,
@@ -192,6 +192,20 @@ export const checkJourneyAccess = (
  * - 24hrs: rounds to next midnight
  * - < 24hrs: exact timestamp
  */
+export { 
+  formatNextAnalyticsTime, 
+  isAnalyticsCooldownActive, 
+  getAnalyticsCooldownText, 
+  getNextAnalyticsAvailableAt,
+  getPlanExpiryInfo,
+  formatEpoch,
+  formatShortDate,
+  formatFullDateTime,
+  formatLocalDate,
+  getRelativeTime,
+} from "@/lib/dateUtils";
+
+/** @deprecated Use formatNextAnalyticsTime from dateUtils instead */
 export const getNextAnalyticsTime = (nextGenerationTimestamp: string | null): Date | null => {
   if (!nextGenerationTimestamp) return null;
   const next = new Date(nextGenerationTimestamp);
@@ -199,12 +213,14 @@ export const getNextAnalyticsTime = (nextGenerationTimestamp: string | null): Da
   return next;
 };
 
+/** @deprecated Use formatNextAnalyticsTime from dateUtils instead */
 export const isAnalyticsGenerationBlocked = (nextGenerationTimestamp: string | null): boolean => {
   const next = getNextAnalyticsTime(nextGenerationTimestamp);
   if (!next) return false;
   return Date.now() < next.getTime();
 };
 
+/** @deprecated Use getAnalyticsCooldownText from dateUtils instead */
 export const getTimeUntilNextAnalytics = (nextGenerationTimestamp: string | null): string | null => {
   const next = getNextAnalyticsTime(nextGenerationTimestamp);
   if (!next) return null;
