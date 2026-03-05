@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Check,
@@ -31,6 +31,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/Layout";
+import { getPlanExpiryInfo, formatShortDate, formatFullDateTime } from "@/lib/dateUtils";
+import { PLAN_LIMITS, type PricingPlanName } from "@/lib/plans";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -141,7 +143,7 @@ const invoices = [
 const Billing = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, pricingPlan } = useAuth();
+  const { products, pricingPlan, planExpiresAt, planInt } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">(
     "monthly"
   );
@@ -149,8 +151,28 @@ const Billing = () => {
   const [checkoutPlan, setCheckoutPlan] = useState("");
   const [checkoutPrice, setCheckoutPrice] = useState("");
   const [successOpen, setSuccessOpen] = useState(false);
-  const planState = "trial" as PlanState;
-  const currentPlan = pricingPlan === "free" ? null : plans.find(p => p.name.toLowerCase() === pricingPlan)?.name || "Grow";
+
+  // Determine trial duration: free = 7 days, paid plans = 14 days
+  const trialDurationDays = pricingPlan === "free" ? 7 : 14;
+
+  // Compute plan expiry info from JWT epoch
+  const expiryInfo = useMemo(() => {
+    if (!planExpiresAt) return null;
+    return getPlanExpiryInfo(planExpiresAt, trialDurationDays);
+  }, [planExpiresAt, trialDurationDays]);
+
+  // Dynamic plan state
+  const planState: PlanState = useMemo(() => {
+    if (!expiryInfo) return "trial";
+    if (expiryInfo.isExpired) return "expiring";
+    if (pricingPlan === "free" || pricingPlan === "launch") return "trial";
+    return "active";
+  }, [expiryInfo, pricingPlan]);
+
+  const currentPlan = pricingPlan === "free" ? "Free Trial" : plans.find(p => p.name.toLowerCase() === pricingPlan)?.name || pricingPlan.charAt(0).toUpperCase() + pricingPlan.slice(1);
+
+  // Get plan limits for display
+  const currentLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
 
   const handleBack = () => {
     const from = location.state?.from;
@@ -217,7 +239,7 @@ const Billing = () => {
           </motion.div>
 
           {/* ── Trial Banner ── */}
-          {planState === "trial" && (
+          {planState === "trial" && expiryInfo && (
             <motion.div
               custom={1}
               variants={fadeUp}
@@ -239,20 +261,20 @@ const Billing = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-white text-sm">
-                    Free trial active — 5 days remaining
+                    {pricingPlan === "free" ? "Free trial" : `${currentPlan} trial`} active — {expiryInfo.daysRemaining} day{expiryInfo.daysRemaining !== 1 ? 's' : ''} remaining
                   </p>
                   <p className="text-blue-100 text-xs mt-0.5">
-                    9 of 14 days used. Upgrade anytime to keep full access.
+                    {expiryInfo.trialDaysUsed} of {expiryInfo.trialDurationDays} days used · Expires {formatShortDate(expiryInfo.expiryDate)}
                   </p>
                   <div className="mt-3 flex items-center gap-3">
                     <div className="h-1.5 w-40 bg-white/20 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-white rounded-full transition-all"
-                        style={{ width: "64%" }}
+                        style={{ width: `${expiryInfo.trialProgress}%` }}
                       />
                     </div>
                     <span className="text-xs text-blue-100 font-medium">
-                      64%
+                      {expiryInfo.trialProgress}%
                     </span>
                   </div>
                 </div>
@@ -267,8 +289,8 @@ const Billing = () => {
             </motion.div>
           )}
 
-          {/* ── Expiring Banner ── */}
-          {planState === "expiring" && (
+          {/* ── Expiring / Expired Banner ── */}
+          {planState === "expiring" && expiryInfo && (
             <motion.div
               custom={1}
               variants={fadeUp}
@@ -282,10 +304,16 @@ const Billing = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-amber-900 text-sm">
-                    Your {currentPlan} plan expires in 5 days
+                    {expiryInfo.isExpired
+                      ? `Your ${currentPlan} plan has expired`
+                      : `Your ${currentPlan} plan expires ${expiryInfo.relativeText}`
+                    }
                   </p>
                   <p className="text-amber-700 text-xs mt-0.5">
-                    Renew now to avoid interruption to your analysis
+                    {expiryInfo.isExpired
+                      ? `Expired on ${formatShortDate(expiryInfo.expiryDate)}. Renew to restore access.`
+                      : `Expires on ${formatFullDateTime(expiryInfo.expiryDate)}. Renew now to avoid interruption.`
+                    }
                   </p>
                 </div>
               </div>
@@ -605,19 +633,23 @@ const Billing = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Active
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                    expiryInfo?.isExpired 
+                      ? "bg-destructive/10 text-destructive border border-destructive/20"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${expiryInfo?.isExpired ? "bg-destructive" : "bg-emerald-500 animate-pulse"}`} />
+                    {expiryInfo?.isExpired ? "Expired" : "Active"}
                   </span>
                 </div>
 
                 <div className="p-6 space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {[
-                      { label: "Plan", value: pricingPlan === "free" ? "Free" : pricingPlan.charAt(0).toUpperCase() + pricingPlan.slice(1), highlight: true as boolean },
-                      { label: "Billing Cycle", value: "Monthly" },
-                      { label: "Next Billing", value: "—" },
-                      { label: "Amount", value: pricingPlan === "free" ? "Free" : "$159 / mo" },
+                      { label: "Plan", value: currentPlan, highlight: true as boolean },
+                      { label: "Analytics Cooldown", value: `${currentLimits.analyticsCooldownHrs}h` },
+                      { label: "Plan Expires", value: expiryInfo ? formatShortDate(expiryInfo.expiryDate) : "—" },
+                      { label: "Days Remaining", value: expiryInfo ? `${expiryInfo.daysRemaining} day${expiryInfo.daysRemaining !== 1 ? 's' : ''}` : "—" },
                     ].map((item) => (
                       <div key={item.label} className="space-y-1">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
@@ -641,25 +673,25 @@ const Billing = () => {
                     </p>
                     {[
                       {
-                        label: "AI Prompts Used",
-                        current: 32,
-                        max: 50,
+                        label: "Keywords",
+                        current: products.length > 0 ? products[0]?.name ? 1 : 0 : 0,
+                        max: currentLimits.maxKeywords,
                         color: "bg-primary",
                       },
                       {
-                        label: "GEO Conversations Today",
-                        current: 14,
-                        max: 20,
+                        label: "Conversations / Day",
+                        current: 0,
+                        max: currentLimits.maxConversationsPerDay,
                         color: "bg-violet-500",
                       },
                       {
-                        label: "Competitors Tracked",
-                        current: 4,
-                        max: 5,
+                        label: "Team Seats",
+                        current: 1,
+                        max: currentLimits.maxUsers,
                         color: "bg-amber-500",
                       },
                     ].map((usage) => {
-                      const pct = (usage.current / usage.max) * 100;
+                      const pct = usage.max > 0 ? (usage.current / usage.max) * 100 : 0;
                       return (
                         <div key={usage.label} className="space-y-1.5">
                           <div className="flex justify-between text-xs">
