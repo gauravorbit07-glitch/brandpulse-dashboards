@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
-import { getProductAnalytics, getAnalyticsList, getAnalyticsById, AnalyticsListItem } from "@/apiHelpers";
+import { getProductAnalytics, getAnalyticsList, getAnalyticsById, AnalyticsListItem, regenerateAnalysis } from "@/apiHelpers";
 import { setAnalyticsData, clearCurrentAnalyticsData } from "@/results/data/analyticsData";
 import { clearAnalyticsDataForCurrentUser } from "@/lib/storageKeys";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { handleUnauthorized, isUnauthorizedError } from "@/lib/authGuard";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
 import { getEmailScopedKey, STORAGE_KEYS } from "@/lib/storageKeys";
@@ -27,7 +28,8 @@ export type TabType =
   | "sources-all" 
   | "competitors-comparisons"
   | "recommendations"
-  | "content-impact-analysis";
+  | "content-impact-analysis"
+  | "ai-readiness-checker";
 
 interface ResultsContextType {
   productData: any;
@@ -45,6 +47,7 @@ interface ResultsContextType {
   refreshAnalyticsList: (limit?: number) => Promise<void>;
   switchToAnalytics: (analyticsId: string) => Promise<void>;
   analyticsVersion: number;
+  nextAnalyticsGenerationTime: string | null;
 }
 
 const ResultsContext = createContext<ResultsContextType | null>(null);
@@ -73,6 +76,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
   const [isSwitchingAnalytics, setIsSwitchingAnalytics] = useState<boolean>(false);
   const [selectedAnalyticsId, setSelectedAnalyticsId] = useState<string | null>(null);
   const [analyticsVersion, setAnalyticsVersion] = useState<number>(0);
+  const [nextAnalyticsGenerationTime, setNextAnalyticsGenerationTime] = useState<string | null>(null);
 
   const { products } = useAuth();
   const { toast } = useToast();
@@ -93,6 +97,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
     "/results/prompts": "prompts",
     "/results/sources-all": "sources-all",
     "/results/competitors-comparisons": "competitors-comparisons",
+    "/results/ai-readiness-checker": "ai-readiness-checker",
   };
 
   useEffect(() => {
@@ -113,6 +118,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
       "competitors-comparisons": "/results/competitors-comparisons",
       "recommendations": "/results/recommendations",
       "content-impact-analysis": "/results/content-impact-analysis",
+      "ai-readiness-checker": "/results/ai-readiness-checker",
     };
     const targetPath = tabToPath[tab];
     if (targetPath && location.pathname !== targetPath) {
@@ -231,6 +237,10 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               setDataReady(true);
               setIsLoading(false);
               
+              // Prevent poll from re-showing toast for already-loaded data
+              hasReceivedDataRef.current = true;
+              hasShownCompletionToastRef.current = true;
+              
               // Also update analyticsData cache
               setAnalyticsData(parsed);
             }
@@ -315,11 +325,11 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
         );
         isInCooldownRef.current = true;
 
-        toastRef.current({
-          title: "Analysis Taking Longer Than Expected",
-          description: `We'll pause checking for ${POLL_COOLDOWN_MS / 60000} minutes. The analysis will continue in the background.`,
-          duration: 5000,
-        });
+        // toastRef.current({
+        //   title: "Analysis Taking Longer Than Expected",
+        //   description: `We'll pause checking for ${POLL_COOLDOWN_MS / 60000} minutes. The analysis will continue in the background.`,
+        //   duration: 5000,
+        // });
 
         if (pollingTimerRef.current) {
           clearTimeout(pollingTimerRef.current);
@@ -432,16 +442,29 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               // Increment version to force component re-renders
               setAnalyticsVersion(prev => prev + 1);
 
-              // Show completion notification ONLY if page was loaded BEFORE analysis completed
-              if (currentStatus === "completed" && !hasShownCompletionToastRef.current) {
-                // Check if analysis completed AFTER this page load
+              // Show notification ONLY once per analysis ID
+              const analysisId = mostRecentAnalysis?.id || '';
+              const toastShownKey = getCompletionToastShownKey();
+              const shownForIds = (() => {
+                try {
+                  return JSON.parse(localStorage.getItem(toastShownKey) || '[]');
+                } catch { return []; }
+              })();
+              const alreadyShownForThisAnalysis = shownForIds.includes(analysisId);
+
+              if (currentStatus === "completed" && !hasShownCompletionToastRef.current && !alreadyShownForThisAnalysis) {
                 const analysisCompletedAfterPageLoad = analysisTimestamp > pageLoadTimestampRef.current;
                 
                 if (analysisCompletedAfterPageLoad) {
-                  // Analysis completed while user is on this page
                   hasShownCompletionToastRef.current = true;
+                  
+                  // Persist shown flag for this analysis ID
+                  try {
+                    const updated = [...shownForIds, analysisId].slice(-20);
+                    localStorage.setItem(toastShownKey, JSON.stringify(updated));
+                  } catch {}
 
-                  // Compute snapshot stats from the analytics data
+                  // Compute snapshot stats
                   const analyticsPayload = mostRecentAnalysis?.analytics?.[0]?.analytics ?? mostRecentAnalysis?.analytics ?? {};
                   const searchKeywords = analyticsPayload?.search_keywords || {};
                   let promptsExecuted = 0;
@@ -457,22 +480,89 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                   const competitorsDetected = Math.max(0, brands.length - 1);
 
                   toastRef.current({
-                    title: "Analysis Updated",
-                    description: [
-                      "Analysis Snapshot",
-                      `Prompts executed:                    ${promptsExecuted}`,
-                      `AI models analyzed:                ${aiModelsAnalyzed}`,
-                      `Responses processed:             ${responsesProcessed}`,
-                      `Citations mapped:                    ${citationsMapped}`,
-                      `Competitors detected:              ${competitorsDetected}`,
-                    ].join("\n"),
-                    duration: 20000,
+                    title: "🎉 Analysis Updated",
+                    description: React.createElement(
+                      "div",
+                      { className: "flex flex-col gap-3" },
+                      React.createElement(
+                        "p",
+                        { className: "whitespace-pre-line text-sm" },
+                        [
+                          "Analysis Snapshot",
+                          `Prompts executed:                    ${promptsExecuted}`,
+                          `AI models analyzed:                ${aiModelsAnalyzed}`,
+                          `Responses processed:             ${responsesProcessed}`,
+                          `Sources:                                    ${citationsMapped}`,
+                          `Competitors detected:              ${competitorsDetected}`,
+                        ].join("\n")
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: () => window.location.reload(),
+                          className: "w-full bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 text-xs md:text-sm font-medium rounded-md text-center",
+                        },
+                        "Refresh Page"
+                      )
+                    ),
+                    duration: Infinity,
                   });
                   console.log("🎉 [POLL] Showing Analysis Updated notification");
                 } else {
-                  // Page was refreshed AFTER analysis completed -> no notification needed
                   console.log("✅ [POLL] Page already refreshed after completion - no notification");
                 }
+              }
+
+              // Handle FAILED status notification
+              if (currentStatus === "failed" && !hasShownCompletionToastRef.current && !alreadyShownForThisAnalysis) {
+                hasShownCompletionToastRef.current = true;
+                
+                // Persist shown flag
+                try {
+                  const updated = [...shownForIds, analysisId].slice(-20);
+                  localStorage.setItem(toastShownKey, JSON.stringify(updated));
+                } catch {}
+
+                const funnyMessages = [
+                  "Oops! Our AI had a little hiccup 🤖💫 Want to give it another shot?",
+                  "Well, that didn't go as planned! 😅 Shall we try again?",
+                  "Our analysis engine tripped over its own feet! 🙈 Want to give it another shot?",
+                  "Houston, we had a problem! 🚀 But we're ready to launch again!",
+                ];
+                const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+
+                toastRef.current({
+                  title: "❌ Analysis Failed",
+                  description: randomMsg,
+                  variant: "destructive",
+                  duration: Infinity,
+                  action: React.createElement(
+                    ToastAction,
+                    {
+                      altText: "Retry analysis",
+                      onClick: async () => {
+                        try {
+                          const token = getSecureAccessToken();
+                          await regenerateAnalysis(productId, token);
+                          toastRef.current({
+                            title: "🔄 Analysis Restarted",
+                            description: "Hang tight! We're giving it another go.",
+                            duration: Infinity,
+                          });
+                        } catch {
+                          toastRef.current({
+                            title: "Error",
+                            description: "Failed to restart analysis. Please try again.",
+                            variant: "destructive",
+                          });
+                        }
+                      },
+                      className: "border-destructive-foreground/30 text-destructive-foreground hover:bg-destructive-foreground/10 px-3 py-1.5 text-xs md:text-sm font-medium rounded-md",
+                    },
+                    "🔄 Retry Analysis"
+                  ),
+                });
+                console.log("❌ [POLL] Showing Analysis Failed notification");
               }
 
               console.log(`✅ [POLL] Analysis ${currentStatus.toUpperCase()} - ALL polling stopped, data saved`);
@@ -496,7 +586,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                 toastRef.current({
                   title: "Analysis in Progress",
                   description: "Your new analysis has begun. You'll receive a notification on your email when it's ready.",
-                  duration: 10000,
+                  duration: Infinity,
                 });
                 hasShownStartMessageRef.current = true;
               }
@@ -517,7 +607,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                 toastRef.current({
                   title: "Analysis in Progress",
                   description: "Your analysis has begun. You'll receive a notification on your email when it's ready.",
-                  duration: 10000,
+                  duration: Infinity,
                 });
                 hasShownStartMessageRef.current = true;
               }
@@ -578,7 +668,9 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
       setIsAnalyticsListLoading(true);
       try {
         console.log("🔄 [LIST] Fetching analytics list for product:", productId);
-        const list = await getAnalyticsList(productId, limit);
+        const response = await getAnalyticsList(productId, limit);
+        const list = response.analytics || [];
+        setNextAnalyticsGenerationTime(response.next_analytics_generation_time);
         const sorted = [...list].sort((a, b) => {
           const tA = new Date(a.created_at).getTime();
           const tB = new Date(b.created_at).getTime();
@@ -887,6 +979,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
         refreshAnalyticsList,
         switchToAnalytics,
         analyticsVersion,
+        nextAnalyticsGenerationTime,
       }}
     >
       {children}

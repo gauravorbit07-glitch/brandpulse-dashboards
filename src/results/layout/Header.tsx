@@ -1,5 +1,20 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Menu, X, User, LogOut, RefreshCw, Plus, Loader2, FileDown, History, Check, ChevronDown, CreditCard, MailPlus } from "lucide-react";
+import { isAnalyticsGenerationBlocked, getTimeUntilNextAnalytics } from "@/lib/plans";
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  RefreshCw,
+  Plus,
+  Loader2,
+  FileDown,
+  History,
+  Check,
+  ChevronDown,
+  CreditCard,
+  MailPlus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -17,9 +32,9 @@ import {
 import { useResults, TabType } from "@/results/context/ResultsContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { PanelLeft } from "lucide-react";
-import { generateReport } from '@/results/layout/downloadReport';
-import { getBrandName } from '@/results/data/analyticsData';
-import { getSecureAccessToken } from '@/lib/secureStorage';
+import { generateReport } from "@/results/layout/downloadReport";
+import { getBrandName } from "@/results/data/analyticsData";
+import { getSecureAccessToken } from "@/lib/secureStorage";
 
 const mobileNavItems = [
   { label: "Overview", path: "/results", tab: "overview" as TabType },
@@ -47,17 +62,17 @@ const mobileNavItems = [
 ];
 
 // Analysis Animation Component - Figma-matching pill design
-const AnalyzingAnimation = ({ 
-  hasError = false, 
+const AnalyzingAnimation = ({
+  hasError = false,
   hasCompleted = false,
-  onRetry 
-}: { 
-  hasError?: boolean; 
+  onRetry,
+}: {
+  hasError?: boolean;
   hasCompleted?: boolean;
   onRetry?: () => void;
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  
+
   const steps = [
     "Creating Queries",
     "Searching LLMs",
@@ -124,7 +139,6 @@ const AnalyzingAnimation = ({
   );
 };
 
-
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -132,24 +146,29 @@ export const Header = () => {
   const [productId, setProductId] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState(false);
   const [analysisCompleted, setAnalysisCompleted] = useState(false);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, products } = useAuth();
   const { toast } = useToast();
-  const { 
-    setActiveTab, 
-    isLoading, 
-    dataReady, 
-    isAnalyzing, 
-    analyticsList, 
-    isAnalyticsListLoading, 
-    isSwitchingAnalytics, 
-    selectedAnalyticsId, 
-    switchToAnalytics 
+  const {
+    setActiveTab,
+    isLoading,
+    dataReady,
+    isAnalyzing,
+    analyticsList,
+    isAnalyticsListLoading,
+    isSwitchingAnalytics,
+    selectedAnalyticsId,
+    switchToAnalytics,
+    nextAnalyticsGenerationTime,
   } = useResults();
   const { toggleSidebar } = useSidebar();
-  const { isAnalyzing: analysisLocked, startAnalysis, completeAnalysis } = useAnalysisState();
+  const {
+    isAnalyzing: analysisLocked,
+    startAnalysis,
+    completeAnalysis,
+  } = useAnalysisState();
 
   // Analysis is in progress if loading and no data ready yet, OR if analyzing via hook
   const isAnalysisInProgress = (isLoading && !dataReady) || isAnalyzing;
@@ -161,17 +180,21 @@ export const Header = () => {
       setAnalysisError(false);
       setAnalysisCompleted(true);
       completeAnalysis();
-      
+
       // Auto-clear completed state after 5 seconds
       const timer = setTimeout(() => {
         setAnalysisCompleted(false);
       }, 5000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [dataReady, isLoading, isAnalyzing, completeAnalysis]);
 
-  const actionsDisabled = isAnalysisInProgress || isRegenerating || analysisLocked;
+  const isCooldownBlocked = isAnalyticsGenerationBlocked(nextAnalyticsGenerationTime);
+  const cooldownTimeLeft = getTimeUntilNextAnalytics(nextAnalyticsGenerationTime);
+
+  const actionsDisabled =
+    isAnalysisInProgress || isRegenerating || analysisLocked || isCooldownBlocked;
 
   useEffect(() => {
     const storedProductId = getSecureProductId();
@@ -227,14 +250,14 @@ export const Header = () => {
       toast({
         title: "Analysis in Progress",
         description:
-          "Your analysis has begun. Please stay on this page, you'll receive a notification here when it's ready.",
-        duration: 10000,
+          "Your analysis has begun. You'll receive a notification on your email when it's ready.",
+        duration: Infinity,
       });
 
       // NOTE: keep locked until dataReady becomes true (handled by useEffect)
     } catch (error) {
       setAnalysisError(true);
-      
+
       toast({
         title: "Error",
         description: "Failed to regenerate analysis. Please try again.",
@@ -243,7 +266,7 @@ export const Header = () => {
 
       setIsRegenerating(false);
       completeAnalysis();
-      
+
       // Auto-clear error state after 5 seconds
       setTimeout(() => {
         setAnalysisError(false);
@@ -258,9 +281,9 @@ export const Header = () => {
 
   const handleGenerateReport = useCallback(() => {
     setIsGeneratingReport(true);
-    
+
     const success = generateReport(toast);
-    
+
     if (!success) {
       setIsGeneratingReport(false);
       return;
@@ -275,12 +298,12 @@ export const Header = () => {
   // Format analytics date for dropdown
   const formatAnalyticsLabel = (createdAt: string) => {
     const date = new Date(createdAt);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -319,16 +342,20 @@ export const Header = () => {
 
           <div className="flex items-center gap-1.5 md:gap-3">
             {/* Analysis in Progress Animation - beside New Analysis button */}
-            {(isAnalysisInProgress || isRegenerating || analysisLocked || analysisError || analysisCompleted) && (
+            {(isAnalysisInProgress ||
+              isRegenerating ||
+              analysisLocked ||
+              analysisError ||
+              analysisCompleted) && (
               <div className="flex items-center">
-                <AnalyzingAnimation 
-                  hasError={analysisError} 
+                <AnalyzingAnimation
+                  hasError={analysisError}
                   hasCompleted={analysisCompleted}
                   onRetry={handleRegenerateAnalysis}
                 />
               </div>
             )}
-            
+
             {/* Previous Analytics Dropdown */}
             {analyticsList && analyticsList.length > 1 && (
               <DropdownMenu>
@@ -349,7 +376,10 @@ export const Header = () => {
                     <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 max-h-96 overflow-y-auto">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-64 max-h-96 overflow-y-auto"
+                >
                   <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                     Previous analytics
                   </div>
@@ -371,7 +401,7 @@ export const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            
+
             {/* New Analysis Button */}
             <Button
               variant="outline"
@@ -386,7 +416,9 @@ export const Header = () => {
               disabled={actionsDisabled}
             >
               <Plus className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">New Analysis</span>
+              <span className="hidden sm:inline">
+                {isCooldownBlocked ? `New Analysis (${cooldownTimeLeft})` : "New Analysis"}
+              </span>
               <span className="sm:hidden">New</span>
             </Button>
 
@@ -404,7 +436,11 @@ export const Header = () => {
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-card border-border" align="end" forceMount>
+                <DropdownMenuContent
+                  className="w-56 bg-card border-border"
+                  align="end"
+                  forceMount
+                >
                   {productId && (
                     <>
                       <DropdownMenuItem
@@ -416,16 +452,24 @@ export const Header = () => {
                         )}
                       >
                         <RefreshCw
-                          className={cn("w-4 h-4", isRegenerating && "animate-spin")}
+                          className={cn(
+                            "w-4 h-4",
+                            isRegenerating && "animate-spin"
+                          )}
                         />
-                        <span>Regenerate Analysis</span>
+                        <span>
+                          {isCooldownBlocked
+                            ? `Regenerate (${cooldownTimeLeft})`
+                            : "Regenerate Analysis"}
+                        </span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleGenerateReport}
                         disabled={isGeneratingReport || isAnalysisInProgress}
                         className={cn(
                           "flex items-center space-x-2",
-                          (isGeneratingReport || isAnalysisInProgress) && "opacity-60 cursor-not-allowed"
+                          (isGeneratingReport || isAnalysisInProgress) &&
+                            "opacity-60 cursor-not-allowed"
                         )}
                       >
                         <FileDown
@@ -435,25 +479,27 @@ export const Header = () => {
                           )}
                         />
                         <span>
-                          {isGeneratingReport ? "Generating..." : "Generate Report"}
+                          {isGeneratingReport
+                            ? "Generating..."
+                            : "Generate Report"}
                         </span>
                       </DropdownMenuItem>
                     </>
                   )}
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     onClick={() => navigate("/billing", { state: { from: location.pathname } })}
                     className="flex items-center space-x-2"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>Billing & Plans</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
+                  </DropdownMenuItem> */}
+                  {/* <DropdownMenuItem
                         onClick={() => navigate("/invite", { state: { from: location.pathname } })}
                         className="flex items-center space-x-2"
                       >
                         <MailPlus className="w-4 h-4" />
                         <span>Invite &amp; Users</span>
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="flex items-center space-x-2 text-destructive focus:text-destructive"

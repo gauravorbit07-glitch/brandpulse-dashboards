@@ -1,13 +1,20 @@
 import { TierBadge } from "@/results/ui/TierBadge";
 import { getCompetitorSentiment, getBrandName, getSentiment, getBrandLogo } from "@/results/data/analyticsData";
-import { Info, ThumbsUp, ThumbsDown, Minus } from "lucide-react";
+import { Info, ThumbsUp } from "lucide-react";
 import { useMemo } from "react";
-import ReactMarkdown from 'react-markdown';
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// Parse summary string with ● delimiters into individual points
+const parseSummaryToPoints = (summary: string): string[] => {
+  if (!summary) return [];
+  const parts = summary.split("●").map(s => s.trim().replace(/\.$/, '').trim()).filter(s => s.length > 0);
+  return parts;
+};
 
 const BrandSentimentContent = () => {
   const brandName = getBrandName();
@@ -71,11 +78,11 @@ const BrandSentimentContent = () => {
               <h3 className="text-lg font-semibold text-foreground">{brandName} Sentiment Overview</h3>
               <TierBadge tier={sentiment.dominant_sentiment} />
             </div>
-            <div className="text-muted-foreground text-sm md:text-base leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-strong:text-foreground">
-              <ReactMarkdown>
-                {sentiment.summary}
-              </ReactMarkdown>
-            </div>
+            <ul className="space-y-1.5 list-disc pl-5 text-muted-foreground text-sm md:text-base leading-relaxed">
+              {parseSummaryToPoints(sentiment.summary).map((point, idx) => (
+                <li key={idx} className="text-muted-foreground">{point}</li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
@@ -167,11 +174,11 @@ const BrandSentimentContent = () => {
                       </div>
                     </td>
                     <td className="py-4 px-4 md:px-6 text-sm text-muted-foreground max-w-md hidden md:table-cell">
-                      <div className="prose prose-xs max-w-none text-muted-foreground prose-p:my-0.5 prose-ul:my-0.5 prose-li:my-0 prose-strong:text-foreground line-clamp-4 hover:line-clamp-none transition-all">
-                        <ReactMarkdown>
-                          {item.summary}
-                        </ReactMarkdown>
-                      </div>
+                      <ul className="space-y-1 list-disc pl-4">
+                        {parseSummaryToPoints(item.summary).map((point, pIdx) => (
+                          <li key={pIdx} className="text-muted-foreground text-sm">{point}</li>
+                        ))}
+                      </ul>
                     </td>
                     <td className="py-4 px-4 md:px-6">
                       <div className="flex justify-center">

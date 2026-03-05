@@ -6,11 +6,11 @@ import SourcesAllContent from "./SourcesAllContent";
 import CompetitorsComparisonsContent from "./CompetitorsComparisonsContent";
 import ExecutiveSummaryContent from "./ExecutiveSummaryContent";
 import RecommendationsContent from "./RecommendationsContent";
+import AIReadinessContent from "./AIReadinessContent";
 import AnalysisPipelineScreen from "@/results/loading/AnalysisPipelineScreen";
 import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { getUserScopedKey, STORAGE_KEYS } from "@/lib/storageKeys";
-import { getSecureAccessToken } from "@/lib/secureStorage";
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -76,6 +76,8 @@ const ResultsContent = () => {
         return <CompetitorsComparisonsContent />;
       case "recommendations":
         return <RecommendationsContent />;
+      case "ai-readiness-checker":
+        return <AIReadinessContent />;
       default:
         return <OverviewContent />;
     }
@@ -100,7 +102,7 @@ const NewResultsContainer = () => {
 
   useEffect(() => {
     console.log("🎬 [NewResultsContainer] Mount - checking auth");
-    const accessToken = getSecureAccessToken();
+    const accessToken = localStorage.getItem("access_token");
     if (!accessToken) {
       console.log("🔒 [NewResultsContainer] No token - will redirect in context");
     }

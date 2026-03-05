@@ -236,6 +236,37 @@ export const clearSecureCollaborators = () => {
   localStorage.removeItem("collaborators");
 };
 
+// ── User Role ──
+export const setSecureUserRole = (role: string) => {
+  secureLocalStorage.setItem("user_role", role);
+};
+
+export const getSecureUserRole = (): string => {
+  return migrateLegacyLocalToSecureLocal("user_role") || "";
+};
+
+export const clearSecureUserRole = () => {
+  secureLocalStorage.removeItem("user_role");
+  localStorage.removeItem("user_role");
+};
+
+// ── Plan Expires At ──
+export const setSecurePlanExpiresAt = (expiresAt: number) => {
+  secureLocalStorage.setItem("plan_expires_at", expiresAt.toString());
+};
+
+export const getSecurePlanExpiresAt = (): number | null => {
+  const raw = migrateLegacyLocalToSecureLocal("plan_expires_at");
+  if (!raw) return null;
+  const num = parseInt(raw, 10);
+  return isNaN(num) ? null : num;
+};
+
+export const clearSecurePlanExpiresAt = () => {
+  secureLocalStorage.removeItem("plan_expires_at");
+  localStorage.removeItem("plan_expires_at");
+};
+
 // ── Clear all sensitive data (used on logout) ──
 export const clearAllSecureData = () => {
   clearSecureAuthStorage();
@@ -246,4 +277,6 @@ export const clearAllSecureData = () => {
   clearSecureProducts();
   clearSecurePricingPlan();
   clearSecureCollaborators();
+  clearSecureUserRole();
+  clearSecurePlanExpiresAt();
 };

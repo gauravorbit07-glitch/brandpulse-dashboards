@@ -221,6 +221,18 @@ export const verifyEmail = async (token: string): Promise<any> => {
 };
 
 /* =====================
+   LOGOUT
+   ===================== */
+export const logout = async (): Promise<void> => {
+  try {
+    await API.post(API_ENDPOINTS.logout);
+  } catch (error) {
+    console.warn('Logout API call failed:', error);
+    throw error;
+  }
+};
+
+/* =====================
    PRODUCT HELPERS
    ===================== */
 export const createProductWithKeywords = async (payload: ProductPayload): Promise<any> => {
@@ -290,6 +302,11 @@ export interface AnalyticsListItem {
   created_at: string;
 }
 
+export interface AnalyticsListResponse {
+  analytics: AnalyticsListItem[];
+  next_analytics_generation_time: string | null;
+}
+
 export const getProductAnalytics = async (
   productId: string,
   accessToken: string
@@ -309,15 +326,19 @@ export const getProductAnalytics = async (
 export const getAnalyticsList = async (
   productId: string,
   limit: number = 10
-): Promise<AnalyticsListItem[]> => {
+): Promise<AnalyticsListResponse> => {
   try {
     const res = await API.get(
       API_ENDPOINTS.getAnalyticsList(productId, limit)
     );
-    return (res?.data as AnalyticsListItem[]) || [];
+    const data = res?.data || {};
+    return {
+      analytics: data.analytics || [],
+      next_analytics_generation_time: data.next_analytics_generation_time || null,
+    };
   } catch (error) {
     console.error("Failed to fetch analytics list:", error);
-    return [];
+    return { analytics: [], next_analytics_generation_time: null };
   }
 };
 
@@ -586,6 +607,36 @@ export interface SearchResultsResponse {
 }
 
 // Duplicate auth interceptor removed: token/session headers are already set by the primary interceptor above.
+
+/* =====================
+   AI READINESS CHECKER
+===================== */
+export interface AIReadinessCheckResult {
+  check: string;
+  passed: boolean;
+  detail: string;
+}
+
+export interface AIReadinessResponse {
+  passed: number;
+  total: number;
+  results: AIReadinessCheckResult[];
+}
+
+export const checkAIReadiness = async (
+  url: string
+): Promise<{ data?: AIReadinessResponse; error?: string }> => {
+  try {
+    const res = await API.post(API_ENDPOINTS.aiReadinessCheck, { url });
+    return { data: res.data };
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.error ||
+      error?.message ||
+      "Something went wrong. Please try again.";
+    return { error: message };
+  }
+};
 
 /* =====================
    HELPER

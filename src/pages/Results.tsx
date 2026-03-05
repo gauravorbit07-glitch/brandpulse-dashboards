@@ -286,7 +286,7 @@ export default function Results() {
         toastRef.current({
           title: "Analysis Taking Longer Than Expected",
           description: `We'll pause checking for ${POLL_COOLDOWN_MS / 60000} minutes. The analysis will continue in the background.`,
-          duration: 5000,
+          duration: Infinity,
         });
 
         // Clear existing timer
@@ -408,7 +408,7 @@ export default function Results() {
                   title: "Analysis Completed",
                   description:
                     "Your analysis is now complete and available on this page.",
-                  duration: 10000,
+                  duration: Infinity,
                 });
                 console.log(
                   "🎉 [POLL] Showing completion notification for new completed analysis"
@@ -440,7 +440,7 @@ export default function Results() {
                   title: "Analysis in Progress",
                   description:
                     "Your new analysis has begun. You'll receive a notification on your email when it's ready.",
-                  duration: 10000,
+                  duration: Infinity,
                 });
                 hasShownStartMessageRef.current = true;
               }
@@ -465,7 +465,7 @@ export default function Results() {
                   title: "Analysis in Progress",
                   description:
                     "Your analysis has begun. You'll receive a notification on your email when it's ready.",
-                  duration: 10000,
+                  duration: Infinity,
                 });
                 hasShownStartMessageRef.current = true;
               }

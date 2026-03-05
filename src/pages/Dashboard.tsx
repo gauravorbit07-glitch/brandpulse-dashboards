@@ -84,7 +84,7 @@ export default function Dashboard() {
         toast({
           title: "Success",
           description: "Dashboard data refreshed successfully",
-          duration: 2000,
+          duration: Infinity,
         });
       }
     } catch (error: any) {

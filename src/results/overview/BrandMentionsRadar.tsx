@@ -1,17 +1,29 @@
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
-import { getKeywords, getBrandName, getCompetitorData } from "@/results/data/analyticsData";
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+import {
+  getKeywords,
+  getBrandName,
+  getCompetitorData,
+} from "@/results/data/analyticsData";
 import { Target, ChevronDown } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toOrdinal } from "@/results/data/formulas";
 import { useResults } from "@/results/context/ResultsContext";
 
 const COLORS = [
-  'hsl(217, 91%, 60%)', // primary blue
-  'hsl(0, 84%, 60%)',   // red
-  'hsl(142, 71%, 45%)', // green
-  'hsl(45, 93%, 47%)',  // yellow
-  'hsl(258, 90%, 66%)', // purple
-  'hsl(180, 70%, 45%)', // cyan
+  "hsl(217, 91%, 60%)", // primary blue
+  "hsl(0, 84%, 60%)", // red
+  "hsl(142, 71%, 45%)", // green
+  "hsl(45, 93%, 47%)", // yellow
+  "hsl(258, 90%, 66%)", // purple
+  "hsl(180, 70%, 45%)", // cyan
 ];
 
 export const BrandMentionsRadar = () => {
@@ -19,58 +31,83 @@ export const BrandMentionsRadar = () => {
   const keywords = getKeywords();
   const brandName = getBrandName();
   const competitorDataList = getCompetitorData();
-  const [selectedKeyword, setSelectedKeyword] = useState<string>('all');
+  const [selectedKeyword, setSelectedKeyword] = useState<string>("all");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+
   // Get all brands dynamically
-  const allBrands = useMemo(() => competitorDataList.map(c => c.name), [competitorDataList, analyticsVersion]);
-  
+  const allBrands = useMemo(
+    () => competitorDataList.map((c) => c.name),
+    [competitorDataList, analyticsVersion]
+  );
+
   // Chart data: brands on the edges
   const chartData = useMemo(() => {
     return allBrands.map((brand) => {
-      const competitor = competitorDataList.find(c => c.name === brand);
+      const competitor = competitorDataList.find((c) => c.name === brand);
       if (!competitor) return { brand, score: 0 };
-      
-      if (selectedKeyword === 'all') {
+
+      if (selectedKeyword === "all") {
         // Sum all keyword scores for this brand
-        const totalScore = competitor.keywordScores.reduce((sum, score) => sum + score, 0);
+        const totalScore = competitor.keywordScores.reduce(
+          (sum, score) => sum + score,
+          0
+        );
         return { brand, score: totalScore };
       } else {
         // Get score for specific keyword
         const keywordIdx = keywords.indexOf(selectedKeyword);
-        return { brand, score: keywordIdx >= 0 ? competitor.keywordScores[keywordIdx] || 0 : 0 };
+        return {
+          brand,
+          score:
+            keywordIdx >= 0 ? competitor.keywordScores[keywordIdx] || 0 : 0,
+        };
       }
     });
-  }, [allBrands, competitorDataList, selectedKeyword, keywords, analyticsVersion]);
+  }, [
+    allBrands,
+    competitorDataList,
+    selectedKeyword,
+    keywords,
+    analyticsVersion,
+  ]);
 
-  const maxScore = Math.max(...chartData.map(d => d.score), 1);
-  
+  const maxScore = Math.max(...chartData.map((d) => d.score), 1);
+
   // Generate dynamic insight
   const insight = useMemo(() => {
-    const brandData = chartData.find(d => d.brand === brandName);
+    const brandData = chartData.find((d) => d.brand === brandName);
     if (!brandData) return `${brandName} performance overview`;
-    
+
     const brandScore = brandData.score;
     const sortedData = [...chartData].sort((a, b) => b.score - a.score);
-    const brandRank = sortedData.findIndex(d => d.brand === brandName) + 1;
+    const brandRank = sortedData.findIndex((d) => d.brand === brandName) + 1;
     const topCompetitor = sortedData[0];
-    
-    if (selectedKeyword === 'all') {
+
+    if (selectedKeyword === "all") {
       // All keywords insight
       if (brandRank === 1) {
-        return `${brandName} leads with ${brandScore} total mentions across all keywords`;
+        return `${brandName} leads with ${brandScore} total mentions across all tracked keywords, setting the benchmark in overall mention volume.`;
       } else {
         const gap = topCompetitor.score - brandScore;
-        return `${brandName} ranks ${toOrdinal(brandRank)} with ${brandScore} mentions, ${gap} behind ${topCompetitor.brand}`;
+        return `${brandName} ranks ${toOrdinal(
+          brandRank
+        )} with ${brandScore} total mentions, reflecting a ${gap}-mention gap versus category leader ${
+          topCompetitor.brand
+        }.`;
       }
     } else {
       // Specific keyword insight
       if (brandRank === 1) {
-        return `${brandName} dominates "${selectedKeyword}" with ${brandScore} mentions`;
+        return `${brandName} leads "${selectedKeyword}" with ${brandScore} mentions, establishing the highest mention share for this keyword.`;
       } else if (brandScore === 0) {
-        return `${brandName} has no mentions for "${selectedKeyword}" - opportunity to improve`;
+        return `${brandName} has zero mentions for "${selectedKeyword}", indicating a clear opportunity to increase keyword presence.`;
       } else {
-        return `${brandName} ranks ${toOrdinal(brandRank)} for "${selectedKeyword}" with ${brandScore} mentions`;
+        const gap = topCompetitor.score - brandScore;
+        return `${brandName} ranks ${toOrdinal(
+          brandRank
+        )} for "${selectedKeyword}" with ${brandScore} mentions, trailing ${
+          topCompetitor.brand
+        } by ${gap}.`;
       }
     }
   }, [chartData, brandName, selectedKeyword]);
@@ -80,7 +117,9 @@ export const BrandMentionsRadar = () => {
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <Target className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-foreground">Mention Distribution</h3>
+          <h3 className="text-lg font-semibold text-foreground">
+            Mention Distribution
+          </h3>
         </div>
         {/* Keyword Selector Dropdown */}
         <div className="relative">
@@ -89,17 +128,26 @@ export const BrandMentionsRadar = () => {
             className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg text-sm font-medium text-foreground hover:bg-muted/80 transition-colors"
           >
             <span className="max-w-[120px] truncate">
-              {selectedKeyword === 'all' ? 'All Keywords' : selectedKeyword}
+              {selectedKeyword === "all" ? "All Keywords" : selectedKeyword}
             </span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${
+                isDropdownOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
-          
+
           {isDropdownOpen && (
             <div className="absolute right-0 top-full mt-1 w-56 bg-card border border-border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
               <button
-                onClick={() => { setSelectedKeyword('all'); setIsDropdownOpen(false); }}
+                onClick={() => {
+                  setSelectedKeyword("all");
+                  setIsDropdownOpen(false);
+                }}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors ${
-                  selectedKeyword === 'all' ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'
+                  selectedKeyword === "all"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-foreground"
                 }`}
               >
                 All Keywords
@@ -107,9 +155,14 @@ export const BrandMentionsRadar = () => {
               {keywords.map((keyword, idx) => (
                 <button
                   key={`keyword-${idx}`}
-                  onClick={() => { setSelectedKeyword(keyword); setIsDropdownOpen(false); }}
+                  onClick={() => {
+                    setSelectedKeyword(keyword);
+                    setIsDropdownOpen(false);
+                  }}
                   className={`w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors ${
-                    selectedKeyword === keyword ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'
+                    selectedKeyword === keyword
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-foreground"
                   }`}
                 >
                   {keyword}
@@ -120,38 +173,43 @@ export const BrandMentionsRadar = () => {
         </div>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        {selectedKeyword === 'all' 
-          ? 'Who dominates mentions across the keywords' 
+        {selectedKeyword === "all"
+          ? "Who dominates mentions across the keywords"
           : `Brand mention for "${selectedKeyword}"`}
       </p>
-      
+
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart data={chartData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+          <RadarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
+          >
             <PolarGrid stroke="hsl(220, 13%, 91%)" />
-            <PolarAngleAxis 
-              dataKey="brand" 
+            <PolarAngleAxis
+              dataKey="brand"
               tick={({ x, y, payload }) => {
                 const isBrand = payload.value === brandName;
                 return (
                   <text
                     x={x}
                     y={y}
-                    fill={isBrand ? 'hsl(217, 91%, 60%)' : 'hsl(220, 9%, 46%)'}
+                    fill={isBrand ? "hsl(217, 91%, 60%)" : "hsl(220, 9%, 46%)"}
                     fontSize={11}
                     fontWeight={isBrand ? 600 : 400}
                     textAnchor="middle"
                     dominantBaseline="middle"
                   >
-                    {payload.value.length > 12 ? payload.value.substring(0, 12) + '...' : payload.value}
+                    {payload.value.length > 12
+                      ? payload.value.substring(0, 12) + "..."
+                      : payload.value}
                   </text>
                 );
               }}
             />
-            <PolarRadiusAxis 
-              angle={90} 
+            <PolarRadiusAxis
+              angle={90}
               domain={[0, maxScore]}
-              tick={{ fill: 'hsl(220, 9%, 46%)', fontSize: 10 }}
+              tick={{ fill: "hsl(220, 9%, 46%)", fontSize: 10 }}
             />
             <Radar
               name="Score"
@@ -163,21 +221,19 @@ export const BrandMentionsRadar = () => {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'hsl(0, 0%, 100%)',
-                border: '1px solid hsl(220, 13%, 91%)',
-                borderRadius: '8px',
+                backgroundColor: "hsl(0, 0%, 100%)",
+                border: "1px solid hsl(220, 13%, 91%)",
+                borderRadius: "8px",
               }}
-              formatter={(value: number) => [value, 'Mentions']}
+              formatter={(value: number) => [value, "Mentions"]}
             />
           </RadarChart>
         </ResponsiveContainer>
       </div>
-      
+
       {/* Dynamic insight - bold and meaningful */}
       <div className="flex items-center justify-center mt-2 pt-2 border-t border-border">
-        <p className="text-sm text-center text-foreground px-4">
-          {insight}
-        </p>
+        <p className="text-sm text-center text-foreground px-4">{insight}</p>
       </div>
     </div>
   );

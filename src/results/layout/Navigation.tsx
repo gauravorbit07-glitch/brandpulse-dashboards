@@ -31,6 +31,7 @@ const navItems: Array<{
     tab: "recommendations",
     dropdown: [
       { label: "Recommendations", tab: "recommendations"},
+      { label: "AI Readiness Checker", tab: "ai-readiness-checker" },
     ],
   },
 ];

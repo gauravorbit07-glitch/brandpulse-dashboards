@@ -184,7 +184,7 @@ const Billing = () => {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 80% 40% at 50% -10%, rgba(59,130,246,0.06) 0%, transparent 70%)",
+              "",
           }}
         />
 
@@ -226,7 +226,7 @@ const Billing = () => {
               className="relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
               style={{
                 background:
-                  "linear-gradient(135deg, #1d4ed8 0%, #2563eb 40%, #3b82f6 100%)",
+                  "var(--gradient-hero-reverse)",
               }}
             >
               {/* Decorative circles */}

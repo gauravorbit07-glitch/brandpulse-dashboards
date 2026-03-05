@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   login as loginAPI,
   register as registerAPI,
+  logout as logoutAPI,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
@@ -28,7 +29,13 @@ import {
   setSecureCollaborators,
   getSecureCollaborators,
   clearAllSecureData,
+  setSecureUserRole,
+  getSecureUserRole,
+  setSecurePlanExpiresAt,
+  getSecurePlanExpiresAt,
 } from "@/lib/secureStorage";
+import { decodeAccessToken, DecodedTokenInfo } from "@/lib/jwtDecode";
+import { getPricingPlanName, type PricingPlanName } from "@/lib/plans";
 
 /* =====================
    TYPES
@@ -82,8 +89,12 @@ interface AuthContextType {
   applicationId: string | null;
   applications: Application[];
   products: Product[];
-  pricingPlan: string;
+  pricingPlan: PricingPlanName;
   collaborators: Collaborator[];
+  userRole: string;
+  userRoleInt: number;
+  planInt: number;
+  planExpiresAt: number | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean | 'email_not_verified'>;
   register: (
@@ -105,8 +116,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [pricingPlan, setPricingPlan] = useState<string>("free");
+  const [pricingPlan, setPricingPlan] = useState<PricingPlanName>("free");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [userRole, setUserRole] = useState<string>("viewer");
+  const [userRoleInt, setUserRoleInt] = useState<number>(4);
+  const [planInt, setPlanInt] = useState<number>(0);
+  const [planExpiresAt, setPlanExpiresAt] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   /* Restore state from localStorage on refresh */
@@ -118,25 +133,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedApplications = getSecureApplications();
     const storedProducts = getSecureProducts();
     
-    if (storedAppId) {
-      setApplicationId(storedAppId);
-    }
-    
-    if (storedApplications.length > 0) {
-      setApplications(storedApplications);
-    }
-    
-    if (storedProducts.length > 0) {
-      setProducts(storedProducts);
-    }
+    if (storedAppId) setApplicationId(storedAppId);
+    if (storedApplications.length > 0) setApplications(storedApplications);
+    if (storedProducts.length > 0) setProducts(storedProducts);
 
     // Restore pricing plan and collaborators
     const storedPlan = getSecurePricingPlan();
-    if (storedPlan) setPricingPlan(storedPlan);
+    if (storedPlan) setPricingPlan(storedPlan as PricingPlanName);
     const storedCollabs = getSecureCollaborators();
     if (storedCollabs.length > 0) setCollaborators(storedCollabs);
+
+    // Restore role and plan from secure storage
+    const storedRole = getSecureUserRole();
+    if (storedRole) {
+      setUserRole(storedRole);
+      // Convert back to int for access checks
+      const roleMap: Record<string, number> = { god: 0, admin: 1, application: 2, editor: 3, viewer: 4 };
+      setUserRoleInt(roleMap[storedRole] ?? 4);
+    }
+    const storedPlanExpiry = getSecurePlanExpiresAt();
+    if (storedPlanExpiry) setPlanExpiresAt(storedPlanExpiry);
+
+    // Try to decode current token for plan/role info
+    if (storedToken) {
+      const decoded = decodeAccessToken(storedToken);
+      if (decoded) {
+        setUserRoleInt(decoded.roleInt);
+        setUserRole(decoded.roleName);
+        setPlanInt(decoded.planInt);
+        setPricingPlan(decoded.planName as PricingPlanName);
+        if (decoded.planExpiresAt) setPlanExpiresAt(decoded.planExpiresAt);
+      }
+    }
     
-    // If we have a token and session ID, restore user state (user is logged in)
+    // If we have a token and session ID, restore user state
     if (storedToken && storedSessionId) {
       const storedUserId = getSecureUserId() || "restored";
       setUser({ 
@@ -146,7 +176,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         last_name: "User" 
       });
       
-      // Restore user ID scoping
       if (storedUserId && storedUserId !== "restored") {
         setCurrentUserId(storedUserId);
         setAnalysisUserId(storedUserId);
@@ -167,18 +196,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return 'email_not_verified';
       }
 
-      // We have a valid response with access_token
+      // Decode JWT to extract role, plan, expiry
+      const decoded = decodeAccessToken(res.access_token);
+      if (decoded) {
+        setUserRoleInt(decoded.roleInt);
+        setUserRole(decoded.roleName);
+        setPlanInt(decoded.planInt);
+        setPricingPlan(decoded.planName as PricingPlanName);
+        setPlanExpiresAt(decoded.planExpiresAt);
+        
+        // Persist role and plan
+        setSecureUserRole(decoded.roleName);
+        setSecurePricingPlan(decoded.planName);
+        if (decoded.planExpiresAt) setSecurePlanExpiresAt(decoded.planExpiresAt);
+      }
+
       if (res.user) {
         const extendedUser = res.user as ExtendedUser;
         setUser(extendedUser);
 
         const userId = extendedUser.id || "";
 
-        // Set user ID for analytics data mapping and analysis state scoping
         setCurrentUserId(userId);
         setAnalysisUserId(userId);
-
-        // Save user ID and first name securely
         setSecureUserId(userId);
         setSecureFirstName(extendedUser.first_name);
 
@@ -197,25 +237,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProducts(allProducts);
         setSecureProducts(allProducts);
 
-        // Extract pricing_plan from first application
-        const plan = appsFromResponse[0]?.pricing_plan || "free";
-        setPricingPlan(plan);
-        setSecurePricingPlan(plan);
-
         // Extract collaborators from first application
         const collabs = appsFromResponse[0]?.collaborators || [];
         setCollaborators(collabs);
         setSecureCollaborators(collabs);
 
-        // Set first_analysis flag: "1" if no products exist yet (first time user)
+        // Set first_analysis flag
         const firstAnalysisKey = getUserScopedKey(STORAGE_KEYS.FIRST_ANALYSIS, userId);
         const existingFlag = localStorage.getItem(firstAnalysisKey);
         if (existingFlag === null) {
-          // First time seeing this user — check if they already have products
-          const isFirstAnalysis = allProducts.length === 0 ? "1" : "1";
-          // Always set to "1" on first encounter; it becomes "0" when View Dashboard is clicked
-          localStorage.setItem(firstAnalysisKey, isFirstAnalysis);
-          console.log(`🏁 [AUTH] First analysis flag set to ${isFirstAnalysis} for user ${userId}`);
+          localStorage.setItem(firstAnalysisKey, "1");
+          console.log(`🏁 [AUTH] First analysis flag set for user ${userId}`);
         }
 
         // Pick applicationId from response
@@ -226,6 +258,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           appId = (res as any).application.id;
         } else if (appsFromResponse.length > 0) {
           appId = appsFromResponse[0].id;
+        }
+
+        // Override with JWT applicationId if available
+        if (decoded?.applicationId) {
+          appId = decoded.applicationId;
         }
 
         if (appId) {
@@ -239,7 +276,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     } catch (error: any) {
       console.error('Auth context: Login error:', error);
-      console.error('Error response:', error.response?.data);
       throw error;
     } finally {
       setIsLoading(false);
@@ -256,7 +292,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ) => {
     setIsLoading(true);
     try {
-      // Split full name on first space
       const parts = fullName.trim().split(' ');
       const firstName = parts[0];
       const lastName = parts.slice(1).join(' ') || ' ';
@@ -276,29 +311,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSecureApplicationId(response.application.id);
       }
 
-      // Save first name securely
       setSecureFirstName(firstName);
-          } finally {
+    } finally {
       setIsLoading(false);
     }
   };
 
   /* =====================
-     LOGOUT - Clear session data but preserve analytics
+     LOGOUT
      ===================== */
   const logout = () => {
-    // Clear user ID references (but keep user-scoped data)
+    // Call backend logout endpoint (fire-and-forget)
+    logoutAPI().catch((err) => {
+      console.warn("Backend logout failed (session may already be expired):", err);
+    });
+
     clearAnalysisUserId();
     clearCurrentUserId();
-
-    // Clear ALL secure storage (token, identity, product, keywords, applications, products)
     clearAllSecureData();
     
-    // Clear only non-critical session-related items, NOT analytics data or analysis state
     const sessionItems = [
       'refresh_token',
       'pending_verification_email',
-      // legacy cleanup (migrated to secure storage)
       'access_token',
       'session_id',
       'application_id',
@@ -312,25 +346,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ];
     
     sessionItems.forEach(key => {
-      try {
-        localStorage.removeItem(key);
-      } catch {
-        // ignore
-      }
+      try { localStorage.removeItem(key); } catch {}
     });
     
-    // Reset state
     setUser(null);
     setApplicationId(null);
     setApplications([]);
     setProducts([]);
     setPricingPlan("free");
     setCollaborators([]);
+    setUserRole("viewer");
+    setUserRoleInt(4);
+    setPlanInt(0);
+    setPlanExpiresAt(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, applicationId, applications, products, pricingPlan, collaborators, isLoading, login, register, logout }}
+      value={{
+        user, applicationId, applications, products, pricingPlan, collaborators,
+        userRole, userRoleInt, planInt, planExpiresAt,
+        isLoading, login, register, logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

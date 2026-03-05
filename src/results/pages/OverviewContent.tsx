@@ -36,6 +36,14 @@ import {
 } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 
+// Parse summary string with ● delimiters into individual points
+const parseSummaryToPoints = (summary: string): string[] => {
+  if (!summary) return [];
+  // Split on ● character
+  const parts = summary.split("●").map(s => s.trim().replace(/\.$/, '').trim()).filter(s => s.length > 0);
+  return parts;
+};
+
 const OverviewContent = () => {
   const { dataReady, analyticsVersion } = useResults();
   const [animatedBars, setAnimatedBars] = useState(false);
@@ -78,7 +86,21 @@ const OverviewContent = () => {
 
   const brandMentionRates = useMemo(() => {
     if (!analyticsAvailable) return [];
-    return getBrandMentionResponseRates();
+    const rates = getBrandMentionResponseRates();
+    const allBrandMentions = (getMentionsPosition().allBrandMentions || {}) as Record<string, number>;
+  
+    return [...rates].sort((a, b) => {
+      // Primary: responseRate descending
+      if (b.responseRate !== a.responseRate) return b.responseRate - a.responseRate;
+      // Tiebreaker: raw mention count descending (NOT AI visibility)
+      const aScore = allBrandMentions[a.brand] ?? 0;
+      const bScore = allBrandMentions[b.brand] ?? 0;
+      if (bScore !== aScore) return bScore - aScore;
+      // Final tiebreaker: non-test brand goes first (test brand sinks on ties)
+      if (a.isTestBrand && !b.isTestBrand) return 1;
+      if (!a.isTestBrand && b.isTestBrand) return -1;
+      return 0;
+    });
   }, [analyticsAvailable, analyticsVersion]);
 
   const sentiment = useMemo(() => {
@@ -98,8 +120,8 @@ const OverviewContent = () => {
   const getMedalIcon = (index: number, isTestBrand: boolean) => {
     if (index === 0) return <Trophy className="w-4 h-4 text-yellow-500" />;
     if (index === 1) return <Medal className="w-4 h-4 text-gray-400" />;
-    if (isTestBrand) return <Award className="w-4 h-4 text-primary" />;
-    return <Award className="w-4 h-4 text-amber-600" />;
+    if (index === 2) return <Medal className="w-4 h-4 text-amber-600" />;
+    return <Award className="w-4 h-4 text-muted-foreground" />;
   };
 
   const mentionsInsight = useMemo(() => {
@@ -118,16 +140,16 @@ const OverviewContent = () => {
 
   const visibilityInsight = useMemo(() => {
     const { brandPosition, totalBrands } = visibilityData;
-
-    if (!brandPosition || brandPosition <= 0) return null;
-
+  
+    if (!brandPosition || brandPosition <= 0 || totalBrands <= 0) return null;
+  
+    const percentileRank = Math.round(((totalBrands - brandPosition) / totalBrands) * 100);
+  
     if (brandPosition === 1) {
-      return `Your brand is leading in AI search visibility score among ${totalBrands} brands.`;
+      return `Your visibility score is higher than ${percentileRank} percent of brands tested for these queries.`;
     }
-
-    return `Your brand ranked at ${toOrdinal(
-      brandPosition
-    )} position out of ${totalBrands} brands.`;
+  
+    return `Your visibility score is higher than ${percentileRank} percent of brands tested for these queries.`;
   }, [visibilityData]);
 
   // FIX 3: Show loading state properly
@@ -366,9 +388,9 @@ const OverviewContent = () => {
               })}
             </div>
 
-            {visibilityData.brandPosition > 0 && visibilityInsight && (
+            {mentionsData.position > 0 && mentionsInsight && (
               <p className="text-sm text-foreground font-medium border-t pt-3 mt-4">
-                {visibilityInsight}
+                {mentionsInsight}
               </p>
             )}
           </div>
@@ -391,19 +413,14 @@ const OverviewContent = () => {
             <div className="py-2">
               <ul className="space-y-2 list-disc pl-5 text-sm text-foreground leading-relaxed">
                 {sentiment.summary ? (
-                  sentiment.summary
-                    .split("\n")
-                    .map((line) => line.trim())
-                    .filter((line) => line.length > 0)
-                    .map((line) => line.replace(/^-\s*/, "")) // Remove leading "- " if present
-                    .map((sentence, index) => (
-                      <li
-                        key={`sentiment-${index}`}
-                        className="text-foreground"
-                      >
-                        {sentence}
-                      </li>
-                    ))
+                  parseSummaryToPoints(sentiment.summary).map((point, index) => (
+                    <li
+                      key={`sentiment-${index}`}
+                      className="text-foreground"
+                    >
+                      {point}
+                    </li>
+                  ))
                 ) : (
                   <li className="text-muted-foreground">
                     No sentiment data available

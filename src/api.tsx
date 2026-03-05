@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   forgotPassword: `${BASE_URL}/api/v1/users/forgot-password`,
   resetPassword: `${BASE_URL}/api/v1/users/reset-password`,
   verifyEmail: `${BASE_URL}/api/v1/users/verify-email`,
+  logout: `${BASE_URL}/api/v1/users/logout`,
 
   // Products
   createProductWithKeywords: `${BASE_URL}/api/v1/products/with-keywords`,
@@ -48,4 +49,7 @@ export const API_ENDPOINTS = {
   sendInvitation: `${BASE_URL}/api/v1/invitations`,
   acceptInvitation: (token: string) =>
     `${BASE_URL}/api/v1/users/invitations/accept/${token}`,
+
+  // Tools
+  aiReadinessCheck: `${BASE_URL}/api/v1/tools/ai-readiness-check`,
 };

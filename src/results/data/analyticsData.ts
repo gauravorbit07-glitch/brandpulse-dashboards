@@ -347,8 +347,14 @@ export const getAIVisibilityMetrics = (): {
     };
   }
   
-  const brandInfo = brandInfoWithLogos.find(b => b.brand === brandName);
-  const brandIndex = brandInfoWithLogos.findIndex(b => b.brand === brandName);
+  // Sort by geo_score descending for AI visibility ranking
+  const sortedByGeoScore = [...brandInfoWithLogos].sort((a, b) => {
+    if (b.geo_score !== a.geo_score) return b.geo_score - a.geo_score;
+    return a.brand.localeCompare(b.brand);
+  });
+  
+  const brandInfo = sortedByGeoScore.find(b => b.brand === brandName);
+  const brandIndex = sortedByGeoScore.findIndex(b => b.brand === brandName);
   
   let totalT1 = 0;
   let totalT2 = 0;
@@ -372,7 +378,7 @@ export const getAIVisibilityMetrics = (): {
     score: brandInfo?.geo_score || 0,
     tier: brandInfo?.geo_tier || 'Low',
     brandPosition: brandIndex + 1,
-    totalBrands: brandInfoWithLogos.length,
+    totalBrands: sortedByGeoScore.length,
     positionBreakdown: { topPosition, midPosition, lowPosition }
   };
 };
@@ -498,6 +504,10 @@ export const getMentionsPosition = (): {
   const sortedByMentions = [...brandInfoWithLogos].sort((a, b) => {
     if (b.mention_score !== a.mention_score) {
       return b.mention_score - a.mention_score;
+    }
+    // Tiebreaker: higher geo_score first
+    if (b.geo_score !== a.geo_score) {
+      return b.geo_score - a.geo_score;
     }
     return a.brand.localeCompare(b.brand);
   });
