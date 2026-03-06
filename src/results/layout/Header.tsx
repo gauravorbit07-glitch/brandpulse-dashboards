@@ -15,6 +15,7 @@ import {
   CreditCard,
   MailPlus,
   Lock,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
@@ -24,7 +25,10 @@ import { regenerateAnalysis } from "@/apiHelpers";
 import { useToast } from "@/hooks/use-toast";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
 import { getSecureProductId } from "@/lib/secureStorage";
-import { isAnalyticsGenerationBlocked, getTimeUntilNextAnalytics } from "@/lib/plans";
+import {
+  isAnalyticsGenerationBlocked,
+  getTimeUntilNextAnalytics,
+} from "@/lib/plans";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -151,7 +155,8 @@ export const Header = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, products, userRoleInt, planInt, planExpiresAt } = useAuth();
+  const { user, logout, products, userRoleInt, planInt, planExpiresAt } =
+    useAuth();
   const { toast } = useToast();
   const {
     setActiveTab,
@@ -192,17 +197,45 @@ export const Header = () => {
     }
   }, [dataReady, isLoading, isAnalyzing, completeAnalysis]);
 
-  const isCooldownBlocked = isAnalyticsGenerationBlocked(nextAnalyticsGenerationTime);
-  const cooldownTimeLeft = getTimeUntilNextAnalytics(nextAnalyticsGenerationTime);
+  const isCooldownBlocked = isAnalyticsGenerationBlocked(
+    nextAnalyticsGenerationTime
+  );
+  const cooldownTimeLeft = getTimeUntilNextAnalytics(
+    nextAnalyticsGenerationTime
+  );
 
   // Journey-based access checks
-  const canGenerateAnalytics = checkJourneyAccess("analytics:generate", userRoleInt, planInt, planExpiresAt).allowed;
-  const canExportReport = checkJourneyAccess("report:export", userRoleInt, planInt, planExpiresAt).allowed;
-  const canInviteUsers = checkJourneyAccess("admin:invite-user", userRoleInt, planInt, planExpiresAt).allowed;
-  const canManageBilling = checkJourneyAccess("admin:manage-app", userRoleInt, planInt, planExpiresAt).allowed;
+  const canGenerateAnalytics = checkJourneyAccess(
+    "analytics:generate",
+    userRoleInt,
+    planInt,
+    planExpiresAt
+  ).allowed;
+  const canExportReport = checkJourneyAccess(
+    "report:export",
+    userRoleInt,
+    planInt,
+    planExpiresAt
+  ).allowed;
+  const canInviteUsers = checkJourneyAccess(
+    "admin:invite-user",
+    userRoleInt,
+    planInt,
+    planExpiresAt
+  ).allowed;
+  const canManageBilling = checkJourneyAccess(
+    "admin:manage-app",
+    userRoleInt,
+    planInt,
+    planExpiresAt
+  ).allowed;
 
   const actionsDisabled =
-    isAnalysisInProgress || isRegenerating || analysisLocked || isCooldownBlocked || !canGenerateAnalytics;
+    isAnalysisInProgress ||
+    isRegenerating ||
+    analysisLocked ||
+    isCooldownBlocked ||
+    !canGenerateAnalytics;
 
   useEffect(() => {
     const storedProductId = getSecureProductId();
@@ -425,7 +458,9 @@ export const Header = () => {
             >
               <Plus className="w-3 h-3 md:w-4 md:h-4" />
               <span className="hidden sm:inline">
-                {isCooldownBlocked ? `New Analysis (${cooldownTimeLeft})` : "New Analysis"}
+                {isCooldownBlocked
+                  ? `New Analysis (${cooldownTimeLeft})`
+                  : "New Analysis"}
               </span>
               <span className="sm:hidden">New</span>
             </Button>
@@ -449,6 +484,14 @@ export const Header = () => {
                   align="end"
                   forceMount
                 >
+                  <div className="px-3 py-2 border-b border-border mb-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {user.first_name} {user.last_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
                   {productId && (
                     <>
                       <DropdownMenuItem
@@ -473,10 +516,16 @@ export const Header = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleGenerateReport}
-                        disabled={isGeneratingReport || isAnalysisInProgress || !canExportReport}
+                        disabled={
+                          isGeneratingReport ||
+                          isAnalysisInProgress ||
+                          !canExportReport
+                        }
                         className={cn(
                           "flex items-center space-x-2",
-                          (isGeneratingReport || isAnalysisInProgress || !canExportReport) &&
+                          (isGeneratingReport ||
+                            isAnalysisInProgress ||
+                            !canExportReport) &&
                             "opacity-60 cursor-not-allowed"
                         )}
                       >
@@ -501,7 +550,22 @@ export const Header = () => {
                     </>
                   )}
                   <DropdownMenuItem
-                    onClick={() => navigate("/billing", { state: { from: location.pathname } })}
+                    onClick={() =>
+                      navigate("/settings", {
+                        state: { from: location.pathname },
+                      })
+                    }
+                    className="flex items-center space-x-2"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      navigate("/billing", {
+                        state: { from: location.pathname },
+                      })
+                    }
                     className="flex items-center space-x-2"
                   >
                     <CreditCard className="w-4 h-4" />
@@ -509,7 +573,11 @@ export const Header = () => {
                   </DropdownMenuItem>
                   {canInviteUsers && (
                     <DropdownMenuItem
-                      onClick={() => navigate("/invite", { state: { from: location.pathname } })}
+                      onClick={() =>
+                        navigate("/invite", {
+                          state: { from: location.pathname },
+                        })
+                      }
                       className="flex items-center space-x-2"
                     >
                       <MailPlus className="w-4 h-4" />

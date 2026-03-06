@@ -33,9 +33,20 @@ import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { getAnalyticsList, type AnalyticsListItem } from "@/apiHelpers";
-import { getSecureProductId, getSecureKeywords } from "@/lib/secureStorage";
 import { PLAN_LIMITS, type PricingPlanName, checkJourneyAccess, getRoleName } from "@/lib/plans";
 import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
+
+// ─── Import all tracking data from analyticsData.ts ──────────────────────
+import {
+  getBrandName,
+  getBrandWebsite,
+  getCompetitorNames,
+  getSearchKeywords,
+  getProductId,
+  getBrandInfoWithLogos,
+  getAnalysisDate,
+  getAnalysisKeywords,
+} from "@/results/data/analyticsData";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 type SettingsTab = "company" | "history" | "account";
@@ -85,13 +96,6 @@ const ALL_MODELS: { id: string; name: string; icon: string }[] = [
   { id: "perplexity", name: "Perplexity", icon: "⊛" },
 ];
 
-// ─── Tier helper ──────────────────────────────────────────────────────────
-const getTierFromScore = (score: number): { label: string; color: string } => {
-  if (score >= 70) return { label: "High", color: "bg-success/10 text-success border-success/20" };
-  if (score >= 40) return { label: "Medium", color: "bg-warning/10 text-warning border-warning/20" };
-  return { label: "Low", color: "bg-destructive/10 text-destructive border-destructive/20" };
-};
-
 export default function Settings() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,16 +104,30 @@ export default function Settings() {
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("company");
 
-  // Company & Tracking state
+  // ─── Seed state from analyticsData.ts ──────────────────────────────────
+  const analyticsCompanyName = getBrandName();
+  const analyticsWebsite = getBrandWebsite();
+  const analyticsProductId = getProductId();
+  const analyticsKeywords = getAnalysisKeywords();
+
+  // Company & Tracking state — pre-populated from analyticsData
   const product = products?.[0];
   const application = applications?.[0];
-  const [companyName, setCompanyName] = useState("");
-  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [companyName, setCompanyName] = useState(
+    analyticsCompanyName || ""
+  );
+  const [websiteUrl, setWebsiteUrl] = useState(
+    analyticsWebsite || ""
+  );
   const [industry, setIndustry] = useState("");
   const [aboutCompany, setAboutCompany] = useState("");
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
-  const [newCompetitor, setNewCompetitor] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Competitors — sourced entirely from analyticsData
+  const [competitors, setCompetitors] = useState<Competitor[]>(() =>
+    getCompetitorNames().map((name, i) => ({ id: String(i), name }))
+  );
+  const [newCompetitor, setNewCompetitor] = useState("");
 
   // AI Models state
   const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
@@ -125,19 +143,36 @@ export default function Settings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Permissions
-  const canEdit = userRoleInt <= 3; // god, admin, application, editor
+  const canEdit = userRoleInt <= 3;
   const isAdmin = userRoleInt <= 1;
   const canExport = checkJourneyAccess("report:export", userRoleInt, planInt, planExpiresAt).allowed;
 
-  // Initialize data from auth context
+  // ─── Sync company fields: analyticsData takes priority, auth context fills gaps ──
   useEffect(() => {
+    // Company name: prefer analytics data, fall back to product/application
+    if (!companyName) {
+      if (analyticsCompanyName) {
+        setCompanyName(analyticsCompanyName);
+      } else if (product?.name) {
+        setCompanyName(product.name);
+      } else if (application?.company_name) {
+        setCompanyName(application.company_name);
+      }
+    }
+
+    // Website: prefer analytics data
+    if (!websiteUrl) {
+      if (analyticsWebsite) {
+        setWebsiteUrl(analyticsWebsite);
+      } else if (product?.website) {
+        setWebsiteUrl(product.website);
+      }
+    }
+
+    // Industry & description only come from product (not in analyticsData)
     if (product) {
-      setCompanyName(product.name || "");
-      setWebsiteUrl(product.website || "");
       setIndustry(product.business_domain || "");
       setAboutCompany(product.description || "");
-    } else if (application) {
-      setCompanyName(application.company_name || "");
     }
 
     if (user) {
@@ -145,6 +180,14 @@ export default function Settings() {
       setEmail(user.email || "");
     }
   }, [product, application, user]);
+
+  // ─── Re-sync competitors whenever analytics data changes ──────────────
+  useEffect(() => {
+    const names = getCompetitorNames();
+    if (names.length > 0) {
+      setCompetitors(names.map((name, i) => ({ id: String(i), name })));
+    }
+  }, []);
 
   // Initialize AI models based on plan
   useEffect(() => {
@@ -156,10 +199,11 @@ export default function Settings() {
     setAiModels(models);
   }, [pricingPlan]);
 
-  // Load analytics history
+  // Load analytics history — uses analyticsProductId from analyticsData first
   useEffect(() => {
     const loadHistory = async () => {
-      const productId = getSecureProductId();
+      // Prefer product ID from analyticsData, fall back to secure storage
+      const productId = analyticsProductId || products?.[0]?.id;
       if (!productId) return;
       setIsLoadingHistory(true);
       try {
@@ -173,20 +217,10 @@ export default function Settings() {
       }
     };
     if (activeTab === "history") loadHistory();
-  }, [activeTab]);
-
-  // Mock competitors from keywords (in a real app these come from API)
-  useEffect(() => {
-    const keywords = getSecureKeywords();
-    // For now, initialize empty - would come from product API
-    if (competitors.length === 0 && product) {
-      // Placeholder
-    }
-  }, [product]);
+  }, [activeTab, analyticsProductId]);
 
   const handleSaveCompany = async () => {
     setIsSaving(true);
-    // In a real implementation, this would call an API endpoint
     setTimeout(() => {
       setIsSaving(false);
       toast({ title: "Changes saved", description: "Company details updated successfully." });
@@ -395,7 +429,29 @@ export default function Settings() {
                     )}
                   </div>
 
-                  {/* Competitors Being Tracked */}
+                  {/* Keywords Being Tracked — sourced from analyticsData */}
+                  {analyticsKeywords.length > 0 && (
+                    <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
+                      <div>
+                        <h2 className="text-base font-semibold text-foreground">Keywords Being Tracked</h2>
+                        <p className="text-sm text-muted-foreground">
+                          {analyticsKeywords.length} keyword{analyticsKeywords.length !== 1 ? "s" : ""} from your last analysis run
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {analyticsKeywords.map((kw, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center px-3 py-1.5 rounded-lg border border-border bg-muted/40 text-sm text-foreground font-medium"
+                          >
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Competitors Being Tracked — sourced from analyticsData */}
                   <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
                     <div>
                       <h2 className="text-base font-semibold text-foreground">Competitors Being Tracked</h2>
