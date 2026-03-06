@@ -1,0 +1,748 @@
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Building2,
+  History,
+  User,
+  Globe,
+  X,
+  Plus,
+  Loader2,
+  Download,
+  Sparkles,
+  Trash2,
+  Upload,
+  AlertTriangle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Layout } from "@/components/Layout";
+import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/hooks/use-toast";
+import { getAnalyticsList, type AnalyticsListItem } from "@/apiHelpers";
+import { getSecureProductId, getSecureKeywords } from "@/lib/secureStorage";
+import { PLAN_LIMITS, type PricingPlanName, checkJourneyAccess, getRoleName } from "@/lib/plans";
+import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
+
+// ─── Types ────────────────────────────────────────────────────────────────
+type SettingsTab = "company" | "history" | "account";
+
+interface Competitor {
+  id: string;
+  name: string;
+}
+
+interface AIModel {
+  id: string;
+  name: string;
+  icon: string;
+  enabled: boolean;
+  allowedByPlan: boolean;
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  }),
+};
+
+// ─── Avatar color helper ──────────────────────────────────────────────────
+const AVATAR_COLORS = [
+  "bg-destructive",
+  "bg-primary",
+  "bg-success",
+  "bg-warning",
+  "bg-[hsl(258_90%_66%)]",
+  "bg-[hsl(330_80%_55%)]",
+];
+const getAvatarColor = (name: string) => {
+  const idx = name.charCodeAt(0) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[idx];
+};
+
+// ─── Model definitions ────────────────────────────────────────────────────
+const ALL_MODELS: { id: string; name: string; icon: string }[] = [
+  { id: "openai", name: "ChatGPT", icon: "🤖" },
+  { id: "google-ai", name: "Google AI Mode", icon: "G" },
+  { id: "gemini", name: "Gemini", icon: "✦" },
+  { id: "anthropic", name: "Claude", icon: "◆" },
+  { id: "perplexity", name: "Perplexity", icon: "⊛" },
+];
+
+// ─── Tier helper ──────────────────────────────────────────────────────────
+const getTierFromScore = (score: number): { label: string; color: string } => {
+  if (score >= 70) return { label: "High", color: "bg-success/10 text-success border-success/20" };
+  if (score >= 40) return { label: "Medium", color: "bg-warning/10 text-warning border-warning/20" };
+  return { label: "Low", color: "bg-destructive/10 text-destructive border-destructive/20" };
+};
+
+export default function Settings() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, products, applications, pricingPlan, userRoleInt, planInt, planExpiresAt, collaborators, logout } = useAuth();
+  const { toast } = useToast();
+
+  const [activeTab, setActiveTab] = useState<SettingsTab>("company");
+
+  // Company & Tracking state
+  const product = products?.[0];
+  const application = applications?.[0];
+  const [companyName, setCompanyName] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [aboutCompany, setAboutCompany] = useState("");
+  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [newCompetitor, setNewCompetitor] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // AI Models state
+  const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
+  const [aiModels, setAiModels] = useState<AIModel[]>([]);
+
+  // Analysis Run History state
+  const [analyticsList, setAnalyticsList] = useState<AnalyticsListItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Account state
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Permissions
+  const canEdit = userRoleInt <= 3; // god, admin, application, editor
+  const isAdmin = userRoleInt <= 1;
+  const canExport = checkJourneyAccess("report:export", userRoleInt, planInt, planExpiresAt).allowed;
+
+  // Initialize data from auth context
+  useEffect(() => {
+    if (product) {
+      setCompanyName(product.name || "");
+      setWebsiteUrl(product.website || "");
+      setIndustry(product.business_domain || "");
+      setAboutCompany(product.description || "");
+    } else if (application) {
+      setCompanyName(application.company_name || "");
+    }
+
+    if (user) {
+      setFullName(`${user.first_name} ${user.last_name}`.trim());
+      setEmail(user.email || "");
+    }
+  }, [product, application, user]);
+
+  // Initialize AI models based on plan
+  useEffect(() => {
+    const models = ALL_MODELS.map((m) => ({
+      ...m,
+      enabled: planLimits.allowedModels.includes(m.id),
+      allowedByPlan: planLimits.allowedModels.includes(m.id),
+    }));
+    setAiModels(models);
+  }, [pricingPlan]);
+
+  // Load analytics history
+  useEffect(() => {
+    const loadHistory = async () => {
+      const productId = getSecureProductId();
+      if (!productId) return;
+      setIsLoadingHistory(true);
+      try {
+        const maxHistory = planLimits.maxAnalyticsHistory;
+        const data = await getAnalyticsList(productId, maxHistory);
+        setAnalyticsList(data.analytics || []);
+      } catch {
+        // silent
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+    if (activeTab === "history") loadHistory();
+  }, [activeTab]);
+
+  // Mock competitors from keywords (in a real app these come from API)
+  useEffect(() => {
+    const keywords = getSecureKeywords();
+    // For now, initialize empty - would come from product API
+    if (competitors.length === 0 && product) {
+      // Placeholder
+    }
+  }, [product]);
+
+  const handleSaveCompany = async () => {
+    setIsSaving(true);
+    // In a real implementation, this would call an API endpoint
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({ title: "Changes saved", description: "Company details updated successfully." });
+    }, 800);
+  };
+
+  const handleSaveAccount = async () => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({ title: "Changes saved", description: "Account details updated." });
+    }, 800);
+  };
+
+  const addCompetitor = () => {
+    const trimmed = newCompetitor.trim();
+    if (!trimmed) return;
+    if (competitors.length >= planLimits.maxCompetitors) {
+      toast({ title: "Limit reached", description: `Your plan allows up to ${planLimits.maxCompetitors} competitors.`, variant: "destructive" });
+      return;
+    }
+    if (competitors.find((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast({ title: "Already exists", description: "This competitor is already being tracked.", variant: "destructive" });
+      return;
+    }
+    setCompetitors([...competitors, { id: Date.now().toString(), name: trimmed }]);
+    setNewCompetitor("");
+  };
+
+  const removeCompetitor = (id: string) => {
+    setCompetitors(competitors.filter((c) => c.id !== id));
+  };
+
+  const toggleModel = (modelId: string) => {
+    setAiModels((prev) =>
+      prev.map((m) => {
+        if (m.id !== modelId) return m;
+        if (!m.allowedByPlan) {
+          toast({ title: "Upgrade required", description: "This model is not available on your current plan.", variant: "destructive" });
+          return m;
+        }
+        return { ...m, enabled: !m.enabled };
+      })
+    );
+  };
+
+  const handleBack = () => {
+    const from = location.state?.from;
+    const loopPages = ["/settings", "/billing", "/invite"];
+    if (from && !loopPages.includes(from)) {
+      navigate(from);
+    } else {
+      const hasProduct = products && products.length > 0;
+      navigate(hasProduct ? "/results" : "/input");
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    setDeleteDialogOpen(false);
+    logout();
+    navigate("/");
+    toast({ title: "Account deleted", description: "Your account has been permanently removed.", variant: "destructive" });
+  };
+
+  const tabs: { key: SettingsTab; label: string; icon: React.ReactNode }[] = [
+    { key: "company", label: "Company & Tracking", icon: <Building2 className="w-4 h-4" /> },
+    { key: "history", label: "Analysis Run History", icon: <History className="w-4 h-4" /> },
+    { key: "account", label: "Account", icon: <User className="w-4 h-4" /> },
+  ];
+
+  return (
+    <Layout>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
+          {/* Back Button */}
+          <motion.button
+            onClick={handleBack}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-border bg-card shadow-sm text-muted-foreground hover:border-primary/40 hover:text-primary hover:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-200"
+          >
+            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5 duration-200" />
+            <span className="text-sm font-semibold">Back</span>
+          </motion.button>
+
+          {/* Page Layout: Sidebar + Content */}
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Sidebar */}
+            <motion.aside
+              custom={0}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="w-full md:w-56 flex-shrink-0"
+            >
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                Settings
+              </p>
+              <nav className="space-y-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left ${
+                      activeTab === tab.key
+                        ? "text-primary bg-primary/5 border-l-2 border-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+            </motion.aside>
+
+            {/* Content */}
+            <motion.div
+              key={activeTab}
+              custom={1}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="flex-1 min-w-0"
+            >
+              {/* ════════════════════ COMPANY & TRACKING ════════════════════ */}
+              {activeTab === "company" && (
+                <div className="space-y-6">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                      Company & Tracking
+                    </h1>
+                    <p className="text-muted-foreground mt-1">
+                      Manage your company profile and what's being tracked
+                    </p>
+                  </div>
+
+                  {/* Company Details */}
+                  <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-5">
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground">Company Details</h2>
+                      <p className="text-sm text-muted-foreground">Basic information about your company</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Company Name
+                        </Label>
+                        <Input
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          disabled={!canEdit}
+                          className="bg-background"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Website URL
+                        </Label>
+                        <Input
+                          value={websiteUrl}
+                          onChange={(e) => setWebsiteUrl(e.target.value)}
+                          disabled={!canEdit}
+                          className="bg-background"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Industry
+                      </Label>
+                      <Input
+                        value={industry}
+                        onChange={(e) => setIndustry(e.target.value)}
+                        disabled={!canEdit}
+                        className="bg-background"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        About Company
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Used by AI to better understand your brand context
+                      </p>
+                      <Textarea
+                        value={aboutCompany}
+                        onChange={(e) => setAboutCompany(e.target.value.slice(0, 500))}
+                        disabled={!canEdit}
+                        rows={4}
+                        className="bg-background resize-y"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {aboutCompany.length} / 500 characters
+                      </p>
+                    </div>
+
+                    {canEdit && (
+                      <Button onClick={handleSaveCompany} disabled={isSaving}>
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        Save Changes
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Competitors Being Tracked */}
+                  <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground">Competitors Being Tracked</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {competitors.length} competitor{competitors.length !== 1 ? "s" : ""} · Max {planLimits.maxCompetitors} on your plan
+                      </p>
+                    </div>
+
+                    {competitors.length > 0 && (
+                      <div className="space-y-2">
+                        {competitors.map((comp) => (
+                          <div
+                            key={comp.id}
+                            className="flex items-center justify-between py-2.5 px-3 rounded-lg border border-border bg-background"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground ${getAvatarColor(comp.name)}`}
+                              >
+                                {comp.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="text-sm font-medium text-foreground">{comp.name}</span>
+                            </div>
+                            {canEdit && (
+                              <button
+                                onClick={() => removeCompetitor(comp.id)}
+                                className="text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {canEdit && competitors.length < planLimits.maxCompetitors && (
+                      <button
+                        onClick={() => {
+                          const name = prompt("Enter competitor name:");
+                          if (name?.trim()) {
+                            setNewCompetitor(name.trim());
+                            setTimeout(() => addCompetitor(), 0);
+                          }
+                        }}
+                        className="w-full py-3 border-2 border-dashed border-border rounded-xl text-sm font-medium text-primary hover:border-primary/40 hover:bg-primary/5 transition-all"
+                      >
+                        <Plus className="w-4 h-4 inline mr-1.5" />
+                        Add Competitor
+                      </button>
+                    )}
+
+                    {competitors.length >= planLimits.maxCompetitors && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        Competitor limit reached.{" "}
+                        <button
+                          onClick={() => navigate("/billing")}
+                          className="text-primary hover:underline"
+                        >
+                          Upgrade plan
+                        </button>{" "}
+                        to add more.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* AI Models Tracked */}
+                  <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground">AI Models Tracked</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Toggle which models are included in analysis
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      {aiModels.map((model) => (
+                        <div
+                          key={model.id}
+                          className={`flex items-center justify-between py-3 px-3 rounded-lg border border-border bg-background ${
+                            !model.allowedByPlan ? "opacity-50" : ""
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-sm">
+                              {model.icon}
+                            </span>
+                            <div>
+                              <span className="text-sm font-medium text-foreground">{model.name}</span>
+                              {!model.allowedByPlan && (
+                                <p className="text-xs text-muted-foreground">Upgrade to unlock</p>
+                              )}
+                            </div>
+                          </div>
+                          <Switch
+                            checked={model.enabled}
+                            onCheckedChange={() => toggleModel(model.id)}
+                            disabled={!canEdit || !model.allowedByPlan}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ════════════════════ ANALYSIS RUN HISTORY ════════════════════ */}
+              {activeTab === "history" && (
+                <div className="space-y-6">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                      Analysis Run History
+                    </h1>
+                    <p className="text-muted-foreground mt-1">
+                      All past analysis runs with scores and downloadable reports
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                    {isLoadingHistory ? (
+                      <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      </div>
+                    ) : analyticsList.length === 0 ? (
+                      <div className="text-center py-20 px-6">
+                        <History className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+                        <p className="text-sm font-medium text-foreground">No analysis runs yet</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Run your first analysis to see results here
+                        </p>
+                        <Button
+                          size="sm"
+                          className="mt-4"
+                          onClick={() => navigate("/input")}
+                        >
+                          <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                          Run Analysis
+                        </Button>
+                      </div>
+                    ) : (
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/30">
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              Date of Run
+                            </th>
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              Analytics ID
+                            </th>
+                            <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              Report
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analyticsList.map((item, idx) => (
+                            <tr
+                              key={item.analytics_id}
+                              className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
+                              onClick={() => navigate(`/results?analytics_id=${item.analytics_id}`)}
+                            >
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground">
+                                      {formatShortDate(item.created_at)}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatLocalDate(item.created_at, "h:mm a")}
+                                    </p>
+                                  </div>
+                                  {idx === 0 && (
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success border-success/20">
+                                      Latest
+                                    </Badge>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="text-xs text-muted-foreground font-mono">
+                                  {item.analytics_id.slice(0, 8)}…
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                {canExport ? (
+                                  <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                                    <Download className="w-3.5 h-3.5 mr-1.5" />
+                                    Download
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toast({
+                                        title: "Upgrade required",
+                                        description: "Report export requires the Grow plan or higher.",
+                                        variant: "destructive",
+                                      });
+                                    }}
+                                  >
+                                    <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                                    Generate Report
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  {analyticsList.length > 0 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Showing last {planLimits.maxAnalyticsHistory} runs ·{" "}
+                      <button
+                        onClick={() => navigate("/billing")}
+                        className="text-primary hover:underline"
+                      >
+                        Upgrade for more history
+                      </button>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* ════════════════════ ACCOUNT ════════════════════ */}
+              {activeTab === "account" && (
+                <div className="space-y-6">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground">Account</h1>
+                    <p className="text-muted-foreground mt-1">
+                      Manage your personal account details
+                    </p>
+                  </div>
+
+                  {/* Contact Details */}
+                  <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-5">
+                    <h2 className="text-base font-semibold text-foreground">Contact Details</h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Full Name
+                        </Label>
+                        <Input
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="bg-background"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Email Address
+                        </Label>
+                        <Input
+                          value={email}
+                          disabled
+                          className="bg-muted/30"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Role
+                      </Label>
+                      <Input
+                        value={getRoleName(userRoleInt).charAt(0).toUpperCase() + getRoleName(userRoleInt).slice(1)}
+                        disabled
+                        className="bg-muted/30 max-w-xs"
+                      />
+                    </div>
+
+                    <Button onClick={handleSaveAccount} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Save Changes
+                    </Button>
+                  </div>
+
+                  {/* Company Logo */}
+                  <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
+                    <h2 className="text-base font-semibold text-foreground">Company Logo</h2>
+                    <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
+                      <Upload className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+                      <p className="text-sm font-medium text-foreground">Upload your company logo</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PNG, SVG — shown in exported reports
+                      </p>
+                      <Button variant="outline" size="sm" className="mt-4">
+                        Browse Files
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Danger Zone */}
+                  <div className="rounded-2xl border border-destructive/20 bg-card shadow-sm p-6">
+                    <h2 className="text-base font-semibold text-foreground">Danger Zone</h2>
+                    <div className="flex items-center justify-between mt-3">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Delete Account</p>
+                        <p className="text-xs text-muted-foreground">
+                          Permanently remove your account and all data
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-destructive/30 text-destructive hover:bg-destructive/5"
+                        onClick={() => setDeleteDialogOpen(true)}
+                      >
+                        Delete Account
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Account Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Account
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. All your data, analysis history, and settings will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAccount}>
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              Delete Permanently
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </Layout>
+  );
+}
