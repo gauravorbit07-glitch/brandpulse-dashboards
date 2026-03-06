@@ -9,7 +9,7 @@ import {
   hasAnalyticsData,
 } from "@/results/data/analyticsData";
 import { LLMVisibilityTable } from "@/results/overview/LLMVisibilityTable";
-import { PlatformPresence } from "@/results/overview/PlatformPresence";
+import { SourceIntelligence } from "@/results/overview/SourceIntelligence";
 import { CompetitorComparisonChart } from "@/results/overview/CompetitorComparisonChart";
 import { BrandMentionsRadar } from "@/results/overview/BrandMentionsRadar";
 import BrandInfoBar from "@/results/overview/BrandInfoBar";
@@ -39,8 +39,10 @@ import { useNavigate } from "react-router-dom";
 // Parse summary string with ● delimiters into individual points
 const parseSummaryToPoints = (summary: string): string[] => {
   if (!summary) return [];
-  // Split on ● character
-  const parts = summary.split("●").map(s => s.trim().replace(/\.$/, '').trim()).filter(s => s.length > 0);
+  const parts = summary
+    .split(/[•.]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
   return parts;
 };
 
@@ -87,11 +89,13 @@ const OverviewContent = () => {
   const brandMentionRates = useMemo(() => {
     if (!analyticsAvailable) return [];
     const rates = getBrandMentionResponseRates();
-    const allBrandMentions = (getMentionsPosition().allBrandMentions || {}) as Record<string, number>;
-  
+    const allBrandMentions = (getMentionsPosition().allBrandMentions ||
+      {}) as Record<string, number>;
+
     return [...rates].sort((a, b) => {
       // Primary: responseRate descending
-      if (b.responseRate !== a.responseRate) return b.responseRate - a.responseRate;
+      if (b.responseRate !== a.responseRate)
+        return b.responseRate - a.responseRate;
       // Tiebreaker: raw mention count descending (NOT AI visibility)
       const aScore = allBrandMentions[a.brand] ?? 0;
       const bScore = allBrandMentions[b.brand] ?? 0;
@@ -140,15 +144,17 @@ const OverviewContent = () => {
 
   const visibilityInsight = useMemo(() => {
     const { brandPosition, totalBrands } = visibilityData;
-  
+
     if (!brandPosition || brandPosition <= 0 || totalBrands <= 0) return null;
-  
-    const percentileRank = Math.round(((totalBrands - brandPosition) / totalBrands) * 100);
-  
+
+    const percentileRank = Math.round(
+      ((totalBrands - brandPosition) / totalBrands) * 100
+    );
+
     if (brandPosition === 1) {
       return `Your visibility score is higher than ${percentileRank} percent of brands tested for these queries.`;
     }
-  
+
     return `Your visibility score is higher than ${percentileRank} percent of brands tested for these queries.`;
   }, [visibilityData]);
 
@@ -411,22 +417,25 @@ const OverviewContent = () => {
               <span>How AI models perceives your brand</span>
             </div>
             <div className="py-2">
-              <ul className="space-y-2 list-disc pl-5 text-sm text-foreground leading-relaxed">
+              <div className="space-y-2 pl-2 text-sm text-foreground leading-relaxed">
                 {sentiment.summary ? (
-                  parseSummaryToPoints(sentiment.summary).map((point, index) => (
-                    <li
-                      key={`sentiment-${index}`}
-                      className="text-foreground"
-                    >
-                      {point}
-                    </li>
-                  ))
+                  parseSummaryToPoints(sentiment.summary).map(
+                    (point, index) => (
+                      <p
+                        key={`sentiment-${index}`}
+                        className="flex items-start gap-2"
+                      >
+                        <span className="text-foreground">●</span>
+                        <span>{point}</span>
+                      </p>
+                    )
+                  )
                 ) : (
-                  <li className="text-muted-foreground">
+                  <p className="text-muted-foreground">
                     No sentiment data available
-                  </li>
+                  </p>
                 )}
-              </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -440,7 +449,7 @@ const OverviewContent = () => {
         {/* Tables */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <LLMVisibilityTable />
-          <PlatformPresence />
+          <SourceIntelligence />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">

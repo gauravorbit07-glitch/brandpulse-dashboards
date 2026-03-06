@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   Zap,
+  X,
   CreditCard,
   Receipt,
   Package,
@@ -52,59 +53,72 @@ type PlanState = "trial" | "active" | "expiring";
 const plans = [
   {
     name: "Launch",
+    planKey: "launch" as PricingPlanName,
     monthlyPrice: 49,
     quarterlyPrice: 41,
     description: "Perfect for getting started",
     icon: "🚀",
     features: [
-      "3 Seed Prompts",
-      "Up to 25 AI Prompts Tracked",
-      "ChatGPT only",
-      "3 Competitors",
-      "10 conversations/day/user",
-      "1 Seat",
-      "Run every 48 hours",
-      "Last 2 Runs Analytics",
-      "Email Support",
+      { label: "Seed Prompts", value: "3" },
+      { label: "Overall AI Prompts Tracked", value: "Up to 25" },
+      { label: "LLMs Tracked", value: "ChatGPT" },
+      { label: "Competitors Tracked", value: "3" },
+      { label: "GEO Agent Intelligence", value: "10 conversations/day/user", sub: "Additional Conv @ $0.01/conv" },
+      { label: "Seats", value: "1" },
+      { label: "Prompt Run", value: "1 Run every 48 hours" },
+      { label: "Report Export", value: "—", disabled: true },
+      { label: "Integrations", value: "Google Analytics, GSC", sub: "* Coming Soon" },
+      { label: "Support", value: "Email" },
+      { label: "Dedicated Account Manager", value: "—", disabled: true },
+      { label: "Analytics History", value: "Last 2 Runs" },
+      { label: "Dedicated GEO Specialist", value: "—", disabled: true },
     ],
   },
   {
     name: "Grow",
+    planKey: "grow" as PricingPlanName,
     monthlyPrice: 159,
     quarterlyPrice: 129,
     popular: true,
     description: "For growing teams & brands",
     icon: "⚡",
     features: [
-      "Up to 6 Seed Prompts",
-      "Up to 50 AI Prompts Tracked",
-      "ChatGPT, Google AI Mode, Perplexity*",
-      "5 Competitors",
-      "20 conversations/day/user",
-      "3 Seats",
-      "Run every 24 hours",
-      "Last 5 Runs Analytics",
-      "Report Export",
-      "Email & Slack Support",
+      { label: "Seed Prompts", value: "Up to 6" },
+      { label: "Overall AI Prompts Tracked", value: "Up to 50" },
+      { label: "LLMs Tracked", value: "ChatGPT, Google AI Mode, Perplexity*" },
+      { label: "Competitors Tracked", value: "5" },
+      { label: "GEO Agent Intelligence", value: "20 conversations/day/user", sub: "Additional Conv @ $0.01/conv" },
+      { label: "Seats", value: "3" },
+      { label: "Prompt Run", value: "1 Run every 24 hours" },
+      { label: "Report Export", value: "Yes" },
+      { label: "Integrations", value: "Google Analytics, GSC", sub: "* Coming Soon" },
+      { label: "Support", value: "Email, Slack" },
+      { label: "Dedicated Account Manager", value: "—", disabled: true },
+      { label: "Analytics History", value: "Last 5 Runs" },
+      { label: "Dedicated GEO Specialist", value: "—", disabled: true },
     ],
   },
   {
     name: "Enterprise",
+    planKey: "enterprise" as PricingPlanName,
     monthlyPrice: null,
     quarterlyPrice: null,
     description: "Custom everything, dedicated team",
     icon: "🏢",
     features: [
-      "Custom Seed Prompts",
-      "Custom AI Prompts Tracked",
-      "ChatGPT, Google AI Mode, Perplexity*",
-      "Custom Competitors",
-      "Custom GEO Agent Intelligence",
-      "Custom Seats",
-      "Custom Analytics History",
-      "Report Export",
-      "Dedicated Account Manager",
-      "Dedicated GEO Specialist",
+      { label: "Seed Prompts", value: "Custom" },
+      { label: "Overall AI Prompts Tracked", value: "Custom" },
+      { label: "LLMs Tracked", value: "ChatGPT, Google AI Mode, Perplexity*" },
+      { label: "Competitors Tracked", value: "Custom" },
+      { label: "GEO Agent Intelligence", value: "Custom" },
+      { label: "Seats", value: "Custom" },
+      { label: "Prompt Run", value: "Custom" },
+      { label: "Report Export", value: "Yes" },
+      { label: "Integrations", value: "Google Analytics, GSC", sub: "* Coming Soon" },
+      { label: "Support", value: "Email, Slack" },
+      { label: "Dedicated Account Manager", value: "Yes" },
+      { label: "Analytics History", value: "Custom" },
+      { label: "Dedicated GEO Specialist", value: "Yes" },
     ],
   },
 ];
@@ -143,7 +157,7 @@ const invoices = [
 const Billing = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, pricingPlan, planExpiresAt, planInt } = useAuth();
+  const { products, pricingPlan, planExpiresAt, planInt, userRoleInt } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">(
     "monthly"
   );
@@ -151,9 +165,13 @@ const Billing = () => {
   const [checkoutPlan, setCheckoutPlan] = useState("");
   const [checkoutPrice, setCheckoutPrice] = useState("");
   const [successOpen, setSuccessOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("plans");
 
-  // Determine trial duration: free = 7 days, paid plans = 14 days
-  const trialDurationDays = pricingPlan === "free" ? 7 : 14;
+  // Check if user is admin (role check for billing access)
+  const isAdmin = userRoleInt <= 1; // god(0) or admin(1)
+
+  // Determine trial duration: free = 7 days, paid plans = 7 days
+  const trialDurationDays = pricingPlan === "free" ? 7 : 7;
 
   // Compute plan expiry info from JWT epoch
   const expiryInfo = useMemo(() => {
@@ -161,11 +179,11 @@ const Billing = () => {
     return getPlanExpiryInfo(planExpiresAt, trialDurationDays);
   }, [planExpiresAt, trialDurationDays]);
 
-  // Dynamic plan state
+  // Dynamic plan state — only "free" is a trial; launch/grow/enterprise are proper plans
   const planState: PlanState = useMemo(() => {
-    if (!expiryInfo) return "trial";
+    if (!expiryInfo) return pricingPlan === "free" ? "trial" : "active";
     if (expiryInfo.isExpired) return "expiring";
-    if (pricingPlan === "free" || pricingPlan === "launch") return "trial";
+    if (pricingPlan === "free") return "trial";
     return "active";
   }, [expiryInfo, pricingPlan]);
 
@@ -238,7 +256,7 @@ const Billing = () => {
             </p>
           </motion.div>
 
-          {/* ── Trial Banner ── */}
+          {/* ── Trial Banner (Free plan only) ── */}
           {planState === "trial" && expiryInfo && (
             <motion.div
               custom={1}
@@ -251,7 +269,6 @@ const Billing = () => {
                   "var(--gradient-hero-reverse)",
               }}
             >
-              {/* Decorative circles */}
               <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5" />
               <div className="absolute -right-4 top-6 w-24 h-24 rounded-full bg-white/5" />
 
@@ -261,9 +278,9 @@ const Billing = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-white text-sm">
-                    {pricingPlan === "free" ? "Free trial" : `${currentPlan} trial`} active — {expiryInfo.daysRemaining} day{expiryInfo.daysRemaining !== 1 ? 's' : ''} remaining
+                    Free trial active — {expiryInfo.daysRemaining} day{expiryInfo.daysRemaining !== 1 ? 's' : ''} remaining
                   </p>
-                  <p className="text-blue-100 text-xs mt-0.5">
+                  <p className="text-white/70 text-xs mt-0.5">
                     {expiryInfo.trialDaysUsed} of {expiryInfo.trialDurationDays} days used · Expires {formatShortDate(expiryInfo.expiryDate)}
                   </p>
                   <div className="mt-3 flex items-center gap-3">
@@ -273,7 +290,7 @@ const Billing = () => {
                         style={{ width: `${expiryInfo.trialProgress}%` }}
                       />
                     </div>
-                    <span className="text-xs text-blue-100 font-medium">
+                    <span className="text-xs text-white/70 font-medium">
                       {expiryInfo.trialProgress}%
                     </span>
                   </div>
@@ -281,10 +298,51 @@ const Billing = () => {
               </div>
               <Button
                 size="sm"
-                className="relative z-10 bg-white text-blue-700 hover:bg-blue-50 font-semibold shadow-sm border-0 flex-shrink-0"
+                className="relative z-10 bg-white text-primary hover:bg-white/90 font-semibold shadow-sm border-0 flex-shrink-0"
+                onClick={() => setActiveTab("plans")}
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 Upgrade Now
+              </Button>
+            </motion.div>
+          )}
+
+          {/* ── Active Plan Banner (Launch, Grow, Enterprise) ── */}
+          {planState === "active" && expiryInfo && (
+            <motion.div
+              custom={1}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              style={{
+                background:
+                  "var(--gradient-hero-reverse)",
+              }}
+            >
+              <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5" />
+              <div className="absolute -right-4 top-6 w-24 h-24 rounded-full bg-white/5" />
+
+              <div className="relative flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white text-sm">
+                    {currentPlan} plan active — {expiryInfo.daysRemaining} day{expiryInfo.daysRemaining !== 1 ? 's' : ''} remaining
+                  </p>
+                  <p className="text-white/70 text-xs mt-0.5">
+                    Renews {formatShortDate(expiryInfo.expiryDate)}
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="relative z-10 bg-white text-primary hover:bg-white/90 font-semibold shadow-sm border-0 flex-shrink-0"
+                onClick={() => setActiveTab("plans")}
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                Manage Plan
               </Button>
             </motion.div>
           )}
@@ -321,6 +379,7 @@ const Billing = () => {
                 size="sm"
                 variant="outline"
                 className="border-amber-300 text-amber-800 hover:bg-amber-100"
+                onClick={() => setActiveTab("plans")}
               >
                 Renew Plan
               </Button>
@@ -328,7 +387,7 @@ const Billing = () => {
           )}
 
           {/* ── Tabs ── */}
-          <Tabs defaultValue="plans" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-muted/80 border border-border h-11 p-1 mb-8 rounded-xl">
               <TabsTrigger
                 value="plans"
@@ -365,7 +424,7 @@ const Billing = () => {
                     Choose a Plan
                   </h3>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    All plans include a 14-day free trial
+                    All plans include a 7-day free trial
                   </p>
                 </div>
                 <div className="flex items-center bg-muted border border-border rounded-full p-1 gap-0.5">
@@ -553,26 +612,38 @@ const Billing = () => {
                         <div className="border-t border-gray-100 mb-4" />
 
                         {/* Features — grow to fill remaining space */}
-                        <ul className="space-y-2.5 flex-1">
+                        <ul className="space-y-2 flex-1">
                           {plan.features.map((f) => (
                             <li
-                              key={f}
-                              className="flex items-start gap-2.5 text-sm"
+                              key={f.label}
+                              className={`flex items-start gap-2.5 text-sm ${f.disabled ? "opacity-50" : ""}`}
                             >
                               <span
                                 className={`flex-shrink-0 w-4 h-4 mt-0.5 rounded-full flex items-center justify-center ${
-                               isPopular ? "bg-primary/10" : "bg-success/10"
+                                  f.disabled
+                                    ? "bg-muted"
+                                    : isPopular ? "bg-primary/10" : "bg-success/10"
                                 }`}
                               >
-                                <Check
-                                  className={`w-2.5 h-2.5 ${
-                                    isPopular
-                                      ? "text-primary"
-                                      : "text-success"
-                                  }`}
-                                />
+                                {f.disabled ? (
+                                  <X className="w-2.5 h-2.5 text-muted-foreground" />
+                                ) : (
+                                  <Check
+                                    className={`w-2.5 h-2.5 ${
+                                      isPopular ? "text-primary" : "text-success"
+                                    }`}
+                                  />
+                                )}
                               </span>
-                              <span className="text-muted-foreground">{f}</span>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  <span className="font-medium text-foreground/80">{f.label}:</span>{" "}
+                                  {f.value}
+                                </span>
+                                {f.sub && (
+                                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">{f.sub}</p>
+                                )}
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -718,7 +789,10 @@ const Billing = () => {
                   </div>
 
                   <div className="flex gap-2 pt-1">
-                    <button className="px-4 py-2 rounded-xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted transition-all">
+                    <button 
+                      onClick={() => setActiveTab("plans")}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted transition-all"
+                    >
                       ⬆ Change Plan
                     </button>
                     <button className="px-4 py-2 rounded-xl text-sm font-semibold bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive/20 transition-all">

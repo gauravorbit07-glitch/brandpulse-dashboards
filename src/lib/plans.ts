@@ -54,66 +54,103 @@ export const ROLE_LABELS: Record<UserRoleName, string> = {
 // ─── Plan Limits ───────────────────────────────────────────────────────────
 
 export interface PlanLimits {
-  maxKeywords: number;
-  allowedModels: string[];
-  maxConversationsPerDay: number;
-  overageChargeUSD: number;
-  maxUsers: number;
-  analyticsCooldownHrs: number;
-  canExportReport: boolean;
-  maxAnalyticsHistory: number;
+  maxKeywords: number;              // Seed Prompts
+  maxAIPrompts: number;             // Overall AI Prompts Tracked
+  allowedModels: string[];          // LLMs Tracked
+  maxCompetitors: number;           // Competitors Tracked
+  maxConversationsPerDay: number;   // GEO Agent Intelligence (per user)
+  overageChargeUSD: number;         // Additional conv charge
+  maxUsers: number;                 // Seats
+  analyticsCooldownHrs: number;     // Prompt Run cooldown
+  canExportReport: boolean;         // Report Export
+  maxAnalyticsHistory: number;      // Analytics History (last N runs)
+  supportChannels: string[];        // Support channels
+  hasDedicatedAccountManager: boolean;
+  hasDedicatedGEOSpecialist: boolean;
+  hasIntegrations: boolean;         // Google Analytics, GSC (coming soon)
 }
 
 export const PLAN_LIMITS: Record<PricingPlanName, PlanLimits> = {
   free: {
+    // Free trial = same features as Launch
     maxKeywords: 3,
+    maxAIPrompts: 25,
     allowedModels: ["openai"],
+    maxCompetitors: 3,
     maxConversationsPerDay: 10,
     overageChargeUSD: 0,
     maxUsers: 1,
     analyticsCooldownHrs: 48,
     canExportReport: false,
     maxAnalyticsHistory: 2,
+    supportChannels: ["email"],
+    hasDedicatedAccountManager: false,
+    hasDedicatedGEOSpecialist: false,
+    hasIntegrations: true,
   },
   launch: {
     maxKeywords: 3,
+    maxAIPrompts: 25,
     allowedModels: ["openai"],
+    maxCompetitors: 3,
     maxConversationsPerDay: 10,
     overageChargeUSD: 0.01,
     maxUsers: 1,
     analyticsCooldownHrs: 48,
     canExportReport: false,
     maxAnalyticsHistory: 2,
+    supportChannels: ["email"],
+    hasDedicatedAccountManager: false,
+    hasDedicatedGEOSpecialist: false,
+    hasIntegrations: true,
   },
   grow: {
     maxKeywords: 6,
+    maxAIPrompts: 50,
     allowedModels: ["openai", "google-ai", "perplexity"],
+    maxCompetitors: 5,
     maxConversationsPerDay: 20,
     overageChargeUSD: 0.01,
     maxUsers: 3,
     analyticsCooldownHrs: 24,
     canExportReport: true,
     maxAnalyticsHistory: 5,
+    supportChannels: ["email", "slack"],
+    hasDedicatedAccountManager: false,
+    hasDedicatedGEOSpecialist: false,
+    hasIntegrations: true,
   },
   enterprise: {
     maxKeywords: 100,
-    allowedModels: ["openai", "anthropic", "google-ai", "perplexity", "gemini"],
-    maxConversationsPerDay: 1000,
-    overageChargeUSD: 0.01,
-    maxUsers: 50,
-    analyticsCooldownHrs: 1,
-    canExportReport: true,
-    maxAnalyticsHistory: 100,
-  },
-  agency: {
-    maxKeywords: 100,
-    allowedModels: ["openai", "anthropic", "google-ai", "perplexity", "gemini"],
+    maxAIPrompts: 1000,
+    allowedModels: ["openai", "google-ai", "perplexity"],
+    maxCompetitors: 100,
     maxConversationsPerDay: 1000,
     overageChargeUSD: 0.01,
     maxUsers: 100,
     analyticsCooldownHrs: 1,
     canExportReport: true,
     maxAnalyticsHistory: 100,
+    supportChannels: ["email", "slack"],
+    hasDedicatedAccountManager: true,
+    hasDedicatedGEOSpecialist: true,
+    hasIntegrations: true,
+  },
+  agency: {
+    maxKeywords: 100,
+    maxAIPrompts: 1000,
+    allowedModels: ["openai", "anthropic", "google-ai", "perplexity", "gemini"],
+    maxCompetitors: 100,
+    maxConversationsPerDay: 1000,
+    overageChargeUSD: 0.01,
+    maxUsers: 100,
+    analyticsCooldownHrs: 1,
+    canExportReport: true,
+    maxAnalyticsHistory: 100,
+    supportChannels: ["email", "slack"],
+    hasDedicatedAccountManager: true,
+    hasDedicatedGEOSpecialist: true,
+    hasIntegrations: true,
   },
 };
 

@@ -235,6 +235,12 @@ export const getSourcesData = (): Record<string, any> => {
   return analytics?.sources_and_content_impact || {};
 };
 
+// Get source impact ranked (preferred for Source Intelligence UI)
+export const getSourceImpactRanked = (): Record<string, any> => {
+  const analytics = getAnalytics();
+  return analytics?.source_impact_ranked || {};
+};
+
 // Get depth notes from sources
 export const getDepthNotes = (): Array<{ source: string; notes: string[] }> => {
   const sourcesData = getSourcesData();

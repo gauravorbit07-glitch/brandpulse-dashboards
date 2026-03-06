@@ -38,6 +38,8 @@ export const API_ENDPOINTS = {
     `${BASE_URL}/api/v1/products/chatbot/history/${productId}?limit=${limit}`,
   sendChatMessage: (productId: string) =>
     `${BASE_URL}/api/v1/products/chatbot/${productId}`,
+  clearChatbotCache: (productId: string) =>
+    `${BASE_URL}/api/v1/products/chatbot/${productId}/cache`,
 
   // Dashboard
   dashboardUsers: `${BASE_URL}/api/v1/dashboard/users`,

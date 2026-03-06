@@ -10,6 +10,7 @@ import { ContentImpact } from "@/components/ContentImpact";
 import { Recommendations } from "@/components/Recommendations";
 import { QueryAnalysis } from "@/components/QueryAnalysis";
 import { ChatSidebar } from "@/components/ChatSidebar";
+import { ChatSidebarWhenOpen } from "@/components/ChatSidebarWhenOpen";
 import { Search } from "lucide-react";
 import { regenerateAnalysis, getProductAnalytics } from "@/apiHelpers";
 import {
@@ -20,6 +21,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { ChatCacheClearTrigger } from "@/hooks/useChatCacheClear";
 import { MessageSquare, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -1038,9 +1040,13 @@ export default function Results() {
         } as React.CSSProperties
       }
     >
+      <ChatCacheClearTrigger
+        productId={resultsData.product.id}
+        isMobileChatOpen={isMobileChatOpen}
+      />
       <Sidebar side="left" collapsible="offcanvas" className="no-print hidden md:flex">
         <SidebarContent>
-          <ChatSidebar productId={resultsData.product.id} />
+          <ChatSidebarWhenOpen productId={resultsData.product.id} />
         </SidebarContent>
       </Sidebar>
 

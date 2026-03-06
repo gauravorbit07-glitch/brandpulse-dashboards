@@ -42,9 +42,9 @@ const quickActions = [
   "What content should I focus on?",
   "How can I improve my rankings?",
   "What are my brand's weaknesses?",
-  "Explain my sentiment analysis",
-  "Which sources are most influential?",
-  "What's my brand tier ranking?",
+  "How have I trended over my last few runs?",
+  "What's changed in my visibility lately?",
+  "Compare my recent runs",
   "How do I compare to industry leaders?"
 ];
 
@@ -69,7 +69,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ productId, className, 
         if (historyMessages.length === 0) {
           const welcomeMessage: ChatMessage = {
             id: 'welcome-message',
-            content: "👋 **Welcome to Geo AI.**\n\n&nbsp;\n\nI help you understand how your brand appears across AI search.\n\n&nbsp;\n\n🔍 Ask me to **check your visibility**, **audit citations**, or **compare competitors**.",
+            content: "👋 **Welcome to Geo AI.**\n\n&nbsp;\n\nI help you understand how your brand appears across AI search. **I also use your past runs**—so you can ask about trends, changes, or how you're doing over time.\n\n&nbsp;\n\n🔍 Ask me to **check your visibility**, **audit citations**, or **compare competitors**.",
             role: 'assistant',
             timestamp: new Date().toISOString()
           };

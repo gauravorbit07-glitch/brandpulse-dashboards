@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { isAnalyticsGenerationBlocked, getTimeUntilNextAnalytics } from "@/lib/plans";
+import { checkJourneyAccess } from "@/lib/plans";
 import {
   Menu,
   X,
@@ -14,6 +14,7 @@ import {
   ChevronDown,
   CreditCard,
   MailPlus,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
@@ -23,6 +24,7 @@ import { regenerateAnalysis } from "@/apiHelpers";
 import { useToast } from "@/hooks/use-toast";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
 import { getSecureProductId } from "@/lib/secureStorage";
+import { isAnalyticsGenerationBlocked, getTimeUntilNextAnalytics } from "@/lib/plans";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -149,7 +151,7 @@ export const Header = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, products } = useAuth();
+  const { user, logout, products, userRoleInt, planInt, planExpiresAt } = useAuth();
   const { toast } = useToast();
   const {
     setActiveTab,
@@ -193,8 +195,14 @@ export const Header = () => {
   const isCooldownBlocked = isAnalyticsGenerationBlocked(nextAnalyticsGenerationTime);
   const cooldownTimeLeft = getTimeUntilNextAnalytics(nextAnalyticsGenerationTime);
 
+  // Journey-based access checks
+  const canGenerateAnalytics = checkJourneyAccess("analytics:generate", userRoleInt, planInt, planExpiresAt).allowed;
+  const canExportReport = checkJourneyAccess("report:export", userRoleInt, planInt, planExpiresAt).allowed;
+  const canInviteUsers = checkJourneyAccess("admin:invite-user", userRoleInt, planInt, planExpiresAt).allowed;
+  const canManageBilling = checkJourneyAccess("admin:manage-app", userRoleInt, planInt, planExpiresAt).allowed;
+
   const actionsDisabled =
-    isAnalysisInProgress || isRegenerating || analysisLocked || isCooldownBlocked;
+    isAnalysisInProgress || isRegenerating || analysisLocked || isCooldownBlocked || !canGenerateAnalytics;
 
   useEffect(() => {
     const storedProductId = getSecureProductId();
@@ -465,41 +473,49 @@ export const Header = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleGenerateReport}
-                        disabled={isGeneratingReport || isAnalysisInProgress}
+                        disabled={isGeneratingReport || isAnalysisInProgress || !canExportReport}
                         className={cn(
                           "flex items-center space-x-2",
-                          (isGeneratingReport || isAnalysisInProgress) &&
+                          (isGeneratingReport || isAnalysisInProgress || !canExportReport) &&
                             "opacity-60 cursor-not-allowed"
                         )}
                       >
-                        <FileDown
-                          className={cn(
-                            "w-4 h-4",
-                            isGeneratingReport && "animate-pulse"
-                          )}
-                        />
+                        {!canExportReport ? (
+                          <Lock className="w-4 h-4" />
+                        ) : (
+                          <FileDown
+                            className={cn(
+                              "w-4 h-4",
+                              isGeneratingReport && "animate-pulse"
+                            )}
+                          />
+                        )}
                         <span>
-                          {isGeneratingReport
+                          {!canExportReport
+                            ? "Export (Upgrade to Grow)"
+                            : isGeneratingReport
                             ? "Generating..."
                             : "Generate Report"}
                         </span>
                       </DropdownMenuItem>
                     </>
                   )}
-                  {/* <DropdownMenuItem
+                  <DropdownMenuItem
                     onClick={() => navigate("/billing", { state: { from: location.pathname } })}
                     className="flex items-center space-x-2"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>Billing & Plans</span>
-                  </DropdownMenuItem> */}
-                  {/* <DropdownMenuItem
-                        onClick={() => navigate("/invite", { state: { from: location.pathname } })}
-                        className="flex items-center space-x-2"
-                      >
-                        <MailPlus className="w-4 h-4" />
-                        <span>Invite &amp; Users</span>
-                      </DropdownMenuItem> */}
+                  </DropdownMenuItem>
+                  {canInviteUsers && (
+                    <DropdownMenuItem
+                      onClick={() => navigate("/invite", { state: { from: location.pathname } })}
+                      className="flex items-center space-x-2"
+                    >
+                      <MailPlus className="w-4 h-4" />
+                      <span>Invite &amp; Users</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="flex items-center space-x-2 text-destructive focus:text-destructive"

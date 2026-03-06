@@ -19,7 +19,6 @@ import ModelWisePromptsTable from "@/results/components/ModelWisePromptsTable";
 import BrandWisePromptsTable from "@/results/components/BrandWisePromptsTable";
 import CategoriesTable from "@/results/components/CategoriesTable";
 
-// Default empty data constants
 const DEFAULT_BRAND_MENTION = 0;
 
 interface Brand {
@@ -33,14 +32,16 @@ const PromptsContent = () => {
   const brandInfo = getBrandInfoWithLogos();
   const keywordsWithPrompts = getSearchKeywordsWithPrompts();
   const [searchParams] = useSearchParams();
-  // Initialize with all keywords expanded by default
   const [expandedKeywords, setExpandedKeywords] = useState<Set<string>>(new Set());
   const [initialExpandDone, setInitialExpandDone] = useState(false);
   const [viewType, setViewType] = useState<"category" | "model" | "brand">("model");
   const [selectedBrand, setSelectedBrand] = useState("");
   const llmData = getLlmData();
   const categories = ['Discovery', 'Comparison', 'Pricing', 'Use Case', 'Trust'];
-  
+
+  // Lifted up from CategoriesTable — needed so expand/collapse button can control it
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(categories));
+
   // Expand all keywords by default on first load
   useEffect(() => {
     if (!initialExpandDone && keywordsWithPrompts.length > 0) {
@@ -60,20 +61,18 @@ const PromptsContent = () => {
       const allKeywordIds = new Set(keywordsWithPrompts.map((k) => k.id));
       setExpandedKeywords(allKeywordIds);
     }
-    
+
     if (selectedBrandParam) {
       setSelectedBrand(selectedBrandParam);
     }
-    
+
     if (selectedViewTypeParam) {
       setViewType(selectedViewTypeParam as "model" | "category" | "brand");
     }
   }, [searchParams, keywordsWithPrompts.length]);
 
-  // Use all keywords since we're removing search functionality
   const filteredKeywords = keywordsWithPrompts;
 
-  // Collect all prompts from all keywords for category view
   const allPrompts = filteredKeywords.flatMap((keyword) =>
     keyword.prompts.map((prompt) => ({
       ...prompt,
@@ -82,58 +81,41 @@ const PromptsContent = () => {
     }))
   );
 
-  // Get all brands for category view (aggregate across all keywords)
   const getAllBrands = () => {
     const brandToUse = selectedBrand || brandName;
-    
-    // Get all unique brands with their aggregated mentions
     const brandMap = new Map<string, Brand>();
-    
+
     brandInfo.forEach((brand) => {
       const totalMentions = Object.values(brand.mention_breakdown || {}).reduce(
         (sum: number, score: unknown) => sum + (typeof score === 'number' ? score : 0),
         0
       );
-      
       if (totalMentions > 0 || brand.brand === brandToUse) {
-        brandMap.set(brand.brand, {
-          ...brand,
-          mention_breakdown: brand.mention_breakdown || {},
-        });
+        brandMap.set(brand.brand, { ...brand, mention_breakdown: brand.mention_breakdown || {} });
       }
     });
 
-    // Convert to array and sort
     const brandsArray = Array.from(brandMap.values());
-    
-    // Find our brand
     const ourBrandIndex = brandsArray.findIndex((b) => b.brand === brandToUse);
     let ourBrand = null;
-    
+
     if (ourBrandIndex !== -1) {
       ourBrand = brandsArray.splice(ourBrandIndex, 1)[0];
     } else {
       ourBrand = brandInfo.find((b) => b.brand === brandToUse);
     }
 
-    // Sort by total mentions (highest first)
     brandsArray.sort((a, b) => {
       const aTotal = Object.values(a.mention_breakdown || {}).reduce(
-        (sum: number, score: unknown) => sum + (typeof score === 'number' ? score : 0),
-        0
+        (sum: number, score: unknown) => sum + (typeof score === 'number' ? score : 0), 0
       );
       const bTotal = Object.values(b.mention_breakdown || {}).reduce(
-        (sum: number, score: unknown) => sum + (typeof score === 'number' ? score : 0),
-        0
+        (sum: number, score: unknown) => sum + (typeof score === 'number' ? score : 0), 0
       );
       return bTotal - aTotal;
     });
 
-    // Add our brand at the end
-    if (ourBrand) {
-      brandsArray.push(ourBrand);
-    }
-
+    if (ourBrand) brandsArray.push(ourBrand);
     return brandsArray;
   };
 
@@ -142,14 +124,12 @@ const PromptsContent = () => {
     return brand?.logo;
   };
 
-  // Get brand's mention breakdown for a keyword
   const getBrandScoreForKeyword = (keywordId: string) => {
     const brandToUse = selectedBrand || brandName;
     const brand = brandInfo.find((b) => b.brand === brandToUse);
     return brand?.mention_breakdown?.[keywordId] || DEFAULT_BRAND_MENTION;
   };
 
-  // Get top competitor for a keyword
   const getTopCompetitorForKeyword = (keywordId: string) => {
     let topBrand = "";
     let topScore = 0;
@@ -167,13 +147,8 @@ const PromptsContent = () => {
     return { brand: topBrand, score: topScore, logo: topLogo };
   };
 
-  // Calculate total prompts
-  const totalPrompts = keywordsWithPrompts.reduce(
-    (acc, k) => acc + k.prompts.length,
-    0
-  );
+  const totalPrompts = keywordsWithPrompts.reduce((acc, k) => acc + k.prompts.length, 0);
 
-  // Handle expand/collapse individual keyword
   const toggleKeyword = (keywordId: string) => {
     setExpandedKeywords((prev) => {
       const newSet = new Set(prev);
@@ -186,58 +161,51 @@ const PromptsContent = () => {
     });
   };
 
-  // Handle expand all
-  const handleExpandAll = () => {
-    const allKeywordIds = new Set(keywordsWithPrompts.map((k) => k.id));
-    setExpandedKeywords(allKeywordIds);
+  // Determine allExpanded based on current viewType
+  const allExpanded = viewType === "category"
+    ? categories.length > 0 && categories.every((c) => expandedCategories.has(c))
+    : keywordsWithPrompts.length > 0 && keywordsWithPrompts.every((k) => expandedKeywords.has(k.id));
+
+  const handleToggleAll = () => {
+    if (viewType === "category") {
+      if (allExpanded) {
+        setExpandedCategories(new Set());
+      } else {
+        setExpandedCategories(new Set(categories));
+      }
+    } else {
+      if (allExpanded) {
+        setExpandedKeywords(new Set());
+      } else {
+        setExpandedKeywords(new Set(keywordsWithPrompts.map((k) => k.id)));
+      }
+    }
   };
 
-  // Handle collapse all
-  const handleCollapseAll = () => {
-    setExpandedKeywords(new Set());
-  };
-
-  // Handle clear brand selection
   const handleClearBrandSelection = () => {
     setSelectedBrand("");
   };
 
-  // Get brands to display for a keyword - includes our brand even if score is 0, placed at the end
   const getBrandsForKeyword = (keywordId: string) => {
     const brandToUse = selectedBrand || brandName;
-    
-    // Get all brands with mentions > 0
     const brandsWithMentions = brandInfo.filter(
       (b) => (b.mention_breakdown?.[keywordId] || 0) > 0
     );
 
-    // Check if our brand (or selected brand) is in the list
-    const ourBrandIndex = brandsWithMentions.findIndex(
-      (b) => b.brand === brandToUse
-    );
-
+    const ourBrandIndex = brandsWithMentions.findIndex((b) => b.brand === brandToUse);
     let ourBrand = null;
-    
-    // If our brand is in the list, remove it to add at the end
+
     if (ourBrandIndex !== -1) {
       ourBrand = brandsWithMentions.splice(ourBrandIndex, 1)[0];
     } else {
-      // If our brand is not in the list, find it and prepare to add with 0 mentions
       ourBrand = brandInfo.find((b) => b.brand === brandToUse);
     }
 
-    // Sort by mentions (highest first)
     brandsWithMentions.sort(
-      (a, b) =>
-        (b.mention_breakdown?.[keywordId] || 0) -
-        (a.mention_breakdown?.[keywordId] || 0)
+      (a, b) => (b.mention_breakdown?.[keywordId] || 0) - (a.mention_breakdown?.[keywordId] || 0)
     );
 
-    // Add our brand at the end
-    if (ourBrand) {
-      brandsWithMentions.push(ourBrand);
-    }
-
+    if (ourBrand) brandsWithMentions.push(ourBrand);
     return brandsWithMentions;
   };
 
@@ -265,23 +233,19 @@ const PromptsContent = () => {
               <div className="text-2xl md:text-3xl font-bold text-primary">
                 {keywordsWithPrompts.length}
               </div>
-              <div className="text-[10px] md:text-xs text-muted-foreground">
-                keywords
-              </div>
+              <div className="text-[10px] md:text-xs text-muted-foreground">keywords</div>
             </div>
             <div className="text-center sm:text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">
                 {totalPrompts}
               </div>
-              <div className="text-[10px] md:text-xs text-muted-foreground">
-                prompts analyzed
-              </div>
+              <div className="text-[10px] md:text-xs text-muted-foreground">prompts analyzed</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* View Type Selection with Expand/Collapse buttons */}
+      {/* View Type Selection with single Expand/Collapse toggle */}
       <div className="flex gap-3 items-center flex-wrap">
         <div className="flex items-center gap-4 bg-card border border-border rounded-lg md:rounded-xl px-4 py-2.5 md:py-3">
           Select View:
@@ -322,38 +286,30 @@ const PromptsContent = () => {
             </Button>
           )}
           <Button
-            onClick={handleExpandAll}
+            onClick={handleToggleAll}
             variant="outline"
             size="default"
             className="whitespace-nowrap"
           >
-            Expand All
-          </Button>
-          <Button
-            onClick={handleCollapseAll}
-            variant="outline"
-            size="default"
-            className="whitespace-nowrap"
-          >
-            Collapse All
+            {allExpanded ? "Collapse All" : "Expand All"}
           </Button>
         </div>
       </div>
 
       {/* Conditional rendering based on viewType */}
       {viewType === "category" ? (
-        /* Category View */
-          <CategoriesTable
-            prompts={allPrompts}
-            brandsToDisplay={getAllBrands()}
-            selectedBrand={selectedBrand ? selectedBrand : brandName}
-            setSelectedBrand={setSelectedBrand}
-            brandName={brandName}
-            getBrandLogo={getBrandLogo}
-            categories={categories}
-          />
+        <CategoriesTable
+          prompts={allPrompts}
+          brandsToDisplay={getAllBrands()}
+          selectedBrand={selectedBrand ? selectedBrand : brandName}
+          setSelectedBrand={setSelectedBrand}
+          brandName={brandName}
+          getBrandLogo={getBrandLogo}
+          categories={categories}
+          expandedCategories={expandedCategories}
+          setExpandedCategories={setExpandedCategories}
+        />
       ) : (
-        /* Keywords with Prompts View */
         <div className="space-y-4">
           {filteredKeywords.map((keyword) => {
             const isExpanded = expandedKeywords.has(keyword.id);
@@ -416,15 +372,9 @@ const PromptsContent = () => {
                             className="w-5 h-5 rounded-full object-contain bg-white"
                           />
                         )}
-                        <span className="text-xs text-muted-foreground">
-                          Top:
-                        </span>
-                        <span className="text-xs font-medium">
-                          {topCompetitor.brand}
-                        </span>
-                        <span className="text-xs font-bold text-primary">
-                          {topCompetitor.score}
-                        </span>
+                        <span className="text-xs text-muted-foreground">Top:</span>
+                        <span className="text-xs font-medium">{topCompetitor.brand}</span>
+                        <span className="text-xs font-bold text-primary">{topCompetitor.score}</span>
                       </div>
                     )}
                   </div>

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { Header } from "./Header";
 import { Navigation } from "./Navigation";
 import { ChatSidebar } from "@/components/ChatSidebar";
+import { ChatSidebarWhenOpen } from "@/components/ChatSidebarWhenOpen";
 import {
   SidebarProvider,
   Sidebar,
@@ -10,6 +11,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { ChatCacheClearTrigger } from "@/hooks/useChatCacheClear";
 import { PanelLeft } from "lucide-react";
 import { getSecureProductId } from "@/lib/secureStorage";
 
@@ -86,6 +88,10 @@ export const Layout = ({ children, hideNav }: LayoutProps) => {
       defaultOpen={false}
       style={{ "--sidebar-width": "24rem" } as React.CSSProperties}
     >
+      <ChatCacheClearTrigger
+        productId={productId}
+        isMobileChatOpen={isMobileChatOpen}
+      />
       {/* Desktop Sidebar */}
       <Sidebar
         side="left"
@@ -93,7 +99,7 @@ export const Layout = ({ children, hideNav }: LayoutProps) => {
         className="no-print hidden md:flex"
       >
         <SidebarContent>
-          <ChatSidebar productId={productId} />
+          <ChatSidebarWhenOpen productId={productId} />
         </SidebarContent>
       </Sidebar>
 

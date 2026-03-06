@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserPlus,
@@ -23,6 +24,7 @@ import { Layout } from "@/components/Layout";
 import { useNavigate } from "react-router-dom";
 import { sendInvitation } from "@/apiHelpers";
 import { useAuth } from "@/contexts/auth-context";
+import { PLAN_LIMITS, type PricingPlanName } from "@/lib/plans";
 
 // ─── Data ─────────────────────────────────────────────────────────────
 const ROLES = {
@@ -241,9 +243,13 @@ function InlineDropdown({
 // ─── Page ─────────────────────────────────────────────────────────────
 export default function TeamMembers() {
   const navigate = useNavigate();
-  const { pricingPlan } = useAuth();
-
+  const { pricingPlan, userRoleInt } = useAuth();
+  const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
+  const maxSeats = planLimits.maxUsers;
+  const isAdmin = userRoleInt <= 1;
   const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
+  const seatsUsed = members.filter((m) => m.status === "active" || m.status === "pending").length;
+  const seatsAtLimit = seatsUsed >= maxSeats;
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<RoleKey>("editor");
   const [inviteRoleOpen, setInviteRoleOpen] = useState(false);
@@ -273,6 +279,11 @@ export default function TeamMembers() {
       return showToast("Enter a valid email", "error");
     if (members.find((m) => m.email === inviteEmail))
       return showToast("Already in workspace", "error");
+    // Enforce seat limit from plan
+    const activeAndPending = members.filter((m) => m.status === "active" || m.status === "pending").length;
+    if (activeAndPending >= maxSeats) {
+      return showToast(`Seat limit reached (${maxSeats}). Upgrade your plan to add more members.`, "error");
+    }
     try {
       const roleMap: Record<string, string> = {
         editor: "editor",
@@ -462,18 +473,23 @@ export default function TeamMembers() {
             animate="visible"
             className="rounded-2xl border border-border bg-card shadow-sm"
           >
-            <div className="px-6 py-4 border-b border-border flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <UserPlus className="w-4 h-4 text-primary" />
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <UserPlus className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Invite a team member
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    They'll get an email with a link to join your workspace
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Invite a team member
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  They'll get an email with a link to join your workspace
-                </p>
-              </div>
+              <span className="text-xs font-semibold text-muted-foreground px-3 py-1.5 rounded-full bg-muted border border-border">
+                {members.filter((m) => m.status === "active" || m.status === "pending").length} / {maxSeats} seats used
+              </span>
             </div>
             <div className="p-6">
               <div className="flex gap-3 flex-wrap md:flex-nowrap">
@@ -563,9 +579,16 @@ export default function TeamMembers() {
 
                 <button
                   onClick={handleInvite}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground flex-shrink-0 transition-all hover:brightness-110 active:scale-[0.98] bg-primary shadow-elevated"
+                  disabled={seatsAtLimit || !isAdmin}
+                  className={cn(
+                    "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground flex-shrink-0 transition-all shadow-elevated",
+                    seatsAtLimit || !isAdmin
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                      : "bg-primary hover:brightness-110 active:scale-[0.98]"
+                  )}
+                  title={!isAdmin ? "Only admins can invite users" : seatsAtLimit ? `Seat limit reached (${maxSeats})` : ""}
                 >
-                  <Send className="w-4 h-4" /> Send Invite
+                  <Send className="w-4 h-4" /> {seatsAtLimit ? "Seats Full" : "Send Invite"}
                 </button>
               </div>
               <p className="text-xs text-foreground mt-3 text-center">
@@ -865,8 +888,8 @@ export default function TeamMembers() {
                 <p className="text-sm font-semibold text-foreground">
                   Seat usage
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {counts.active} of 3 seats used on the{" "}
+              <p className="text-xs text-muted-foreground">
+                  {counts.active} of {maxSeats} seats used on the{" "}
                   <span className="text-primary font-semibold capitalize">
                     {pricingPlan}
                   </span>{" "}
@@ -879,15 +902,18 @@ export default function TeamMembers() {
                 <div
                   className="h-full rounded-full bg-primary transition-all duration-700"
                   style={{
-                    width: `${Math.min((counts.active / 3) * 100, 100)}%`,
+                    width: `${Math.min((counts.active / maxSeats) * 100, 100)}%`,
                   }}
                 />
               </div>
               <span className="text-xs font-bold text-foreground whitespace-nowrap">
-                {counts.active} / 3
+                {counts.active} / {maxSeats}
               </span>
             </div>
-            <button className="px-4 py-2 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted transition-colors flex-shrink-0">
+            <button 
+              onClick={() => navigate("/billing", { state: { from: "/invite" } })}
+              className="px-4 py-2 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted transition-colors flex-shrink-0"
+            >
               Upgrade for more seats →
             </button>
           </motion.div>

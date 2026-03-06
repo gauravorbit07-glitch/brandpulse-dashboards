@@ -525,6 +525,29 @@ export const sendChatMessage = async (
   }
 };
 
+export interface ClearChatbotCacheResponse {
+  success: boolean;
+  message: string;
+  product_id: string;
+}
+
+export const clearChatbotCache = async (
+  productId: string,
+  accessToken: string
+): Promise<ClearChatbotCacheResponse | null> => {
+  try {
+    const res = await API.delete(API_ENDPOINTS.clearChatbotCache(productId), {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return res?.data ?? null;
+  } catch (error) {
+    console.error('Failed to clear chatbot cache:', error);
+    return null;
+  }
+};
+
 /* =====================
    DASHBOARD HELPERS
    ===================== */

@@ -110,7 +110,7 @@ export const Layout = ({ children, showNavigation = true, sidebarTrigger }: Layo
                         <User className="w-4 h-4" />
                         <span>{user.first_name} {user.last_name}</span>
                       </DropdownMenuItem>
-                      {/* <DropdownMenuItem
+                      <DropdownMenuItem
                         onClick={() => navigate("/billing", { state: { from: location.pathname } })}
                         className="flex items-center space-x-2"
                       >
@@ -123,7 +123,7 @@ export const Layout = ({ children, showNavigation = true, sidebarTrigger }: Layo
                       >
                         <MailPlus className="w-4 h-4" />
                         <span>Invite &amp; Users</span>
-                      </DropdownMenuItem> */}
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleLogout}
                         className="flex items-center space-x-2 text-destructive focus:text-destructive"

@@ -146,7 +146,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
   const isLoadingListRef = useRef(false);
   const toastRef = useRef(toast);
   const hasShownCompletionToastRef = useRef(false);
-  const pageLoadTimestampRef = useRef<number>(Date.now()); // Track when page loaded
+  const pageLoadTimestampRef = useRef<number>(Date.now());
   const analyticsCacheKeyRef = useRef<string>("");
   
   const getCompletionToastShownKey = useCallback(() => {
@@ -325,12 +325,6 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
         );
         isInCooldownRef.current = true;
 
-        // toastRef.current({
-        //   title: "Analysis Taking Longer Than Expected",
-        //   description: `We'll pause checking for ${POLL_COOLDOWN_MS / 60000} minutes. The analysis will continue in the background.`,
-        //   duration: 5000,
-        // });
-
         if (pollingTimerRef.current) {
           clearTimeout(pollingTimerRef.current);
           pollingTimerRef.current = undefined;
@@ -452,10 +446,13 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               })();
               const alreadyShownForThisAnalysis = shownForIds.includes(analysisId);
 
+              // ─── COMPLETED TOAST ───────────────────────────────────────────
               if (currentStatus === "completed" && !hasShownCompletionToastRef.current && !alreadyShownForThisAnalysis) {
-                const analysisCompletedAfterPageLoad = analysisTimestamp > pageLoadTimestampRef.current;
-                
-                if (analysisCompletedAfterPageLoad) {
+                // Use triggeredAt (regen flow) if available, otherwise fall back to page load timestamp
+                const referenceTimestamp = triggeredAt ?? pageLoadTimestampRef.current;
+                const analysisCompletedAfterReference = analysisTimestamp > referenceTimestamp;
+
+                if (analysisCompletedAfterReference) {
                   hasShownCompletionToastRef.current = true;
                   
                   // Persist shown flag for this analysis ID
@@ -509,60 +506,74 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
                   });
                   console.log("🎉 [POLL] Showing Analysis Updated notification");
                 } else {
-                  console.log("✅ [POLL] Page already refreshed after completion - no notification");
+                  console.log("✅ [POLL] Analysis predates reference timestamp - skipping toast");
                 }
               }
 
-              // Handle FAILED status notification
+              // ─── FAILED TOAST ──────────────────────────────────────────────
               if (currentStatus === "failed" && !hasShownCompletionToastRef.current && !alreadyShownForThisAnalysis) {
-                hasShownCompletionToastRef.current = true;
-                
-                // Persist shown flag
-                try {
-                  const updated = [...shownForIds, analysisId].slice(-20);
-                  localStorage.setItem(toastShownKey, JSON.stringify(updated));
-                } catch {}
+                // Same timestamp guard as completed — skip stale failed analyses
+                const referenceTimestamp = triggeredAt ?? pageLoadTimestampRef.current;
+                const analysisFailedAfterReference = analysisTimestamp > referenceTimestamp;
 
-                const funnyMessages = [
-                  "Oops! Our AI had a little hiccup 🤖💫 Want to give it another shot?",
-                  "Well, that didn't go as planned! 😅 Shall we try again?",
-                  "Our analysis engine tripped over its own feet! 🙈 Want to give it another shot?",
-                  "Houston, we had a problem! 🚀 But we're ready to launch again!",
-                ];
-                const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+                if (analysisFailedAfterReference) {
+                  hasShownCompletionToastRef.current = true;
 
-                toastRef.current({
-                  title: "❌ Analysis Failed",
-                  description: randomMsg,
-                  variant: "destructive",
-                  duration: Infinity,
-                  action: React.createElement(
-                    ToastAction,
-                    {
-                      altText: "Retry analysis",
-                      onClick: async () => {
-                        try {
-                          const token = getSecureAccessToken();
-                          await regenerateAnalysis(productId, token);
-                          toastRef.current({
-                            title: "🔄 Analysis Restarted",
-                            description: "Hang tight! We're giving it another go.",
-                            duration: Infinity,
-                          });
-                        } catch {
-                          toastRef.current({
-                            title: "Error",
-                            description: "Failed to restart analysis. Please try again.",
-                            variant: "destructive",
-                          });
-                        }
-                      },
-                      className: "border-destructive-foreground/30 text-destructive-foreground hover:bg-destructive-foreground/10 px-3 py-1.5 text-xs md:text-sm font-medium rounded-md",
-                    },
-                    "🔄 Retry Analysis"
-                  ),
-                });
-                console.log("❌ [POLL] Showing Analysis Failed notification");
+                  // Persist shown flag
+                  try {
+                    const updated = [...shownForIds, analysisId].slice(-20);
+                    localStorage.setItem(toastShownKey, JSON.stringify(updated));
+                  } catch {}
+
+                  const funnyMessages = [
+                    "Oops! Our AI had a little hiccup 🤖💫 Want to give it another shot?",
+                    "Well, that didn't go as planned! 😅 Shall we try again?",
+                    "Our analysis engine tripped over its own feet! 🙈 Want to give it another shot?",
+                    "Houston, we had a problem! 🚀 But we're ready to launch again!",
+                  ];
+                  const randomMsg = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+
+                  toastRef.current({
+                    title: "❌ Analysis Failed",
+                    description: React.createElement(
+                      "div",
+                      { className: "flex flex-col gap-3" },
+                      React.createElement(
+                        "p",
+                        { className: "text-sm" },
+                        randomMsg
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: async () => {
+                            try {
+                              const token = getSecureAccessToken();
+                              await regenerateAnalysis(productId, token);
+                              toastRef.current({
+                                title: "🔄 Analysis Restarted",
+                                description: "Hang tight! We're giving it another go.",
+                                duration: Infinity,
+                              });
+                            } catch {
+                              toastRef.current({
+                                title: "Error",
+                                description: "Failed to restart analysis. Please try again.",
+                                variant: "destructive",
+                              });
+                            }
+                          },
+                          className: "w-full bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 text-xs md:text-sm font-medium rounded-md text-center",
+                        },
+                        "🔄 Retry Analysis"
+                      )
+                    ),
+                    duration: Infinity,
+                  });
+                  console.log("❌ [POLL] Showing Analysis Failed notification");
+                } else {
+                  console.log("✅ [POLL] Failed analysis predates reference timestamp - skipping toast");
+                }
               }
 
               console.log(`✅ [POLL] Analysis ${currentStatus.toUpperCase()} - ALL polling stopped, data saved`);
@@ -669,14 +680,13 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
       try {
         console.log("🔄 [LIST] Fetching analytics list for product:", productId);
         const response = await getAnalyticsList(productId, limit);
-        const list = response.analytics || [];
-        setNextAnalyticsGenerationTime(response.next_analytics_generation_time);
-        const sorted = [...list].sort((a, b) => {
+        const sorted = [...response.analytics].sort((a, b) => {
           const tA = new Date(a.created_at).getTime();
           const tB = new Date(b.created_at).getTime();
           return tB - tA;
         });
         setAnalyticsList(sorted);
+        setNextAnalyticsGenerationTime(response.next_analytics_generation_time);
 
         const currentId = currentAnalytics?.id;
         if (currentId && sorted.some((item) => item.analytics_id === currentId)) {
