@@ -106,9 +106,16 @@ export const Layout = ({ children, showNavigation = true, sidebarTrigger }: Layo
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56 bg-card border-border" align="end" forceMount>
-                      <DropdownMenuItem className="flex items-center space-x-2 md:hidden">
-                        <User className="w-4 h-4" />
-                        <span>{user.first_name} {user.last_name}</span>
+                      <div className="px-3 py-2 border-b border-border mb-1">
+                        <p className="text-sm font-semibold text-foreground">{user.first_name} {user.last_name}</p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      </div>
+                      <DropdownMenuItem
+                        onClick={() => navigate("/settings", { state: { from: location.pathname } })}
+                        className="flex items-center space-x-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => navigate("/billing", { state: { from: location.pathname } })}
