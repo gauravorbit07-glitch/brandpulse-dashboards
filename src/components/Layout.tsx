@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, CreditCard, MailPlus } from "lucide-react";
+import { User, LogOut, CreditCard, MailPlus, Settings } from "lucide-react";
 import { getSecureProductId } from "@/lib/secureStorage";
 import { useState, useEffect } from "react";
 import { regenerateAnalysis } from "@/apiHelpers";
