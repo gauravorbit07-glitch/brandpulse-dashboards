@@ -18,7 +18,8 @@ import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "./ScrollToTop";
 import NewResultsContainer from "./results/pages/NewResultsContainer";
 import Billing from "./pages/Billing";
-import TeamMembers from "./pages/Invitation"
+import TeamMembers from "./pages/Invitation";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
