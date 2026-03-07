@@ -169,11 +169,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // If we have a token and session ID, restore user state
     if (storedToken && storedSessionId) {
       const storedUserId = getSecureUserId() || "restored";
+      // Decode JWT to get real email and user info
+      const decoded = decodeAccessToken(storedToken);
+      const restoredEmail = decoded?.email || getSecureEmail() || "";
+      const restoredLastName = getSecureLastName() || "";
       setUser({ 
         id: storedUserId, 
-        email: "user@restored.com", 
+        email: restoredEmail, 
         first_name: storedFirstName || "User", 
-        last_name: "User" 
+        last_name: restoredLastName || "" 
       });
       
       if (storedUserId && storedUserId !== "restored") {
