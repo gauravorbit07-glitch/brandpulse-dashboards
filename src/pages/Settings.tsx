@@ -32,9 +32,11 @@ import {
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { getAnalyticsList, type AnalyticsListItem } from "@/apiHelpers";
+import { getAnalyticsList, getAnalyticsById, type AnalyticsListItem } from "@/apiHelpers";
 import { PLAN_LIMITS, type PricingPlanName, checkJourneyAccess, getRoleName } from "@/lib/plans";
 import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
+import { generateReport } from "@/results/layout/downloadReport";
+import { setAnalyticsData } from "@/results/data/analyticsData";
 
 // ─── Import all tracking data from analyticsData.ts ──────────────────────
 import {
@@ -637,7 +639,22 @@ export default function Settings() {
                               </td>
                               <td className="px-6 py-4 text-right">
                                 {canExport ? (
-                                  <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                                  <Button variant="outline" size="sm" onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      // Fetch the analytics data for this specific run
+                                      const analyticsData = await getAnalyticsById(item.analytics_id);
+                                      if (analyticsData) {
+                                        // Temporarily set analytics data so report generators can read it
+                                        setAnalyticsData(analyticsData);
+                                        generateReport(toast);
+                                      } else {
+                                        toast({ title: "Error", description: "Could not load analytics data for this run.", variant: "destructive" });
+                                      }
+                                    } catch {
+                                      toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
+                                    }
+                                  }}>
                                     <Download className="w-3.5 h-3.5 mr-1.5" />
                                     Download
                                   </Button>

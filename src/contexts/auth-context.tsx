@@ -33,6 +33,10 @@ import {
   getSecureUserRole,
   setSecurePlanExpiresAt,
   getSecurePlanExpiresAt,
+  setSecureEmail,
+  getSecureEmail,
+  setSecureLastName,
+  getSecureLastName,
 } from "@/lib/secureStorage";
 import { decodeAccessToken, DecodedTokenInfo } from "@/lib/jwtDecode";
 import { getPricingPlanName, type PricingPlanName } from "@/lib/plans";
@@ -169,11 +173,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // If we have a token and session ID, restore user state
     if (storedToken && storedSessionId) {
       const storedUserId = getSecureUserId() || "restored";
+      // Decode JWT to get real email and user info
+      const decoded = decodeAccessToken(storedToken);
+      const restoredEmail = decoded?.email || getSecureEmail() || "";
+      const restoredLastName = getSecureLastName() || "";
       setUser({ 
         id: storedUserId, 
-        email: "user@restored.com", 
+        email: restoredEmail, 
         first_name: storedFirstName || "User", 
-        last_name: "User" 
+        last_name: restoredLastName || "" 
       });
       
       if (storedUserId && storedUserId !== "restored") {
@@ -221,6 +229,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAnalysisUserId(userId);
         setSecureUserId(userId);
         setSecureFirstName(extendedUser.first_name);
+        setSecureLastName(extendedUser.last_name || "");
+        setSecureEmail(extendedUser.email || "");
 
         // Store applications and products from response
         const appsFromResponse = (res as any).applications || [];

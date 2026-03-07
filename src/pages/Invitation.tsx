@@ -95,63 +95,7 @@ interface Member {
   isYou?: boolean;
 }
 
-const INITIAL_MEMBERS: Member[] = [
-  {
-    id: "1",
-    name: "Gaurav Sharma",
-    email: "gaurav@georankers.com",
-    role: "admin",
-    status: "active",
-    initials: "GS",
-    joinedAt: "Jan 3, 2025",
-    isYou: true,
-  },
-  {
-    id: "2",
-    name: "Priya Mehta",
-    email: "priya@acme.com",
-    role: "editor",
-    status: "active",
-    initials: "PM",
-    joinedAt: "Jan 15, 2025",
-  },
-  {
-    id: "3",
-    name: "Rahul Verma",
-    email: "rahul@acme.com",
-    role: "viewer",
-    status: "active",
-    initials: "RV",
-    joinedAt: "Feb 2, 2025",
-  },
-  {
-    id: "4",
-    name: "Sarah Johnson",
-    email: "sarah.j@partner.io",
-    role: "editor",
-    status: "pending",
-    initials: "SJ",
-    invitedAt: "Feb 20, 2025",
-  },
-  {
-    id: "5",
-    name: "Tom Nguyen",
-    email: "tom@designco.io",
-    role: "viewer",
-    status: "pending",
-    initials: "TN",
-    invitedAt: "Feb 24, 2025",
-  },
-  {
-    id: "6",
-    name: "Lisa Park",
-    email: "lisa.park@corp.com",
-    role: "editor",
-    status: "declined",
-    initials: "LP",
-    invitedAt: "Feb 10, 2025",
-  },
-];
+// No more hardcoded data - we use collaborators from auth context
 
 const STATUS_CONFIG = {
   active: {
@@ -243,11 +187,63 @@ function InlineDropdown({
 // ─── Page ─────────────────────────────────────────────────────────────
 export default function TeamMembers() {
   const navigate = useNavigate();
-  const { pricingPlan, userRoleInt } = useAuth();
+  const { pricingPlan, userRoleInt, user, collaborators: authCollaborators } = useAuth();
   const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
   const maxSeats = planLimits.maxUsers;
   const isAdmin = userRoleInt <= 1;
-  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
+
+  // Build members list from auth collaborators
+  const buildMembersFromCollaborators = (): Member[] => {
+    if (!authCollaborators || authCollaborators.length === 0) {
+      // Fallback: show current user as only member
+      if (user) {
+        return [{
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`.trim(),
+          email: user.email,
+          role: userRoleInt <= 1 ? "admin" : userRoleInt <= 3 ? "editor" : "viewer",
+          status: "active" as MemberStatus,
+          initials: `${user.first_name.charAt(0)}${(user.last_name || "").charAt(0)}`.toUpperCase(),
+          joinedAt: "Member",
+          isYou: true,
+        }];
+      }
+      return [];
+    }
+
+    return authCollaborators.map((collab: any) => {
+      const collabUser = collab.user;
+      const firstName = collabUser?.first_name || collab.email?.split("@")[0] || "User";
+      const lastName = collabUser?.last_name || "";
+      const fullName = `${firstName} ${lastName}`.trim();
+      const email = collabUser?.email || collab.email || "";
+      const isActive = collabUser?.is_active !== false;
+
+      // Map role string to RoleKey
+      let roleKey: RoleKey = "viewer";
+      const roleStr = (collab.role || "").toLowerCase();
+      if (roleStr === "admin" || roleStr === "god") roleKey = "admin";
+      else if (roleStr === "editor" || roleStr === "application") roleKey = "editor";
+      else roleKey = "viewer";
+
+      const isCurrentUser = user && (collabUser?.id === user.id || collabUser?.email === user.email);
+
+      return {
+        id: collab.id || collab.user_id || email,
+        name: fullName,
+        email,
+        role: roleKey,
+        status: (isActive ? "active" : "pending") as MemberStatus,
+        initials: `${firstName.charAt(0)}${lastName.charAt(0) || firstName.charAt(1) || ""}`.toUpperCase(),
+        joinedAt: collab.created_at
+          ? new Date(collab.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          : undefined,
+        isYou: !!isCurrentUser,
+      };
+    });
+  };
+
+  const [members, setMembers] = useState<Member[]>(buildMembersFromCollaborators);
   const seatsUsed = members.filter((m) => m.status === "active" || m.status === "pending").length;
   const seatsAtLimit = seatsUsed >= maxSeats;
   const [inviteEmail, setInviteEmail] = useState("");
