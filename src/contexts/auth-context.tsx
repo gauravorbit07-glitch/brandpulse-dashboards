@@ -33,6 +33,10 @@ import {
   getSecureUserRole,
   setSecurePlanExpiresAt,
   getSecurePlanExpiresAt,
+  setSecureEmail,
+  getSecureEmail,
+  setSecureLastName,
+  getSecureLastName,
 } from "@/lib/secureStorage";
 import { decodeAccessToken, DecodedTokenInfo } from "@/lib/jwtDecode";
 import { getPricingPlanName, type PricingPlanName } from "@/lib/plans";
