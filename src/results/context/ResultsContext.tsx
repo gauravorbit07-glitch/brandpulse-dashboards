@@ -50,7 +50,7 @@ interface ResultsContextType {
   nextAnalyticsGenerationTime: string | null;
 }
 
-const ResultsContext = createContext<ResultsContextType | null>(null);
+export const ResultsContext = createContext<ResultsContextType | null>(null);
 
 export const useResults = () => {
   const context = useContext(ResultsContext);

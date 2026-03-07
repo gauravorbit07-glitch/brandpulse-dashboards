@@ -14,6 +14,11 @@ export const API_ENDPOINTS = {
   createProductWithKeywords: `${BASE_URL}/api/v1/products/with-keywords`,
   generateWithKeywords: `${BASE_URL}/api/v1/products/generate/with-keywords`,
   regenerateAnalysis: `${BASE_URL}/api/v1/products/generate/result-and-analytics`,
+  createProduct: `${BASE_URL}/api/v1/products`,
+
+  // Onboarding
+  onboardingData: `${BASE_URL}/api/v1/onboarding/data`,
+  onboardingSelections: `${BASE_URL}/api/v1/onboarding/selections`,
 
   // Analytics
   getKeywordAnalytics: (keywordId: string, date: string) =>

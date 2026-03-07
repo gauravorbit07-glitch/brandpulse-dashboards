@@ -68,8 +68,8 @@ export interface ProductPayload {
 }
 
 export interface NewAnalysis {
-  productId: string,
-  searchKeywords: string[]
+  productId: string;
+  searchKeywords: string[];
 }
 
 /* =====================
@@ -83,7 +83,7 @@ const API = axios.create({
 API.interceptors.request.use((config) => {
   const token = getSecureAccessToken();
   const sessionId = getSecureSessionId();
-  
+
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -100,16 +100,15 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Skip auth check for login/register/verify endpoints
     const authEndpoints = ['/login', '/register', '/verify-email', '/forgot-password', '/reset-password'];
     const requestUrl = error.config?.url || '';
     const isAuthEndpoint = authEndpoints.some(endpoint => requestUrl.includes(endpoint));
-    
+
     if (!isAuthEndpoint && isUnauthorizedError(error)) {
       handleUnauthorized();
       return Promise.reject(error);
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -118,15 +117,13 @@ API.interceptors.response.use(
    AUTH HELPERS
    ===================== */
 export const login = async (payload: LoginRequest): Promise<LoginResponse> => {
-  // Encrypt the password before sending
   const encryptedPayload = {
     ...payload,
-    password: encryptPassword(payload.password)
+    password: encryptPassword(payload.password),
   };
-  
+
   const res: AxiosResponse<LoginResponse> = await API.post(API_ENDPOINTS.login, encryptedPayload);
 
-  // Save token and critical identity values securely
   if (res.data.access_token && res.data.access_token.trim() !== "") {
     setSecureAccessToken(res.data.access_token);
 
@@ -149,18 +146,16 @@ export const register = async (
   payload: RegisterRequest
 ): Promise<RegisterResponse | null> => {
   try {
-    // Encrypt the password before sending
     const encryptedPayload = {
       ...payload,
-      password: encryptPassword(payload.password)
+      password: encryptPassword(payload.password),
     };
-    
+
     const res: AxiosResponse<RegisterResponse> = await API.post(
       API_ENDPOINTS.register,
       encryptedPayload
     );
 
-    // Store token + application id securely if registration successful
     if (res.data.access_token) {
       setSecureAccessToken(res.data.access_token);
     }
@@ -171,14 +166,10 @@ export const register = async (
     return res.data;
   } catch (error: any) {
     console.error("Register error:", error);
-
-    // Extract message from backend
     const backendMessage =
       error.response?.data?.error ||
       error.response?.data?.message ||
       "Registration failed. Please try again.";
-
-    // Throw clean error message (no toast here)
     throw new Error(backendMessage);
   }
 };
@@ -198,10 +189,9 @@ export const forgotPassword = async (email: string): Promise<any> => {
 
 export const resetPassword = async (token: string, newPassword: string): Promise<any> => {
   try {
-    // Encrypt the password before sending
-    const res = await API.post(API_ENDPOINTS.resetPassword, { 
-      token, 
-      new_password: encryptPassword(newPassword)
+    const res = await API.post(API_ENDPOINTS.resetPassword, {
+      token,
+      new_password: encryptPassword(newPassword),
     });
     return res.data;
   } catch (error) {
@@ -229,6 +219,121 @@ export const logout = async (): Promise<void> => {
   } catch (error) {
     console.warn('Logout API call failed:', error);
     throw error;
+  }
+};
+
+/* =====================
+   ONBOARDING HELPERS
+   ===================== */
+export interface OnboardingDataRequest {
+  website: string;
+  business_domain?: string;
+  application_id: string;
+  product_id?: string;
+}
+
+export interface OnboardingCompetitor {
+  name: string;
+  website: string;
+}
+
+export interface OnboardingDataResponse {
+  description: string;
+  name: string;
+  competitors: OnboardingCompetitor[];
+  keywords: string[];
+}
+
+export const fetchOnboardingData = async (
+  website: string,
+  business_domain?: string,
+  productId?: string
+): Promise<OnboardingDataResponse> => {
+  try {
+    let appId = getSecureApplicationId();
+
+    if (!appId) {
+      appId = crypto.randomUUID();
+      setSecureApplicationId(appId);
+    }
+
+    const payload: OnboardingDataRequest = {
+      website,
+      application_id: appId,
+      ...(business_domain && { business_domain }),
+      ...(productId && { product_id: productId }),
+    };
+
+    const res = await API.post(API_ENDPOINTS.onboardingData, payload);
+    return res.data;
+  } catch (error: any) {
+    console.error('Fetch onboarding data error:', error);
+    const message =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      'Failed to fetch onboarding data';
+    throw new Error(message);
+  }
+};
+
+export interface OnboardingSelectionsRequest {
+  website: string;
+  competitors: OnboardingCompetitor[];
+  keywords: string[];
+  application_id?: string;
+}
+
+export const saveOnboardingSelections = async (
+  payload: OnboardingSelectionsRequest
+): Promise<{ message: string }> => {
+  try {
+    const appId = payload.application_id || getSecureApplicationId() || "";
+
+    const body = {
+      ...payload,
+      application_id: appId,
+    };
+
+    const res = await API.post(API_ENDPOINTS.onboardingSelections, body);
+    return res.data;
+  } catch (error: any) {
+    console.error('Save onboarding selections error:', error);
+    const message =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      'Failed to save selections';
+    throw new Error(message);
+  }
+};
+
+export interface CreateProductRequest {
+  website: string;
+  name?: string;
+  description?: string;
+  business_domain?: string;
+  application_id?: string;
+}
+
+export const createProduct = async (
+  payload: CreateProductRequest
+): Promise<any> => {
+  try {
+    const appId = payload.application_id || getSecureApplicationId() || "";
+
+    const body = {
+      ...payload,
+      application_id: appId,
+    };
+
+    const res = await API.post(API_ENDPOINTS.createProduct, body);
+    return res.data;
+  } catch (error: any) {
+    console.error('Create product error:', error);
+    const message =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      'Failed to create product';
+    throw new Error(message);
   }
 };
 
@@ -296,7 +401,6 @@ export const generateWithKeywords = async (
 /* =====================
    ANALYTICS HELPERS
    ===================== */
-
 export interface AnalyticsListItem {
   analytics_id: string;
   created_at: string;
@@ -313,9 +417,7 @@ export const getProductAnalytics = async (
 ): Promise<any> => {
   try {
     const res = await API.get(API_ENDPOINTS.getProductAnalytics(productId), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     return res?.data || null;
   } catch (error) {
@@ -328,9 +430,7 @@ export const getAnalyticsList = async (
   limit: number = 10
 ): Promise<AnalyticsListResponse> => {
   try {
-    const res = await API.get(
-      API_ENDPOINTS.getAnalyticsList(productId, limit)
-    );
+    const res = await API.get(API_ENDPOINTS.getAnalyticsList(productId, limit));
     const data = res?.data || {};
     return {
       analytics: data.analytics || [],
@@ -342,9 +442,7 @@ export const getAnalyticsList = async (
   }
 };
 
-export const getAnalyticsById = async (
-  analyticsId: string
-): Promise<any> => {
+export const getAnalyticsById = async (analyticsId: string): Promise<any> => {
   try {
     const res = await API.get(API_ENDPOINTS.getAnalyticsById(analyticsId));
     return res?.data || null;
@@ -360,13 +458,9 @@ export const regenerateAnalysis = async (
 ): Promise<any> => {
   try {
     const res = await API.post(
-      API_ENDPOINTS.regenerateAnalysis, 
+      API_ENDPOINTS.regenerateAnalysis,
       { product_id: productId },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     return res?.data || null;
   } catch (error) {
@@ -382,9 +476,7 @@ export const getKeywordAnalytics = async (
 ): Promise<any> => {
   try {
     const res = await API.get(API_ENDPOINTS.getKeywordAnalytics(keywordId, date), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     return res?.data || null;
   } catch (error) {
@@ -398,9 +490,7 @@ export const getProductsByApplication = async (
 ): Promise<any> => {
   try {
     const res = await API.get(API_ENDPOINTS.getProductsByApplication(applicationId), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     return res?.data || null;
   } catch (error) {
@@ -455,33 +545,25 @@ export const getChatHistory = async (
 ): Promise<ChatMessage[]> => {
   try {
     const res = await API.get(API_ENDPOINTS.getChatHistory(productId, limit), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    
+
     const data: ChatHistoryResponse = res?.data;
-    
+
     if (!data || !data.history || !Array.isArray(data.history)) {
       return [];
     }
-    
-    // Transform history to messages array
+
     const messages: ChatMessage[] = [];
-    
-    // History comes most recent first, reverse for chronological display
     const reversedHistory = [...data.history].reverse();
-    
+
     reversedHistory.forEach((item) => {
-      // Add user message (question)
       messages.push({
         id: `${item.id}-question`,
         content: item.question,
         role: 'user',
         timestamp: item.created_at || item.updated_at,
       });
-      
-      // Add assistant message (answer)
       messages.push({
         id: `${item.id}-answer`,
         content: item.answer,
@@ -489,7 +571,7 @@ export const getChatHistory = async (
         timestamp: item.updated_at || item.created_at,
       });
     });
-    
+
     return messages;
   } catch (error) {
     console.error('Failed to get chat history:', error);
@@ -505,19 +587,15 @@ export const sendChatMessage = async (
   try {
     const requestBody: ChatbotRequest = {
       product_id: productId,
-      question: question,
+      question,
     };
-    
+
     const res = await API.post(
       API_ENDPOINTS.sendChatMessage(productId),
       requestBody,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
-    
+
     return res?.data || null;
   } catch (error) {
     console.error('Failed to send chat message:', error);
@@ -537,9 +615,7 @@ export const clearChatbotCache = async (
 ): Promise<ClearChatbotCacheResponse | null> => {
   try {
     const res = await API.delete(API_ENDPOINTS.clearChatbotCache(productId), {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     return res?.data ?? null;
   } catch (error) {
@@ -572,30 +648,23 @@ export const getDashboardUsers = async (
     if (accessToken) {
       headers.Authorization = `Bearer ${accessToken}`;
     }
-    
-    const res = await API.get(API_ENDPOINTS.dashboardUsers, {
-      headers,
-    });
+
+    const res = await API.get(API_ENDPOINTS.dashboardUsers, { headers });
     return res?.data || [];
   } catch (error: any) {
     console.error('Failed to get dashboard users:', error);
-    
-    // Extract error message from backend response
-    const errorMessage = 
+    const errorMessage =
       error.response?.data?.error ||
       error.response?.data?.message ||
       error.message ||
       'Failed to fetch dashboard users';
-    
-    // Throw error with backend message so it can be handled by the component
     throw new Error(errorMessage);
   }
 };
 
 /* =====================
    SEARCH RESULTS TYPES
-===================== */
-
+   ===================== */
 export interface SearchResult {
   name: string;
   rank: number;
@@ -629,11 +698,25 @@ export interface SearchResultsResponse {
   keywords: KeywordData[];
 }
 
-// Duplicate auth interceptor removed: token/session headers are already set by the primary interceptor above.
+export const getProductSearchResults = async (
+  productId: string
+): Promise<SearchResultsResponse> => {
+  try {
+    const res = await API.get(API_ENDPOINTS.getProductSearchResults(productId));
+    return res.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to fetch search results";
+    throw new Error(message);
+  }
+};
 
 /* =====================
    AI READINESS CHECKER
-===================== */
+   ===================== */
 export interface AIReadinessCheckResult {
   check: string;
   passed: boolean;
@@ -658,28 +741,6 @@ export const checkAIReadiness = async (
       error?.message ||
       "Something went wrong. Please try again.";
     return { error: message };
-  }
-};
-
-/* =====================
-   HELPER
-===================== */
-
-export const getProductSearchResults = async (
-  productId: string
-): Promise<SearchResultsResponse> => {
-  try {
-    const res = await API.get(
-      API_ENDPOINTS.getProductSearchResults(productId)
-    );
-    return res.data;
-  } catch (error: any) {
-    const message =
-      error.response?.data?.error ||
-      error.response?.data?.message ||
-      error.message ||
-      "Failed to fetch search results";
-    throw new Error(message);
   }
 };
 
@@ -722,10 +783,7 @@ export const acceptInvitation = async (
       ...payload,
       password: encryptPassword(payload.password),
     };
-    const res = await API.post(
-      API_ENDPOINTS.acceptInvitation(token),
-      encryptedPayload
-    );
+    const res = await API.post(API_ENDPOINTS.acceptInvitation(token), encryptedPayload);
     return res.data;
   } catch (error: any) {
     const message =
