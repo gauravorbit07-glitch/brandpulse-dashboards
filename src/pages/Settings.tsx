@@ -640,7 +640,22 @@ export default function Settings() {
                               </td>
                               <td className="px-6 py-4 text-right">
                                 {canExport ? (
-                                  <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                                  <Button variant="outline" size="sm" onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      // Fetch the analytics data for this specific run
+                                      const analyticsData = await getAnalyticsById(item.analytics_id);
+                                      if (analyticsData) {
+                                        // Temporarily set analytics data so report generators can read it
+                                        setAnalyticsData(analyticsData);
+                                        generateReport(toast);
+                                      } else {
+                                        toast({ title: "Error", description: "Could not load analytics data for this run.", variant: "destructive" });
+                                      }
+                                    } catch {
+                                      toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
+                                    }
+                                  }}>
                                     <Download className="w-3.5 h-3.5 mr-1.5" />
                                     Download
                                   </Button>
