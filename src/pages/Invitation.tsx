@@ -95,63 +95,7 @@ interface Member {
   isYou?: boolean;
 }
 
-const INITIAL_MEMBERS: Member[] = [
-  {
-    id: "1",
-    name: "Gaurav Sharma",
-    email: "gaurav@georankers.com",
-    role: "admin",
-    status: "active",
-    initials: "GS",
-    joinedAt: "Jan 3, 2025",
-    isYou: true,
-  },
-  {
-    id: "2",
-    name: "Priya Mehta",
-    email: "priya@acme.com",
-    role: "editor",
-    status: "active",
-    initials: "PM",
-    joinedAt: "Jan 15, 2025",
-  },
-  {
-    id: "3",
-    name: "Rahul Verma",
-    email: "rahul@acme.com",
-    role: "viewer",
-    status: "active",
-    initials: "RV",
-    joinedAt: "Feb 2, 2025",
-  },
-  {
-    id: "4",
-    name: "Sarah Johnson",
-    email: "sarah.j@partner.io",
-    role: "editor",
-    status: "pending",
-    initials: "SJ",
-    invitedAt: "Feb 20, 2025",
-  },
-  {
-    id: "5",
-    name: "Tom Nguyen",
-    email: "tom@designco.io",
-    role: "viewer",
-    status: "pending",
-    initials: "TN",
-    invitedAt: "Feb 24, 2025",
-  },
-  {
-    id: "6",
-    name: "Lisa Park",
-    email: "lisa.park@corp.com",
-    role: "editor",
-    status: "declined",
-    initials: "LP",
-    invitedAt: "Feb 10, 2025",
-  },
-];
+// No more hardcoded data - we use collaborators from auth context
 
 const STATUS_CONFIG = {
   active: {
