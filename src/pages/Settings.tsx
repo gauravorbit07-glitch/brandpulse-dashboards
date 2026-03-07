@@ -32,8 +32,11 @@ import {
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { getAnalyticsList, type AnalyticsListItem } from "@/apiHelpers";
+import { getAnalyticsList, getAnalyticsById, type AnalyticsListItem } from "@/apiHelpers";
 import { PLAN_LIMITS, type PricingPlanName, checkJourneyAccess, getRoleName } from "@/lib/plans";
+import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
+import { generateReport } from "@/results/layout/downloadReport";
+import { setAnalyticsData } from "@/results/data/analyticsData";
 import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
 
 // ─── Import all tracking data from analyticsData.ts ──────────────────────
