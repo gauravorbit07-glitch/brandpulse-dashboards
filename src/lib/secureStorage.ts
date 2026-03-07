@@ -267,6 +267,34 @@ export const clearSecurePlanExpiresAt = () => {
   localStorage.removeItem("plan_expires_at");
 };
 
+// ── Email ──
+export const setSecureEmail = (email: string) => {
+  secureLocalStorage.setItem("user_email", email);
+};
+
+export const getSecureEmail = (): string => {
+  return migrateLegacyLocalToSecureLocal("user_email") || "";
+};
+
+export const clearSecureEmail = () => {
+  secureLocalStorage.removeItem("user_email");
+  localStorage.removeItem("user_email");
+};
+
+// ── Last Name ──
+export const setSecureLastName = (lastName: string) => {
+  secureLocalStorage.setItem("last_name", lastName);
+};
+
+export const getSecureLastName = (): string => {
+  return migrateLegacyLocalToSecureLocal("last_name") || "";
+};
+
+export const clearSecureLastName = () => {
+  secureLocalStorage.removeItem("last_name");
+  localStorage.removeItem("last_name");
+};
+
 // ── Clear all sensitive data (used on logout) ──
 export const clearAllSecureData = () => {
   clearSecureAuthStorage();
@@ -279,4 +307,6 @@ export const clearAllSecureData = () => {
   clearSecureCollaborators();
   clearSecureUserRole();
   clearSecurePlanExpiresAt();
+  clearSecureEmail();
+  clearSecureLastName();
 };
