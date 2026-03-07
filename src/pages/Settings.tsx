@@ -48,6 +48,7 @@ import {
   getBrandInfoWithLogos,
   getAnalysisDate,
   getAnalysisKeywords,
+  getModelName,
 } from "@/results/data/analyticsData";
 
 // ─── Types ────────────────────────────────────────────────────────────────
