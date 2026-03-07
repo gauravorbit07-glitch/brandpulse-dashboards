@@ -753,15 +753,20 @@ export default function TeamMembers() {
                             {Object.values(ROLES).map((r) => {
                               const RI = r.icon;
                               const rKey = r.key as RoleKey;
+                              // Don't allow changing TO admin or changing FROM admin
+                              const isAdminRole = rKey === "admin";
+                              const memberIsAdmin = member.role === "admin";
+                              const isDisabled = isAdminRole || memberIsAdmin;
                               return (
                                 <button
                                   key={rKey}
-                                  onClick={() =>
-                                    handleRoleChange(member.id, rKey)
-                                  }
-                                  className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left ${
+                                  onClick={() => {
+                                    if (!isDisabled) handleRoleChange(member.id, rKey);
+                                  }}
+                                  disabled={isDisabled}
+                                  className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors text-left ${
                                     member.role === rKey ? "bg-muted" : ""
-                                  }`}
+                                  } ${isDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-muted"}`}
                                 >
                                   <span
                                     className={`w-7 h-7 rounded-lg ${r.bg} flex items-center justify-center flex-shrink-0`}
@@ -773,7 +778,7 @@ export default function TeamMembers() {
                                       {r.label}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
-                                      {r.description}
+                                      {isAdminRole ? "Contact support to change admin" : r.description}
                                     </p>
                                   </div>
                                   {member.role === rKey && (
