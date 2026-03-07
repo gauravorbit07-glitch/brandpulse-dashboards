@@ -718,7 +718,7 @@ export default function TeamMembers() {
 
                         {/* Role badge */}
                         <div className="relative flex-shrink-0">
-                          {!member.isYou ? (
+                        {!member.isYou && member.role !== "admin" ? (
                             <button
                               onClick={() => {
                                 closeAll();

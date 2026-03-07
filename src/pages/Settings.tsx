@@ -191,13 +191,31 @@ export default function Settings() {
     }
   }, []);
 
-  // Initialize AI models based on plan
+  // Initialize AI models based on plan + actually tracked models from analytics
   useEffect(() => {
-    const models = ALL_MODELS.map((m) => ({
-      ...m,
-      enabled: planLimits.allowedModels.includes(m.id),
-      allowedByPlan: planLimits.allowedModels.includes(m.id),
-    }));
+    // Get models actually used from analytics data
+    const modelsUsedStr = getModelName();
+    const trackedModelIds = modelsUsedStr
+      ? modelsUsedStr.split(",").map((s: string) => s.trim().toLowerCase())
+      : [];
+
+    const models = ALL_MODELS.map((m) => {
+      const allowedByPlan = planLimits.allowedModels.includes(m.id);
+      // Model is enabled if it's tracked in analytics AND allowed by plan
+      const isTracked = trackedModelIds.some((t: string) => 
+        t === m.id || 
+        (m.id === "openai" && (t === "chatgpt" || t === "openai")) ||
+        (m.id === "google-ai" && (t === "google_ai_mode" || t === "google-ai" || t === "google_ai_overview")) ||
+        (m.id === "gemini" && t === "gemini") ||
+        (m.id === "anthropic" && (t === "anthropic" || t === "claude")) ||
+        (m.id === "perplexity" && t === "perplexity")
+      );
+      return {
+        ...m,
+        enabled: allowedByPlan && (trackedModelIds.length === 0 ? allowedByPlan : isTracked),
+        allowedByPlan,
+      };
+    });
     setAiModels(models);
   }, [pricingPlan]);
 
