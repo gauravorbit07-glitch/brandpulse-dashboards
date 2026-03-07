@@ -225,6 +225,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAnalysisUserId(userId);
         setSecureUserId(userId);
         setSecureFirstName(extendedUser.first_name);
+        setSecureLastName(extendedUser.last_name || "");
+        setSecureEmail(extendedUser.email || "");
 
         // Store applications and products from response
         const appsFromResponse = (res as any).applications || [];

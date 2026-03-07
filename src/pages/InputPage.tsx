@@ -657,7 +657,15 @@ export default function InputPage() {
       previousAnalytics: null,
       activeTab: "overview",
       setActiveTab: () => { },
-      isAnalyzing: false
+      isAnalyzing: false,
+      analyticsList: [],
+      isAnalyticsListLoading: false,
+      isSwitchingAnalytics: false,
+      selectedAnalyticsId: null,
+      refreshAnalyticsList: async () => {},
+      switchToAnalytics: async () => {},
+      analyticsVersion: 0,
+      nextAnalyticsGenerationTime: null,
     }}>
       <SidebarProvider defaultOpen={false}>
         <div className="w-full">
