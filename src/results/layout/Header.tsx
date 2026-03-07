@@ -217,7 +217,7 @@ export const Header = () => {
     planInt,
     planExpiresAt
   ).allowed;
-  const canInviteUsers = checkJourneyAccess(
+  const canInviteUsers = userRoleInt <= 1 || checkJourneyAccess(
     "admin:invite-user",
     userRoleInt,
     planInt,
