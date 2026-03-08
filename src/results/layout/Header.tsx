@@ -184,7 +184,7 @@ export const Header = () => {
 
   // Helper to build a unique key for tracking shown completions per user+analytics
   const getCompletionShownKey = useCallback(() => {
-    const userId = user?.email || user?.first_name || "unknown";
+    const userId = user?.id || "unknown";
     const analyticsId = selectedAnalyticsId || "default";
     return `analysis_completed_shown_${userId}_${analyticsId}`;
   }, [user, selectedAnalyticsId]);
