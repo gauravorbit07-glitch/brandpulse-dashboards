@@ -483,8 +483,12 @@ export default function TeamMembers() {
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-semibold text-muted-foreground px-3 py-1.5 rounded-full bg-muted border border-border">
-                {members.filter((m) => m.status === "active" || m.status === "pending").length} / {maxSeats} seats used
+              <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                seatsAtLimit
+                  ? "bg-destructive/10 text-destructive border-destructive/20"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}>
+                {seatsUsed} / {maxSeats} seats used
               </span>
             </div>
             <div className="p-6">
@@ -889,10 +893,10 @@ export default function TeamMembers() {
                 <p className="text-sm font-semibold text-foreground">
                   Seat usage
                 </p>
-              <p className="text-xs text-muted-foreground">
-                  {counts.active} of {maxSeats} seats used on the{" "}
-                  <span className="text-primary font-semibold capitalize">
-                    {pricingPlan}
+              <p className={`text-xs ${seatsAtLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                  {seatsUsed} of {maxSeats} seats used on the{" "}
+                  <span className={`font-semibold capitalize ${seatsAtLimit ? "text-destructive" : "text-primary"}`}>
+                    {pricingPlan === "free" ? "Free Trial" : pricingPlan}
                   </span>{" "}
                   plan
                 </p>
@@ -901,14 +905,18 @@ export default function TeamMembers() {
             <div className="flex items-center gap-3 flex-1 max-w-xs">
               <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary transition-all duration-700"
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    seatsAtLimit ? "bg-destructive" : "bg-primary"
+                  }`}
                   style={{
-                    width: `${Math.min((counts.active / maxSeats) * 100, 100)}%`,
+                    width: `${Math.min((seatsUsed / maxSeats) * 100, 100)}%`,
                   }}
                 />
               </div>
-              <span className="text-xs font-bold text-foreground whitespace-nowrap">
-                {counts.active} / {maxSeats}
+              <span className={`text-xs font-bold whitespace-nowrap ${
+                seatsAtLimit ? "text-destructive" : "text-foreground"
+              }`}>
+                {seatsUsed} / {maxSeats}
               </span>
             </div>
             <button 
