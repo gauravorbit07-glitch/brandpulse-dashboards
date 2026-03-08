@@ -22,20 +22,28 @@ const ResultsContent = () => {
 
   // Pipeline should be skipped if:
   // 1. User has already seen pipeline before (first_analysis flag = "0"), OR
-  // 2. There are multiple previous analyses (not the user's first run)
+  // 2. There are multiple previous analyses (not the user's first run), OR
+  // 3. Current analysis is already completed and was loaded from cache (not a fresh run)
   const shouldSkipPipeline = useMemo(() => {
     try {
       const key = getUserScopedKey(STORAGE_KEYS.FIRST_ANALYSIS);
       const val = localStorage.getItem(key);
-      // Already seen pipeline before
+      // Already seen pipeline before — never show again
       if (val === "0") return true;
-      // Multiple analyses exist = not first time
+      // Multiple analyses exist = not first time user
       if (analyticsList && analyticsList.length > 1) return true;
+      // If we have a single completed analysis and the flag was never set,
+      // it means the user is returning (not first visit) — skip
+      if (analyticsList && analyticsList.length === 1 && currentAnalytics?.status?.toLowerCase() === "completed" && val === null) {
+        // Set the flag so pipeline never shows
+        localStorage.setItem(key, "0");
+        return true;
+      }
       return false;
     } catch {
       return false;
     }
-  }, [analyticsList]);
+  }, [analyticsList, currentAnalytics]);
 
   const [pipelineDone, setPipelineDone] = useState(shouldSkipPipeline);
 
