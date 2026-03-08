@@ -182,37 +182,54 @@ export const Header = () => {
   // Analysis is in progress if loading and no data ready yet, OR if analyzing via hook
   const isAnalysisInProgress = (isLoading && !dataReady) || isAnalyzing;
 
+  // Helper to build a unique key for tracking shown completions per user+analytics
+  const getCompletionShownKey = useCallback(() => {
+    const userId = user?.email || user?.first_name || "unknown";
+    const analyticsId = selectedAnalyticsId || "default";
+    return `analysis_completed_shown_${userId}_${analyticsId}`;
+  }, [user, selectedAnalyticsId]);
+
   // Track when we enter analysis state so we know the completion is meaningful
   // NOTE: Do NOT include analysisLocked here — it persists across login/logout
   // and would falsely trigger "Analysis Complete" on every login
   useEffect(() => {
     if (isAnalysisInProgress || isRegenerating) {
       setWasAnalyzing(true);
+      // Clear the shown flag when a NEW analysis starts so completion can show once
+      try {
+        localStorage.removeItem(getCompletionShownKey());
+      } catch {}
     }
-  }, [isAnalysisInProgress, isRegenerating]);
+  }, [isAnalysisInProgress, isRegenerating, getCompletionShownKey]);
 
-  // Only show "Analysis Complete" when transitioning from analyzing→complete in THIS session
+  // Only show "Analysis Complete" once per analysis, tied to user+analytics ID
   useEffect(() => {
     if (dataReady && !isLoading && !isAnalyzing && wasAnalyzing) {
       setIsRegenerating(false);
       setAnalysisError(false);
-      setAnalysisCompleted(true);
       setWasAnalyzing(false);
       completeAnalysis();
 
-      // Auto-clear completed state after 5 seconds
-      const timer = setTimeout(() => {
-        setAnalysisCompleted(false);
-      }, 5000);
+      // Check if we already showed completion for this user+analytics combo
+      const key = getCompletionShownKey();
+      const alreadyShown = localStorage.getItem(key);
+      if (!alreadyShown) {
+        setAnalysisCompleted(true);
+        localStorage.setItem(key, Date.now().toString());
 
-      return () => clearTimeout(timer);
+        // Auto-clear after 2 seconds
+        const timer = setTimeout(() => {
+          setAnalysisCompleted(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
     }
     // If data is ready on mount but we were never analyzing, just clean up
     if (dataReady && !isLoading && !isAnalyzing && !wasAnalyzing) {
       setIsRegenerating(false);
       completeAnalysis();
     }
-  }, [dataReady, isLoading, isAnalyzing, wasAnalyzing, completeAnalysis]);
+  }, [dataReady, isLoading, isAnalyzing, wasAnalyzing, completeAnalysis, getCompletionShownKey]);
 
   const isCooldownBlocked = isAnalyticsGenerationBlocked(
     nextAnalyticsGenerationTime
