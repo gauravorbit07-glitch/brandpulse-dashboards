@@ -483,8 +483,12 @@ export default function TeamMembers() {
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-semibold text-muted-foreground px-3 py-1.5 rounded-full bg-muted border border-border">
-                {members.filter((m) => m.status === "active" || m.status === "pending").length} / {maxSeats} seats used
+              <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                seatsAtLimit
+                  ? "bg-destructive/10 text-destructive border-destructive/20"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}>
+                {seatsUsed} / {maxSeats} seats used
               </span>
             </div>
             <div className="p-6">
