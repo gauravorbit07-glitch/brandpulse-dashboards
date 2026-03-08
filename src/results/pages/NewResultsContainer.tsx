@@ -17,7 +17,7 @@ const scrollToTop = () => {
 };
 
 const ResultsContent = () => {
-  const { activeTab, dataReady, currentAnalytics, analyticsList } = useResults();
+  const { activeTab, dataReady, currentAnalytics, analyticsList, isAnalyzing } = useResults();
   const location = useLocation();
 
   // Pipeline should be skipped if:

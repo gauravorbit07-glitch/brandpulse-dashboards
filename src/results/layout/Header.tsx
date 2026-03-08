@@ -152,6 +152,8 @@ export const Header = () => {
   const [productId, setProductId] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState(false);
   const [analysisCompleted, setAnalysisCompleted] = useState(false);
+  // Track whether we were actually in an analysis state before data arrived
+  const [wasAnalyzing, setWasAnalyzing] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -180,12 +182,20 @@ export const Header = () => {
   // Analysis is in progress if loading and no data ready yet, OR if analyzing via hook
   const isAnalysisInProgress = (isLoading && !dataReady) || isAnalyzing;
 
-  // Clear regenerating state once data is ready
+  // Track when we enter analysis state so we know the completion is meaningful
   useEffect(() => {
-    if (dataReady && !isLoading && !isAnalyzing) {
+    if (isAnalysisInProgress || isRegenerating || analysisLocked) {
+      setWasAnalyzing(true);
+    }
+  }, [isAnalysisInProgress, isRegenerating, analysisLocked]);
+
+  // Only show "Analysis Complete" when transitioning from analyzing→complete in THIS session
+  useEffect(() => {
+    if (dataReady && !isLoading && !isAnalyzing && wasAnalyzing) {
       setIsRegenerating(false);
       setAnalysisError(false);
       setAnalysisCompleted(true);
+      setWasAnalyzing(false);
       completeAnalysis();
 
       // Auto-clear completed state after 5 seconds
@@ -195,7 +205,12 @@ export const Header = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [dataReady, isLoading, isAnalyzing, completeAnalysis]);
+    // If data is ready on mount but we were never analyzing, just clean up
+    if (dataReady && !isLoading && !isAnalyzing && !wasAnalyzing) {
+      setIsRegenerating(false);
+      completeAnalysis();
+    }
+  }, [dataReady, isLoading, isAnalyzing, wasAnalyzing, completeAnalysis]);
 
   const isCooldownBlocked = isAnalyticsGenerationBlocked(
     nextAnalyticsGenerationTime

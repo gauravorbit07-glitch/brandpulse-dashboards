@@ -167,18 +167,20 @@ interface JourneyRule {
 }
 
 export const JOURNEY_REGISTRY: Record<string, JourneyRule> = {
-  "product:create":      { minRole: 2, minPlan: 1, enforcePlanExpiry: true },
+  // Free plan (0) has same features as Launch (1), just 7-day expiry
+  // So minPlan: 0 for everything except report:export (Grow/2)
+  "product:create":      { minRole: 2, minPlan: 0, enforcePlanExpiry: true },
   "product:read":        { minRole: 4, minPlan: 0, enforcePlanExpiry: false },
-  "product:update":      { minRole: 3, minPlan: 1, enforcePlanExpiry: true },
-  "product:delete":      { minRole: 1, minPlan: 1, enforcePlanExpiry: true },
-  "keyword:create":      { minRole: 3, minPlan: 1, enforcePlanExpiry: true },
-  "analytics:generate":  { minRole: 3, minPlan: 1, enforcePlanExpiry: true },
+  "product:update":      { minRole: 3, minPlan: 0, enforcePlanExpiry: true },
+  "product:delete":      { minRole: 1, minPlan: 0, enforcePlanExpiry: true },
+  "keyword:create":      { minRole: 3, minPlan: 0, enforcePlanExpiry: true },
+  "analytics:generate":  { minRole: 3, minPlan: 0, enforcePlanExpiry: true },
   "analytics:read":      { minRole: 4, minPlan: 0, enforcePlanExpiry: false },
   "chatbot:ask":         { minRole: 4, minPlan: 0, enforcePlanExpiry: false },
   "chatbot:history":     { minRole: 4, minPlan: 0, enforcePlanExpiry: false },
-  "search:generate":     { minRole: 3, minPlan: 1, enforcePlanExpiry: true },
+  "search:generate":     { minRole: 3, minPlan: 0, enforcePlanExpiry: true },
   "admin:manage-app":    { minRole: 1, minPlan: 0, enforcePlanExpiry: false },
-  "admin:invite-user":   { minRole: 1, minPlan: 1, enforcePlanExpiry: true },
+  "admin:invite-user":   { minRole: 1, minPlan: 0, enforcePlanExpiry: true },
   "report:export":       { minRole: 3, minPlan: 2, enforcePlanExpiry: true },
 };
 
