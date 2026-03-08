@@ -204,8 +204,14 @@ export const Header = () => {
   }, [isRegenerating, getCompletionShownKey]);
 
   // Also track real server-side analysis (isAnalyzing from polling), but only
-  // if NOT on initial page load (wasAnalyzing or isRegenerating already set)
+  // AFTER the component has mounted — skip the initial render cycle entirely
+  // to prevent falsely triggering the completion pill on login/refresh
   useEffect(() => {
+    if (!hasMountedRef.current) {
+      // Skip the very first evaluation — this is the initial page load
+      hasMountedRef.current = true;
+      return;
+    }
     if (isAnalyzing && !dataReady) {
       setWasAnalyzing(true);
     }
