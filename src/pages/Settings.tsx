@@ -581,139 +581,14 @@ export default function Settings() {
 
               {/* ════════════════════ ANALYSIS RUN HISTORY ════════════════════ */}
               {activeTab === "history" && (
-                <div className="space-y-6">
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                      Analysis Run History
-                    </h1>
-                    <p className="text-muted-foreground mt-1">
-                      All past analysis runs with scores and downloadable reports
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                    {isLoadingHistory ? (
-                      <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                      </div>
-                    ) : analyticsList.length === 0 ? (
-                      <div className="text-center py-20 px-6">
-                        <History className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
-                        <p className="text-sm font-medium text-foreground">No analysis runs yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Run your first analysis to see results here
-                        </p>
-                        <Button
-                          size="sm"
-                          className="mt-4"
-                          onClick={() => navigate("/input")}
-                        >
-                          <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                          Run Analysis
-                        </Button>
-                      </div>
-                    ) : (
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-border bg-muted/30">
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Date of Run
-                            </th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Analytics ID
-                            </th>
-                            <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Report
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {analyticsList.map((item, idx) => (
-                            <tr
-                              key={item.analytics_id}
-                              className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
-                              onClick={() => navigate(`/results?analytics_id=${item.analytics_id}`)}
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <div>
-                                    <p className="text-sm font-medium text-foreground">
-                                      {formatShortDate(item.created_at)}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatLocalDate(item.created_at, "h:mm a")}
-                                    </p>
-                                  </div>
-                                  {idx === 0 && (
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success border-success/20">
-                                      Latest
-                                    </Badge>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <span className="text-xs text-muted-foreground font-mono">
-                                  {item.analytics_id.slice(0, 8)}…
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                {canExport ? (
-                                  <Button variant="outline" size="sm" onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      // Fetch the analytics data for this specific run
-                                      const analyticsData = await getAnalyticsById(item.analytics_id);
-                                      if (analyticsData) {
-                                        // Temporarily set analytics data so report generators can read it
-                                        setAnalyticsData(analyticsData);
-                                        generateReport(toast);
-                                      } else {
-                                        toast({ title: "Error", description: "Could not load analytics data for this run.", variant: "destructive" });
-                                      }
-                                    } catch {
-                                      toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
-                                    }
-                                  }}>
-                                    <Download className="w-3.5 h-3.5 mr-1.5" />
-                                    Download
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toast({
-                                        title: "Upgrade required",
-                                        description: "Report export requires the Grow plan or higher.",
-                                        variant: "destructive",
-                                      });
-                                    }}
-                                  >
-                                    <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                                    Generate Report
-                                  </Button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-
-                  {analyticsList.length > 0 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      Showing last {planLimits.maxAnalyticsHistory} runs ·{" "}
-                      <button
-                        onClick={() => navigate("/billing")}
-                        className="text-primary hover:underline"
-                      >
-                        Upgrade for more history
-                      </button>
-                    </p>
-                  )}
-                </div>
+                <AnalysisRunHistoryTab
+                  analyticsList={analyticsList}
+                  isLoadingHistory={isLoadingHistory}
+                  canExport={canExport}
+                  planLimits={planLimits}
+                  navigate={navigate}
+                  toast={toast}
+                />
               )}
 
               {/* ════════════════════ ACCOUNT ════════════════════ */}
