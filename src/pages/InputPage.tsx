@@ -679,7 +679,7 @@ export default function InputPage() {
 
                 {!isAnalyzing ? (
                   <>
-                    <div className="space-y-4 text-center mb-12">
+                    <div className="space-y-4 text-center mb-8">
                       <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl lg:text-6xl">
                         <span className="gradient-text">Analysis</span> Setup
                       </h1>
@@ -688,85 +688,83 @@ export default function InputPage() {
                       </p>
                     </div>
 
-                    <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-start">
-                      {/* SIDEBAR PROGRESSION */}
-                      <aside className="lg:col-span-3 mb-10 lg:mb-0">
-                        <div className="lg:sticky lg:top-32 space-y-10 animate-in fade-in slide-in-from-left-6 duration-700">
-                          <div className="space-y-1">
+                    {/* PROGRESS BAR - Fixed/Sticky below header */}
+                    <div className="sticky top-14 z-20 bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 px-4 py-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
+                      <div className="max-w-3xl mx-auto">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="space-y-0.5">
                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/50">Your Progress</h3>
                             <p className="text-sm font-bold text-foreground/80">Analysis Configuration</p>
                           </div>
-
-                          <div className="flex flex-col gap-8 relative">
-                            {/* Vertical Line Connector */}
-                            <div className="absolute left-5 top-4 bottom-4 w-0.5 bg-muted rounded-full overflow-hidden z-0">
-                              <div
-                                className="w-full bg-emerald-500 transition-all duration-1000"
-                                style={{
-                                  height: selectedCompetitors.length >= 4 ? '100%' :
-                                    brandDescription ? '50%' : '0%'
-                                }}
-                              />
+                          {/* Requirement Pills inline */}
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all duration-500",
+                              selectedCompetitors.length >= 4
+                                ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+                                : "text-muted-foreground/70 bg-muted/50 border-muted"
+                            )}>
+                              {selectedCompetitors.length >= 4 ? <Check className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
+                              Min. 4 Competitors
                             </div>
-
-                            {[
-                              { id: 1, label: "Brand Identity", desc: "Identity & Vision", active: true, completed: Boolean(brandDescription) },
-                              { id: 2, label: "Competitors", desc: "Market Benchmarks", active: Boolean(brandDescription), completed: selectedCompetitors.length >= 4 },
-                              { id: 3, label: "Keywords", desc: "Visibility Targets", active: selectedCompetitors.length >= 4, completed: selectedKeywords.length >= 1 },
-                            ].map((step) => (
-                              <div key={step.id} className={cn(
-                                "flex items-start gap-5 transition-all duration-500 relative z-10",
-                                step.active ? "opacity-100" : "opacity-30"
-                              )}>
-                                <div className={cn(
-                                  "w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-bold transition-all duration-500 border-2 shrink-0 bg-background",
-                                  step.completed ? "bg-emerald-500 border-emerald-500 text-white shadow-glow-emerald" :
-                                    step.active ? "bg-primary border-primary text-primary-foreground shadow-glow" :
-                                      "border-muted text-muted-foreground"
-                                )}>
-                                  {step.completed ? <Check className="w-5 h-5" /> : step.id}
-                                </div>
-                                <div className="flex flex-col gap-0.5 pt-0.5">
-                                  <span className={cn(
-                                    "text-xs font-black uppercase tracking-wider",
-                                    step.active ? "text-foreground" : "text-muted-foreground"
-                                  )}>{step.label}</span>
-                                  <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tight">{step.desc}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Requirement Pill */}
-                          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 backdrop-blur-sm flex flex-col gap-3 transition-all duration-300 hover:bg-primary/10">
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest">
-                              <Tag className="w-3 h-3" />
-                              Requirements
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-[10px] font-bold">
-                                <span className={selectedCompetitors.length >= 4 ? "text-emerald-500" : "text-muted-foreground/70"}>Min. 4 Competitors</span>
-                                {selectedCompetitors.length >= 4 ? (
-                                  <Check className="w-3 h-3 text-emerald-500" />
-                                ) : (
-                                  <div className="w-3 h-3 rounded-full border border-muted-foreground/30" />
-                                )}
-                              </div>
-                              <div className="flex items-center justify-between text-[10px] font-bold">
-                                <span className={selectedKeywords.length >= 1 ? "text-emerald-500" : "text-muted-foreground/70"}>Min. 1 Keyword</span>
-                                {selectedKeywords.length >= 1 ? (
-                                  <Check className="w-3 h-3 text-emerald-500" />
-                                ) : (
-                                  <div className="w-3 h-3 rounded-full border border-muted-foreground/30" />
-                                )}
-                              </div>
+                            <div className={cn(
+                              "flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all duration-500",
+                              selectedKeywords.length >= 1
+                                ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+                                : "text-muted-foreground/70 bg-muted/50 border-muted"
+                            )}>
+                              {selectedKeywords.length >= 1 ? <Check className="w-3 h-3" /> : <div className="w-3 h-3 rounded-full border border-current" />}
+                              Min. 1 Keyword
                             </div>
                           </div>
                         </div>
-                      </aside>
 
-                      {/* MAIN CONTENT AREA */}
-                      <div className="lg:col-span-9 space-y-12">
+                        {/* Horizontal Steps */}
+                        <div className="flex items-center gap-2 relative">
+                          {/* Horizontal Line Connector */}
+                          <div className="absolute top-5 left-5 right-5 h-0.5 bg-muted rounded-full overflow-hidden z-0">
+                            <div
+                              className="h-full bg-emerald-500 transition-all duration-1000"
+                              style={{
+                                width: selectedCompetitors.length >= 4 && selectedKeywords.length >= 1 ? '100%' :
+                                  selectedCompetitors.length >= 4 ? '75%' :
+                                  brandDescription ? '35%' : '0%'
+                              }}
+                            />
+                          </div>
+
+                          {[
+                            { id: 1, label: "Brand Identity", desc: "Identity & Vision", active: true, completed: Boolean(brandDescription) },
+                            { id: 2, label: "Competitors", desc: "Market Benchmarks", active: Boolean(brandDescription), completed: selectedCompetitors.length >= 4 },
+                            { id: 3, label: "Keywords", desc: "Visibility Targets", active: selectedCompetitors.length >= 4, completed: selectedKeywords.length >= 1 },
+                          ].map((step) => (
+                            <div key={step.id} className={cn(
+                              "flex items-center gap-3 flex-1 transition-all duration-500 relative z-10",
+                              step.active ? "opacity-100" : "opacity-30"
+                            )}>
+                              <div className={cn(
+                                "w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-bold transition-all duration-500 border-2 shrink-0 bg-background",
+                                step.completed ? "bg-emerald-500 border-emerald-500 text-white shadow-glow-emerald" :
+                                  step.active ? "bg-primary border-primary text-primary-foreground shadow-glow" :
+                                    "border-muted text-muted-foreground"
+                              )}>
+                                {step.completed ? <Check className="w-5 h-5" /> : step.id}
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                <span className={cn(
+                                  "text-xs font-black uppercase tracking-wider",
+                                  step.active ? "text-foreground" : "text-muted-foreground"
+                                )}>{step.label}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground/60 tracking-tight">{step.desc}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SCROLLABLE CONTENT AREA */}
+                    <div className="max-w-3xl mx-auto space-y-12">
                         {/* SECTION 1: Brand Details */}
                         <Card className="border-none shadow-elevated bg-card/60 backdrop-blur-md overflow-hidden relative group transition-all duration-500 hover:shadow-glow/20">
                           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1123,7 +1121,6 @@ export default function InputPage() {
                           </Button>
                         </div>
 
-                      </div>
                     </div>
                   </>
                 ) : (
