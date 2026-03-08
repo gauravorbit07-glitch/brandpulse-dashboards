@@ -769,11 +769,20 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pla
             if (Array.isArray(kw?.prompts)) promptsCount += kw.prompts.length;
           });
 
-          // AI Visibility Score
+          // AI Visibility Score — use same logic as overview (getAIVisibilityMetrics)
           const brands = analyticsPayload?.brands || [];
-          const mainBrand = brands[0];
-          const geoScore = mainBrand?.geo_score?.Value ?? mainBrand?.geo_score ?? 0;
-          const allScores = brands.map((b: any) => b?.geo_score?.Value ?? b?.geo_score ?? 0);
+          // Reverse brands to match getBrandInfoWithLogos order (highest first)
+          const reversedBrands = [...brands].reverse();
+          const brandNameForScore = analyticsPayload?.brand_name || "";
+          const mainBrand = reversedBrands.find((b: any) => b.brand === brandNameForScore) || reversedBrands[0];
+          const rawGeoScore = typeof mainBrand?.geo_score === 'object' 
+            ? (mainBrand?.geo_score?.Value ?? 0) 
+            : (mainBrand?.geo_score ?? 0);
+          const geoScore = rawGeoScore;
+          const allScores = brands.map((b: any) => {
+            const s = b?.geo_score;
+            return typeof s === 'object' ? (s?.Value ?? 0) : (s ?? 0);
+          });
           const percentile = allScores.length > 1 ? calculatePercentile(geoScore, allScores) : (geoScore > 0 ? 50 : 0);
           const tier = getTierFromPercentile(percentile);
 
@@ -1003,7 +1012,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pla
                         navigate("/billing", { state: { from: "/settings" } });
                       }} className="border-warning/30 text-warning hover:bg-warning/5">
                         <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Upgrade to Export
+                        Upgrade to Grow
                       </Button>
                     )}
                   </td>

@@ -157,7 +157,7 @@ const invoices = [
 const Billing = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, pricingPlan, planExpiresAt, planInt, userRoleInt } = useAuth();
+  const { products, pricingPlan, planExpiresAt, planInt, userRoleInt, collaborators } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">(
     "monthly"
   );
@@ -742,50 +742,58 @@ const Billing = () => {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                       Usage This Cycle
                     </p>
-                    {[
-                      {
-                        label: "Keywords",
-                        current: products.length > 0 ? products[0]?.name ? 1 : 0 : 0,
-                        max: currentLimits.maxKeywords,
-                        color: "bg-primary",
-                      },
-                      {
-                        label: "Conversations / Day",
-                        current: 0,
-                        max: currentLimits.maxConversationsPerDay,
-                        color: "bg-violet-500",
-                      },
-                      {
-                        label: "Team Seats",
-                        current: 1,
-                        max: currentLimits.maxUsers,
-                        color: "bg-amber-500",
-                      },
-                    ].map((usage) => {
-                      const pct = usage.max > 0 ? (usage.current / usage.max) * 100 : 0;
-                      return (
-                        <div key={usage.label} className="space-y-1.5">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground font-medium">
-                              {usage.label}
-                            </span>
-                            <span className="font-semibold text-foreground">
-                              {usage.current}
-                              <span className="text-muted-foreground">
-                                {" "}
-                                / {usage.max}
+                    {(() => {
+                      // Dynamic seat count from collaborators
+                      const seatsUsed = collaborators && collaborators.length > 0 ? collaborators.length : 1;
+                      
+                      const usageItems = [
+                        {
+                          label: "Seed Prompts",
+                          current: products.length > 0 ? 1 : 0,
+                          max: currentLimits.maxKeywords,
+                          color: "bg-primary",
+                        },
+                        {
+                          label: "Conversations / Day",
+                          current: 0,
+                          max: currentLimits.maxConversationsPerDay,
+                          color: "bg-violet-500",
+                        },
+                        {
+                          label: "Team Seats",
+                          current: seatsUsed,
+                          max: currentLimits.maxUsers,
+                          color: "bg-amber-500",
+                        },
+                      ];
+                      
+                      return usageItems.map((usage) => {
+                        const pct = usage.max > 0 ? Math.min((usage.current / usage.max) * 100, 100) : 0;
+                        const atLimit = usage.current >= usage.max;
+                        return (
+                          <div key={usage.label} className="space-y-1.5">
+                            <div className="flex justify-between text-xs">
+                              <span className={`font-medium ${atLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                                {usage.label}
                               </span>
-                            </span>
+                              <span className={`font-semibold ${atLimit ? "text-destructive" : "text-foreground"}`}>
+                                {usage.current}
+                                <span className={atLimit ? "text-destructive/70" : "text-muted-foreground"}>
+                                  {" "}
+                                  / {usage.max}
+                                </span>
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-700 ${atLimit ? "bg-destructive" : usage.color}`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-700 ${usage.color}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
 
                   <div className="flex gap-2 pt-1">

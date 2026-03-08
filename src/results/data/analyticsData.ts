@@ -299,9 +299,9 @@ export const getBrandInfoWithLogos = (): Array<{
   
   return reversedBrands.map((brand: any) => ({
     brand: brand.brand,
-    geo_score: brand.geo_score || 0,
-    mention_score: brand.mention_score || 0,
-    mention_count: brand.mention_count || 0,
+    geo_score: typeof brand.geo_score === 'object' ? (brand.geo_score?.Value ?? 0) : (brand.geo_score || 0),
+    mention_score: typeof brand.mention_score === 'object' ? (brand.mention_score?.Value ?? 0) : (brand.mention_score || 0),
+    mention_count: typeof brand.mention_count === 'object' ? (brand.mention_count?.Value ?? 0) : (brand.mention_count || 0),
     logo: formatLogoUrl(brand.logo || ''),
     geo_tier: brand.geo_tier || 'Low',
     mention_tier: brand.mention_tier || 'Low',
