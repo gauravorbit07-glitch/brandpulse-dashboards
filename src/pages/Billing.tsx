@@ -157,7 +157,7 @@ const invoices = [
 const Billing = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, pricingPlan, planExpiresAt, planInt, userRoleInt } = useAuth();
+  const { products, pricingPlan, planExpiresAt, planInt, userRoleInt, collaborators } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">(
     "monthly"
   );
