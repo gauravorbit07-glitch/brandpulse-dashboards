@@ -1003,7 +1003,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pla
                         navigate("/billing", { state: { from: "/settings" } });
                       }} className="border-warning/30 text-warning hover:bg-warning/5">
                         <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Upgrade to Export
+                        Upgrade to Grow
                       </Button>
                     )}
                   </td>
