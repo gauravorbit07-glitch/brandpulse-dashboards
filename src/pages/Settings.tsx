@@ -965,7 +965,6 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pla
                   </td>
                   <td className="px-4 py-4 text-center">
                     <span className="text-2xl font-bold text-foreground">{item.aiVisibilityScore}</span>
-                    <span className="text-xs text-muted-foreground">/100</span>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <Badge variant="outline" className={`text-xs ${getTierColor(item.tier)}`}>
