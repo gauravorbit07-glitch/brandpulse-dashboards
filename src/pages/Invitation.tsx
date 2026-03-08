@@ -893,10 +893,10 @@ export default function TeamMembers() {
                 <p className="text-sm font-semibold text-foreground">
                   Seat usage
                 </p>
-              <p className="text-xs text-muted-foreground">
-                  {counts.active} of {maxSeats} seats used on the{" "}
-                  <span className="text-primary font-semibold capitalize">
-                    {pricingPlan}
+              <p className={`text-xs ${seatsAtLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                  {seatsUsed} of {maxSeats} seats used on the{" "}
+                  <span className={`font-semibold capitalize ${seatsAtLimit ? "text-destructive" : "text-primary"}`}>
+                    {pricingPlan === "free" ? "Free Trial" : pricingPlan}
                   </span>{" "}
                   plan
                 </p>
