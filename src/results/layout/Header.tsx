@@ -189,18 +189,26 @@ export const Header = () => {
     return `analysis_completed_shown_${userId}_${analyticsId}`;
   }, [user, selectedAnalyticsId]);
 
-  // Track when we enter analysis state so we know the completion is meaningful
-  // NOTE: Do NOT include analysisLocked here — it persists across login/logout
-  // and would falsely trigger "Analysis Complete" on every login
+  // Only mark wasAnalyzing when user explicitly triggers regeneration
+  // Do NOT react to isAnalysisInProgress — it's briefly true on every page load
+  // which would falsely trigger the completion pill on login/refresh
   useEffect(() => {
-    if (isAnalysisInProgress || isRegenerating) {
+    if (isRegenerating) {
       setWasAnalyzing(true);
       // Clear the shown flag when a NEW analysis starts so completion can show once
       try {
         localStorage.removeItem(getCompletionShownKey());
       } catch {}
     }
-  }, [isAnalysisInProgress, isRegenerating, getCompletionShownKey]);
+  }, [isRegenerating, getCompletionShownKey]);
+
+  // Also track real server-side analysis (isAnalyzing from polling), but only
+  // if NOT on initial page load (wasAnalyzing or isRegenerating already set)
+  useEffect(() => {
+    if (isAnalyzing && !dataReady) {
+      setWasAnalyzing(true);
+    }
+  }, [isAnalyzing, dataReady]);
 
   // Only show "Analysis Complete" once per analysis, tied to user+analytics ID
   useEffect(() => {
