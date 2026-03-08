@@ -154,6 +154,7 @@ export const Header = () => {
   const [analysisCompleted, setAnalysisCompleted] = useState(false);
   // Track whether we were actually in an analysis state before data arrived
   const [wasAnalyzing, setWasAnalyzing] = useState(false);
+  const hasMountedRef = useRef(false);
 
   const location = useLocation();
   const navigate = useNavigate();
