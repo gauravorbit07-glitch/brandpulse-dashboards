@@ -991,20 +991,19 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pla
                         Download
                       </Button>
                     ) : !item.hasReport ? (
-                      <Button variant="outline" size="sm" onClick={(e) => {
+                      <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed" onClick={(e) => {
                         e.stopPropagation();
-                        toast({ title: "Report not ready", description: "This analysis is still processing.", variant: "destructive" });
                       }}>
                         <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Generate Report
+                        Processing...
                       </Button>
                     ) : (
                       <Button variant="outline" size="sm" onClick={(e) => {
                         e.stopPropagation();
-                        toast({ title: "Upgrade required", description: "Report export requires the Grow plan or higher.", variant: "destructive" });
-                      }}>
+                        navigate("/billing", { state: { from: "/settings" } });
+                      }} className="border-warning/30 text-warning hover:bg-warning/5">
                         <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Generate Report
+                        Upgrade to Export
                       </Button>
                     )}
                   </td>
