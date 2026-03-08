@@ -183,11 +183,13 @@ export const Header = () => {
   const isAnalysisInProgress = (isLoading && !dataReady) || isAnalyzing;
 
   // Track when we enter analysis state so we know the completion is meaningful
+  // NOTE: Do NOT include analysisLocked here — it persists across login/logout
+  // and would falsely trigger "Analysis Complete" on every login
   useEffect(() => {
-    if (isAnalysisInProgress || isRegenerating || analysisLocked) {
+    if (isAnalysisInProgress || isRegenerating) {
       setWasAnalyzing(true);
     }
-  }, [isAnalysisInProgress, isRegenerating, analysisLocked]);
+  }, [isAnalysisInProgress, isRegenerating]);
 
   // Only show "Analysis Complete" when transitioning from analyzing→complete in THIS session
   useEffect(() => {
