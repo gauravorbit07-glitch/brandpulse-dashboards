@@ -905,14 +905,18 @@ export default function TeamMembers() {
             <div className="flex items-center gap-3 flex-1 max-w-xs">
               <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary transition-all duration-700"
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    seatsAtLimit ? "bg-destructive" : "bg-primary"
+                  }`}
                   style={{
-                    width: `${Math.min((counts.active / maxSeats) * 100, 100)}%`,
+                    width: `${Math.min((seatsUsed / maxSeats) * 100, 100)}%`,
                   }}
                 />
               </div>
-              <span className="text-xs font-bold text-foreground whitespace-nowrap">
-                {counts.active} / {maxSeats}
+              <span className={`text-xs font-bold whitespace-nowrap ${
+                seatsAtLimit ? "text-destructive" : "text-foreground"
+              }`}>
+                {seatsUsed} / {maxSeats}
               </span>
             </div>
             <button 
