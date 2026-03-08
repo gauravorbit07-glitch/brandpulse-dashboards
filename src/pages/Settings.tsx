@@ -51,6 +51,8 @@ import {
   getModelName,
 } from "@/results/data/analyticsData";
 
+import { calculatePercentile, getTierFromPercentile } from "@/results/data/formulas";
+
 // ─── Types ────────────────────────────────────────────────────────────────
 type SettingsTab = "company" | "history" | "account";
 

@@ -447,7 +447,18 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
               const alreadyShownForThisAnalysis = shownForIds.includes(analysisId);
 
               // ─── COMPLETED TOAST ───────────────────────────────────────────
-              if (currentStatus === "completed" && !hasShownCompletionToastRef.current && !alreadyShownForThisAnalysis) {
+              // Only show if: not already shown, not shown for this analysis ID,
+              // AND the user is NOT currently on the pipeline screen (first_analysis != "0" means pipeline may be showing)
+              const isPipelineActive = (() => {
+                try {
+                  const faKey = getEmailScopedKey(STORAGE_KEYS.FIRST_ANALYSIS);
+                  const faVal = localStorage.getItem(faKey);
+                  // Pipeline is active if first_analysis flag is NOT "0" (hasn't been dismissed yet)
+                  return faVal !== "0";
+                } catch { return false; }
+              })();
+
+              if (currentStatus === "completed" && !hasShownCompletionToastRef.current && !alreadyShownForThisAnalysis && !isPipelineActive) {
                 // Use triggeredAt (regen flow) if available, otherwise fall back to page load timestamp
                 const referenceTimestamp = triggeredAt ?? pageLoadTimestampRef.current;
                 const analysisCompletedAfterReference = analysisTimestamp > referenceTimestamp;

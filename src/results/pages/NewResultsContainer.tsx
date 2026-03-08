@@ -17,21 +17,34 @@ const scrollToTop = () => {
 };
 
 const ResultsContent = () => {
-  const { activeTab, dataReady, currentAnalytics } = useResults();
+  const { activeTab, dataReady, currentAnalytics, analyticsList } = useResults();
   const location = useLocation();
 
-  // Check if pipeline should be skipped (first_analysis already "0")
+  // Pipeline should be skipped if:
+  // 1. User has already seen pipeline before (first_analysis flag = "0"), OR
+  // 2. There are multiple previous analyses (not the user's first run)
   const shouldSkipPipeline = useMemo(() => {
     try {
       const key = getUserScopedKey(STORAGE_KEYS.FIRST_ANALYSIS);
       const val = localStorage.getItem(key);
-      return val === "0";
+      // Already seen pipeline before
+      if (val === "0") return true;
+      // Multiple analyses exist = not first time
+      if (analyticsList && analyticsList.length > 1) return true;
+      return false;
     } catch {
       return false;
     }
-  }, []);
+  }, [analyticsList]);
 
   const [pipelineDone, setPipelineDone] = useState(shouldSkipPipeline);
+
+  // Update pipelineDone if analyticsList loads and reveals multiple runs
+  useEffect(() => {
+    if (shouldSkipPipeline && !pipelineDone) {
+      setPipelineDone(true);
+    }
+  }, [shouldSkipPipeline, pipelineDone]);
 
   useEffect(() => {
     if (pipelineDone) {
