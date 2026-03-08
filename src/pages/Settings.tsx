@@ -51,6 +51,8 @@ import {
   getModelName,
 } from "@/results/data/analyticsData";
 
+import { calculatePercentile, getTierFromPercentile } from "@/results/data/formulas";
+
 // ─── Types ────────────────────────────────────────────────────────────────
 type SettingsTab = "company" | "history" | "account";
 
@@ -581,139 +583,14 @@ export default function Settings() {
 
               {/* ════════════════════ ANALYSIS RUN HISTORY ════════════════════ */}
               {activeTab === "history" && (
-                <div className="space-y-6">
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                      Analysis Run History
-                    </h1>
-                    <p className="text-muted-foreground mt-1">
-                      All past analysis runs with scores and downloadable reports
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                    {isLoadingHistory ? (
-                      <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                      </div>
-                    ) : analyticsList.length === 0 ? (
-                      <div className="text-center py-20 px-6">
-                        <History className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
-                        <p className="text-sm font-medium text-foreground">No analysis runs yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Run your first analysis to see results here
-                        </p>
-                        <Button
-                          size="sm"
-                          className="mt-4"
-                          onClick={() => navigate("/input")}
-                        >
-                          <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                          Run Analysis
-                        </Button>
-                      </div>
-                    ) : (
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-border bg-muted/30">
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Date of Run
-                            </th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Analytics ID
-                            </th>
-                            <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Report
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {analyticsList.map((item, idx) => (
-                            <tr
-                              key={item.analytics_id}
-                              className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
-                              onClick={() => navigate(`/results?analytics_id=${item.analytics_id}`)}
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <div>
-                                    <p className="text-sm font-medium text-foreground">
-                                      {formatShortDate(item.created_at)}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatLocalDate(item.created_at, "h:mm a")}
-                                    </p>
-                                  </div>
-                                  {idx === 0 && (
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success border-success/20">
-                                      Latest
-                                    </Badge>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <span className="text-xs text-muted-foreground font-mono">
-                                  {item.analytics_id.slice(0, 8)}…
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                {canExport ? (
-                                  <Button variant="outline" size="sm" onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      // Fetch the analytics data for this specific run
-                                      const analyticsData = await getAnalyticsById(item.analytics_id);
-                                      if (analyticsData) {
-                                        // Temporarily set analytics data so report generators can read it
-                                        setAnalyticsData(analyticsData);
-                                        generateReport(toast);
-                                      } else {
-                                        toast({ title: "Error", description: "Could not load analytics data for this run.", variant: "destructive" });
-                                      }
-                                    } catch {
-                                      toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
-                                    }
-                                  }}>
-                                    <Download className="w-3.5 h-3.5 mr-1.5" />
-                                    Download
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toast({
-                                        title: "Upgrade required",
-                                        description: "Report export requires the Grow plan or higher.",
-                                        variant: "destructive",
-                                      });
-                                    }}
-                                  >
-                                    <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                                    Generate Report
-                                  </Button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-
-                  {analyticsList.length > 0 && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      Showing last {planLimits.maxAnalyticsHistory} runs ·{" "}
-                      <button
-                        onClick={() => navigate("/billing")}
-                        className="text-primary hover:underline"
-                      >
-                        Upgrade for more history
-                      </button>
-                    </p>
-                  )}
-                </div>
+                <AnalysisRunHistoryTab
+                  analyticsList={analyticsList}
+                  isLoadingHistory={isLoadingHistory}
+                  canExport={canExport}
+                  planLimits={planLimits}
+                  navigate={navigate}
+                  toast={toast}
+                />
               )}
 
               {/* ════════════════════ ACCOUNT ════════════════════ */}
@@ -836,5 +713,409 @@ export default function Settings() {
         </DialogContent>
       </Dialog>
     </Layout>
+  );
+}
+
+// ─── Analysis Run History Tab (extracted component) ──────────────────────
+
+interface AnalysisRunHistoryTabProps {
+  analyticsList: AnalyticsListItem[];
+  isLoadingHistory: boolean;
+  canExport: boolean;
+  planLimits: (typeof PLAN_LIMITS)[PricingPlanName];
+  navigate: ReturnType<typeof useNavigate>;
+  toast: ReturnType<typeof useToast>["toast"];
+}
+
+interface EnrichedAnalytics {
+  analytics_id: string;
+  created_at: string;
+  promptsCount: number;
+  aiVisibilityScore: number;
+  tier: string;
+  models: string[];
+  keywords: { name: string; runs: number; avgMentions: number; models: string[]; consistencyScore: number | null }[];
+  hasReport: boolean;
+}
+
+function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, planLimits, navigate, toast }: AnalysisRunHistoryTabProps) {
+  const [enrichedList, setEnrichedList] = useState<EnrichedAnalytics[]>([]);
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [keywordConsistency, setKeywordConsistency] = useState<
+    { keyword: string; runs: number; avgMentions: number; models: string[]; score: number | null }[]
+  >([]);
+
+  // Enrich analytics list items with scores from the full analytics data
+  useEffect(() => {
+    if (analyticsList.length === 0) return;
+
+    const enrichAll = async () => {
+      setIsEnriching(true);
+      const results: EnrichedAnalytics[] = [];
+      const keywordMap: Record<string, { mentions: number[]; models: Set<string> }> = {};
+
+      for (const item of analyticsList) {
+        try {
+          const resp = await getAnalyticsById(item.analytics_id);
+          const analyticsPayload =
+            resp?.analytics?.[0]?.analytics?.[0]?.analytics ??
+            resp?.analytics?.[0]?.analytics ??
+            resp?.analytics ??
+            null;
+
+          let promptsCount = 0;
+          const searchKeywords = analyticsPayload?.search_keywords || {};
+          Object.values(searchKeywords).forEach((kw: any) => {
+            if (Array.isArray(kw?.prompts)) promptsCount += kw.prompts.length;
+          });
+
+          // AI Visibility Score
+          const brands = analyticsPayload?.brands || [];
+          const mainBrand = brands[0];
+          const geoScore = mainBrand?.geo_score?.Value ?? mainBrand?.geo_score ?? 0;
+          const allScores = brands.map((b: any) => b?.geo_score?.Value ?? b?.geo_score ?? 0);
+          const percentile = allScores.length > 1 ? calculatePercentile(geoScore, allScores) : (geoScore > 0 ? 50 : 0);
+          const tier = getTierFromPercentile(percentile);
+
+          // Models used
+          const modelsStr = analyticsPayload?.models_used || "";
+          const models = modelsStr ? modelsStr.split(",").map((s: string) => s.trim()) : [];
+
+          // Has report (completed status)
+          const status = resp?.analytics?.[0]?.status?.toLowerCase() ?? "";
+          const hasReport = status === "completed";
+
+          // Track keyword consistency
+          Object.values(searchKeywords).forEach((kw: any) => {
+            const kwName = kw?.name || "";
+            if (!kwName) return;
+            if (!keywordMap[kwName]) {
+              keywordMap[kwName] = { mentions: [], models: new Set() };
+            }
+            // Count mentions for this keyword in this run
+            const mentionCount = Array.isArray(kw?.prompts) ? kw.prompts.length : 0;
+            keywordMap[kwName].mentions.push(mentionCount);
+            models.forEach((m: string) => keywordMap[kwName].models.add(m));
+          });
+
+          results.push({
+            analytics_id: item.analytics_id,
+            created_at: item.created_at,
+            promptsCount,
+            aiVisibilityScore: Math.round(geoScore),
+            tier,
+            models,
+            keywords: [],
+            hasReport,
+          });
+        } catch {
+          results.push({
+            analytics_id: item.analytics_id,
+            created_at: item.created_at,
+            promptsCount: 0,
+            aiVisibilityScore: 0,
+            tier: "Low",
+            models: [],
+            keywords: [],
+            hasReport: false,
+          });
+        }
+      }
+
+      setEnrichedList(results);
+
+      // Build keyword consistency data
+      const MIN_RUNS_FOR_SCORE = 3;
+      const kwConsistency = Object.entries(keywordMap).map(([keyword, data]) => {
+        const runs = data.mentions.length;
+        const totalMentions = data.mentions.reduce((a, b) => a + b, 0);
+        const avgMentions = runs > 0 ? totalMentions / runs : 0;
+        const models = Array.from(data.models);
+        // Simple consistency score: based on how consistent mention counts are
+        let score: number | null = null;
+        if (runs >= MIN_RUNS_FOR_SCORE) {
+          const mean = avgMentions;
+          if (mean === 0) {
+            score = 0;
+          } else {
+            const variance = data.mentions.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / runs;
+            const stdDev = Math.sqrt(variance);
+            const cv = stdDev / mean; // coefficient of variation
+            score = Math.max(0, Math.min(100, Math.round((1 - cv) * 100)));
+          }
+        }
+        return { keyword, runs, avgMentions: Math.round(avgMentions * 10) / 10, models, score };
+      });
+      setKeywordConsistency(kwConsistency);
+      setIsEnriching(false);
+    };
+
+    enrichAll();
+  }, [analyticsList]);
+
+  const getModelBadgeLabel = (model: string): string => {
+    const m = model.toLowerCase();
+    if (m === "openai" || m === "chatgpt") return "GPT";
+    if (m === "gemini") return "Gem";
+    if (m === "google_ai_mode" || m === "google-ai" || m === "google_ai_overview") return "GAI";
+    if (m === "anthropic" || m === "claude") return "Cld";
+    if (m === "perplexity") return "Pplx";
+    return model.slice(0, 3).toUpperCase();
+  };
+
+  const getTierColor = (tier: string) => {
+    switch (tier.toLowerCase()) {
+      case "high": return "bg-success/10 text-success border-success/20";
+      case "medium": return "bg-warning/10 text-warning border-warning/20";
+      default: return "bg-destructive/10 text-destructive border-destructive/20";
+    }
+  };
+
+  const getConsistencyIcon = (score: number) => {
+    if (score >= 70) return <span className="text-success">✅</span>;
+    if (score >= 40) return <span className="text-warning">⚠️</span>;
+    return <span className="text-destructive">🔴</span>;
+  };
+
+  const getConfidenceLabel = (runs: number, score: number) => {
+    if (score >= 70) return "High confidence";
+    if (score >= 40) return "Moderate confidence";
+    return "Low confidence";
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* ─── Analysis Run History Table ─── */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+          Analysis Run History
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          All past analysis runs with scores and downloadable reports
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        {isLoadingHistory || isEnriching ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : enrichedList.length === 0 ? (
+          <div className="text-center py-20 px-6">
+            <History className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-sm font-medium text-foreground">No analysis runs yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Run your first analysis to see results here
+            </p>
+            <Button size="sm" className="mt-4" onClick={() => navigate("/input")}>
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              Run Analysis
+            </Button>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Date of Run
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Prompts
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  AI Visibility Score
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Tier
+                </th>
+                <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Report
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {enrichedList.map((item, idx) => (
+                <tr
+                  key={item.analytics_id}
+                  className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/results?analytics_id=${item.analytics_id}`)}
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {formatShortDate(item.created_at)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatLocalDate(item.created_at, "h:mm a")}
+                        </p>
+                      </div>
+                      {idx === 0 && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success border-success/20">
+                          Latest
+                        </Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <Badge variant="outline" className="text-xs">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      {item.promptsCount} prompts
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className="text-2xl font-bold text-foreground">{item.aiVisibilityScore}</span>
+                    <span className="text-xs text-muted-foreground">/100</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <Badge variant="outline" className={`text-xs ${getTierColor(item.tier)}`}>
+                      {item.tier}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    {item.hasReport && canExport ? (
+                      <Button variant="outline" size="sm" onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const analyticsData = await getAnalyticsById(item.analytics_id);
+                          if (analyticsData) {
+                            setAnalyticsData(analyticsData);
+                            generateReport(toast);
+                          } else {
+                            toast({ title: "Error", description: "Could not load analytics data.", variant: "destructive" });
+                          }
+                        } catch {
+                          toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
+                        }
+                      }}>
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                        Download
+                      </Button>
+                    ) : !item.hasReport ? (
+                      <Button variant="outline" size="sm" onClick={(e) => {
+                        e.stopPropagation();
+                        toast({ title: "Report not ready", description: "This analysis is still processing.", variant: "destructive" });
+                      }}>
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Generate Report
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={(e) => {
+                        e.stopPropagation();
+                        toast({ title: "Upgrade required", description: "Report export requires the Grow plan or higher.", variant: "destructive" });
+                      }}>
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Generate Report
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {enrichedList.length > 0 && (
+        <p className="text-xs text-muted-foreground text-center">
+          Showing last {planLimits.maxAnalyticsHistory} runs ·{" "}
+          <button onClick={() => navigate("/billing")} className="text-primary hover:underline">
+            Upgrade for more history
+          </button>
+        </p>
+      )}
+
+      {/* ─── Keyword Consistency Scores ─── */}
+      {keywordConsistency.length > 0 && (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Keyword Consistency Scores</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                How consistently your brand appears across multiple runs per keyword
+              </p>
+            </div>
+            <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20 px-3 py-1">
+              <Sparkles className="w-3 h-3 mr-1" />
+              Min. 3 runs needed per keyword
+            </Badge>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Keyword / Seed Prompt
+                  </th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Runs
+                  </th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Avg. Mention Count
+                  </th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    AI Models
+                  </th>
+                  <th className="text-center px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Consistency Score
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {keywordConsistency.map((kw) => (
+                  <tr key={kw.keyword} className="border-b border-border last:border-0">
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-medium text-foreground">{kw.keyword}</span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="text-sm font-semibold text-foreground">{kw.runs}</span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      {kw.avgMentions > 0 ? (
+                        <span className="text-sm text-foreground">
+                          {kw.avgMentions} <span className="text-xs text-muted-foreground">/run</span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <div className="flex items-center justify-center gap-1 flex-wrap">
+                        {kw.models.map((m) => (
+                          <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                            {getModelBadgeLabel(m)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {kw.score !== null ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            {getConsistencyIcon(kw.score)}
+                            <span className="text-2xl font-bold text-foreground">{kw.score}</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">
+                            {kw.runs} runs · {getConfidenceLabel(kw.runs, kw.score)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-sm text-muted-foreground">⏳ Building</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {3 - kw.runs} more run{3 - kw.runs !== 1 ? "s" : ""} needed
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
