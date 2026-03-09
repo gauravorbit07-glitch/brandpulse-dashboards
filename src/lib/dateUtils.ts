@@ -110,19 +110,18 @@ export const getPlanExpiryInfo = (
 // ─── Analytics Cooldown (Midnight-Rounding) ────────────────────────────────
 
 /**
- * Calculate when the next analytics run is available, using midnight-rounding rules:
+ * Calculate when the next analytics run is available.
  * 
- * - Cooldown ≥ 48hrs: block until midnight of the target day
- *   e.g. ran on Mar 5 4PM with 48hr cooldown → blocked until Mar 7 12:00 AM (midnight)
+ * Cooldown counting ALWAYS starts from midnight (00:00) of the day the analysis ran.
  * 
- * - Cooldown = 24hrs: block until next midnight
- *   e.g. ran on Mar 5 4PM with 24hr cooldown → blocked until Mar 6 12:00 AM (midnight)
- * 
- * - Cooldown < 24hrs: exact timestamp (no rounding)
- *   e.g. ran on Mar 5 4PM with 1hr cooldown → blocked until Mar 5 5:00 PM
+ * - cooldownHours = 0: No cooldown (enterprise). Can run again immediately.
+ * - cooldownHours >= 48 (free/launch): midnight of run day + 48h
+ *   e.g. ran at 1:32 AM Mar 12 → Mar 12 00:00 + 48h = Mar 14 00:00
+ * - cooldownHours >= 24 (grow): midnight of run day + 24h
+ *   e.g. ran at 1:32 AM Mar 12 → Mar 12 00:00 + 24h = Mar 13 00:00
  * 
  * @param lastRunAt  When the analysis was last run (Date or ISO string)
- * @param cooldownHours  Cooldown period in hours
+ * @param cooldownHours  Cooldown period in hours (0 = no cooldown)
  * @returns The Date when the next run becomes available
  */
 export const getNextAnalyticsAvailableAt = (
