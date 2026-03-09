@@ -587,6 +587,7 @@ export default function Settings() {
                   analyticsList={analyticsList}
                   isLoadingHistory={isLoadingHistory}
                   canExport={canExport}
+                  pricingPlan={pricingPlan}
                   planLimits={planLimits}
                   navigate={navigate}
                   toast={toast}
