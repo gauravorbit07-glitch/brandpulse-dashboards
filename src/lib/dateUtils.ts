@@ -129,26 +129,28 @@ export const getNextAnalyticsAvailableAt = (
   lastRunAt: Date | string,
   cooldownHours: number
 ): Date => {
+  // Enterprise: no cooldown
+  if (cooldownHours <= 0) {
+    return new Date(0); // Always in the past → never blocked
+  }
+
   const lastRun = typeof lastRunAt === "string" ? new Date(lastRunAt) : lastRunAt;
   
+  // Start counting from midnight (00:00) of the day the analysis ran
+  const midnightOfRunDay = startOfDay(lastRun);
+  
   if (cooldownHours >= 48) {
-    // Round to midnight of the target day
-    // e.g. 48hrs from Mar 5 4PM = Mar 7 4PM → round to Mar 8 12:00 AM (start of Mar 8)
-    // But the requirement says "block until 7th March midnight" which means start of Mar 7
-    // So: add cooldownHours, then take start of that day (midnight)
-    const rawTarget = new Date(lastRun.getTime() + cooldownHours * 60 * 60 * 1000);
-    return startOfDay(rawTarget);
+    // e.g. midnight Mar 12 + 48h = Mar 14 00:00 AM
+    return addDays(midnightOfRunDay, cooldownHours / 24);
   }
   
   if (cooldownHours >= 24) {
-    // Block until next midnight
-    // e.g. 24hrs from Mar 5 4PM = Mar 6 4PM → round to Mar 6 12:00 AM (start of day)
-    const rawTarget = new Date(lastRun.getTime() + cooldownHours * 60 * 60 * 1000);
-    return startOfDay(rawTarget);
+    // e.g. midnight Mar 12 + 24h = Mar 13 00:00 AM
+    return addDays(midnightOfRunDay, 1);
   }
   
-  // < 24hrs: exact timestamp
-  return new Date(lastRun.getTime() + cooldownHours * 60 * 60 * 1000);
+  // < 24hrs: exact timestamp from midnight
+  return new Date(midnightOfRunDay.getTime() + cooldownHours * 60 * 60 * 1000);
 };
 
 /**
