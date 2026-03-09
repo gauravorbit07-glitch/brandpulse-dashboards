@@ -1,3 +1,4 @@
+// Auth context — provides authentication state to the entire app
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   login as loginAPI,
