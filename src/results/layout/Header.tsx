@@ -158,7 +158,7 @@ export const Header = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, products, userRoleInt, planInt, planExpiresAt } =
+  const { user, logout, products, userRoleInt, planInt, planExpiresAt, pricingPlan } =
     useAuth();
   const { toast } = useToast();
   const {
