@@ -128,7 +128,7 @@ export const PLAN_LIMITS: Record<PricingPlanName, PlanLimits> = {
     maxConversationsPerDay: 1000,
     overageChargeUSD: 0.01,
     maxUsers: 100,
-    analyticsCooldownHrs: 1,
+    analyticsCooldownHrs: 0,
     canExportReport: true,
     maxAnalyticsHistory: 100,
     supportChannels: ["email", "slack"],
