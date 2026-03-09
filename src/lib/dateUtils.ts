@@ -110,45 +110,46 @@ export const getPlanExpiryInfo = (
 // ─── Analytics Cooldown (Midnight-Rounding) ────────────────────────────────
 
 /**
- * Calculate when the next analytics run is available, using midnight-rounding rules:
+ * Calculate when the next analytics run is available.
  * 
- * - Cooldown ≥ 48hrs: block until midnight of the target day
- *   e.g. ran on Mar 5 4PM with 48hr cooldown → blocked until Mar 7 12:00 AM (midnight)
+ * Cooldown counting ALWAYS starts from midnight (00:00) of the day the analysis ran.
  * 
- * - Cooldown = 24hrs: block until next midnight
- *   e.g. ran on Mar 5 4PM with 24hr cooldown → blocked until Mar 6 12:00 AM (midnight)
- * 
- * - Cooldown < 24hrs: exact timestamp (no rounding)
- *   e.g. ran on Mar 5 4PM with 1hr cooldown → blocked until Mar 5 5:00 PM
+ * - cooldownHours = 0: No cooldown (enterprise). Can run again immediately.
+ * - cooldownHours >= 48 (free/launch): midnight of run day + 48h
+ *   e.g. ran at 1:32 AM Mar 12 → Mar 12 00:00 + 48h = Mar 14 00:00
+ * - cooldownHours >= 24 (grow): midnight of run day + 24h
+ *   e.g. ran at 1:32 AM Mar 12 → Mar 12 00:00 + 24h = Mar 13 00:00
  * 
  * @param lastRunAt  When the analysis was last run (Date or ISO string)
- * @param cooldownHours  Cooldown period in hours
+ * @param cooldownHours  Cooldown period in hours (0 = no cooldown)
  * @returns The Date when the next run becomes available
  */
 export const getNextAnalyticsAvailableAt = (
   lastRunAt: Date | string,
   cooldownHours: number
 ): Date => {
+  // Enterprise: no cooldown
+  if (cooldownHours <= 0) {
+    return new Date(0); // Always in the past → never blocked
+  }
+
   const lastRun = typeof lastRunAt === "string" ? new Date(lastRunAt) : lastRunAt;
   
+  // Start counting from midnight (00:00) of the day the analysis ran
+  const midnightOfRunDay = startOfDay(lastRun);
+  
   if (cooldownHours >= 48) {
-    // Round to midnight of the target day
-    // e.g. 48hrs from Mar 5 4PM = Mar 7 4PM → round to Mar 8 12:00 AM (start of Mar 8)
-    // But the requirement says "block until 7th March midnight" which means start of Mar 7
-    // So: add cooldownHours, then take start of that day (midnight)
-    const rawTarget = new Date(lastRun.getTime() + cooldownHours * 60 * 60 * 1000);
-    return startOfDay(rawTarget);
+    // e.g. midnight Mar 12 + 48h = Mar 14 00:00 AM
+    return addDays(midnightOfRunDay, cooldownHours / 24);
   }
   
   if (cooldownHours >= 24) {
-    // Block until next midnight
-    // e.g. 24hrs from Mar 5 4PM = Mar 6 4PM → round to Mar 6 12:00 AM (start of day)
-    const rawTarget = new Date(lastRun.getTime() + cooldownHours * 60 * 60 * 1000);
-    return startOfDay(rawTarget);
+    // e.g. midnight Mar 12 + 24h = Mar 13 00:00 AM
+    return addDays(midnightOfRunDay, 1);
   }
   
-  // < 24hrs: exact timestamp
-  return new Date(lastRun.getTime() + cooldownHours * 60 * 60 * 1000);
+  // < 24hrs: exact timestamp from midnight
+  return new Date(midnightOfRunDay.getTime() + cooldownHours * 60 * 60 * 1000);
 };
 
 /**

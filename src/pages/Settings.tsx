@@ -587,6 +587,7 @@ export default function Settings() {
                   analyticsList={analyticsList}
                   isLoadingHistory={isLoadingHistory}
                   canExport={canExport}
+                  pricingPlan={pricingPlan}
                   planLimits={planLimits}
                   navigate={navigate}
                   toast={toast}
@@ -722,6 +723,7 @@ interface AnalysisRunHistoryTabProps {
   analyticsList: AnalyticsListItem[];
   isLoadingHistory: boolean;
   canExport: boolean;
+  pricingPlan: string;
   planLimits: (typeof PLAN_LIMITS)[PricingPlanName];
   navigate: ReturnType<typeof useNavigate>;
   toast: ReturnType<typeof useToast>["toast"];
@@ -738,7 +740,7 @@ interface EnrichedAnalytics {
   hasReport: boolean;
 }
 
-function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, planLimits, navigate, toast }: AnalysisRunHistoryTabProps) {
+function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pricingPlan, planLimits, navigate, toast }: AnalysisRunHistoryTabProps) {
   const [enrichedList, setEnrichedList] = useState<EnrichedAnalytics[]>([]);
   const [isEnriching, setIsEnriching] = useState(false);
   const [keywordConsistency, setKeywordConsistency] = useState<
@@ -981,7 +983,22 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pla
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {item.hasReport && canExport ? (
+                    {!item.hasReport ? (
+                      <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed" onClick={(e) => {
+                        e.stopPropagation();
+                      }}>
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Processing...
+                      </Button>
+                    ) : !canExport ? (
+                      <Button variant="outline" size="sm" onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/billing", { state: { from: "/settings" } });
+                      }} className="border-warning/30 text-warning hover:bg-warning/5">
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Upgrade to Grow
+                      </Button>
+                    ) : (
                       <Button variant="outline" size="sm" onClick={async (e) => {
                         e.stopPropagation();
                         try {
@@ -997,22 +1014,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pla
                         }
                       }}>
                         <Download className="w-3.5 h-3.5 mr-1.5" />
-                        Download
-                      </Button>
-                    ) : !item.hasReport ? (
-                      <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed" onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Processing...
-                      </Button>
-                    ) : (
-                      <Button variant="outline" size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        navigate("/billing", { state: { from: "/settings" } });
-                      }} className="border-warning/30 text-warning hover:bg-warning/5">
-                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Upgrade to Grow
+                        Generate Report
                       </Button>
                     )}
                   </td>
