@@ -26,9 +26,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAnalysisState } from "@/hooks/useAnalysisState";
 import { getSecureProductId } from "@/lib/secureStorage";
 import {
-  isAnalyticsGenerationBlocked,
-  getTimeUntilNextAnalytics,
-} from "@/lib/plans";
+  isAnalyticsCooldownActive,
+  getAnalyticsCooldownText,
+} from "@/lib/dateUtils";
 import {
   DropdownMenu,
   DropdownMenuContent,
