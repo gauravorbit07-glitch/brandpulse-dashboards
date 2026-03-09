@@ -246,12 +246,15 @@ export const Header = () => {
     }
   }, [dataReady, isLoading, isAnalyzing, wasAnalyzing, completeAnalysis, getCompletionShownKey]);
 
-  const isCooldownBlocked = isAnalyticsGenerationBlocked(
-    nextAnalyticsGenerationTime
-  );
-  const cooldownTimeLeft = getTimeUntilNextAnalytics(
-    nextAnalyticsGenerationTime
-  );
+  // Compute cooldown using plan-aware midnight-based logic
+  const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
+  const lastRunDate = analyticsList?.[0]?.created_at || null;
+  const isCooldownBlocked = lastRunDate
+    ? isAnalyticsCooldownActive(lastRunDate, planLimits.analyticsCooldownHrs)
+    : false;
+  const cooldownTimeLeft = lastRunDate
+    ? getAnalyticsCooldownText(lastRunDate, planLimits.analyticsCooldownHrs)
+    : null;
 
   // Journey-based access checks
   const canGenerateAnalytics = checkJourneyAccess(
