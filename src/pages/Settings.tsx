@@ -983,7 +983,22 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {item.hasReport && canExport ? (
+                    {!item.hasReport ? (
+                      <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed" onClick={(e) => {
+                        e.stopPropagation();
+                      }}>
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Processing...
+                      </Button>
+                    ) : !canExport ? (
+                      <Button variant="outline" size="sm" onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/billing", { state: { from: "/settings" } });
+                      }} className="border-warning/30 text-warning hover:bg-warning/5">
+                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                        Upgrade to Grow
+                      </Button>
+                    ) : (
                       <Button variant="outline" size="sm" onClick={async (e) => {
                         e.stopPropagation();
                         try {
@@ -999,22 +1014,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                         }
                       }}>
                         <Download className="w-3.5 h-3.5 mr-1.5" />
-                        Download
-                      </Button>
-                    ) : !item.hasReport ? (
-                      <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed" onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Processing...
-                      </Button>
-                    ) : (
-                      <Button variant="outline" size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        navigate("/billing", { state: { from: "/settings" } });
-                      }} className="border-warning/30 text-warning hover:bg-warning/5">
-                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Upgrade to Grow
+                        Generate Report
                       </Button>
                     )}
                   </td>
