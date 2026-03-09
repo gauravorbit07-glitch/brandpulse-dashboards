@@ -740,7 +740,7 @@ interface EnrichedAnalytics {
   hasReport: boolean;
 }
 
-function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, planLimits, navigate, toast }: AnalysisRunHistoryTabProps) {
+function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pricingPlan, planLimits, navigate, toast }: AnalysisRunHistoryTabProps) {
   const [enrichedList, setEnrichedList] = useState<EnrichedAnalytics[]>([]);
   const [isEnriching, setIsEnriching] = useState(false);
   const [keywordConsistency, setKeywordConsistency] = useState<
