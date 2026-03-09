@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { checkJourneyAccess } from "@/lib/plans";
+import { checkJourneyAccess, PLAN_LIMITS, type PricingPlanName } from "@/lib/plans";
 import {
   Menu,
   X,
