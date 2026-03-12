@@ -469,6 +469,26 @@ export const getAnalyticsById = async (analyticsId: string): Promise<any> => {
   }
 };
 
+export const getAnalyticsHistory = async (
+  productId: string,
+  page: number = 1
+): Promise<AnalyticsHistoryResponse> => {
+  try {
+    const res = await API.get(API_ENDPOINTS.getAnalyticsHistory(productId, page));
+    const data = res?.data || {};
+    return {
+      analytics: data.analytics || [],
+      page: data.page || 1,
+      page_size: data.page_size || 5,
+      total_items: data.total_items || 0,
+      total_pages: data.total_pages || 1,
+    };
+  } catch (error) {
+    console.error("Failed to fetch analytics history:", error);
+    return { analytics: [], page: 1, page_size: 5, total_items: 0, total_pages: 1 };
+  }
+};
+
 export const regenerateAnalysis = async (
   productId: string,
   accessToken: string
