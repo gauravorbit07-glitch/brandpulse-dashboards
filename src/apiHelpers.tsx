@@ -411,6 +411,23 @@ export interface AnalyticsListResponse {
   next_analytics_generation_time: string | null;
 }
 
+// New paginated analytics history types
+export interface AnalyticsHistoryItem {
+  analytics_id: string;
+  keywords: string[];
+  geo_score: number;
+  visibility_tier: string;
+  generated_at: string;
+}
+
+export interface AnalyticsHistoryResponse {
+  analytics: AnalyticsHistoryItem[];
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+}
+
 export const getProductAnalytics = async (
   productId: string,
   accessToken: string
