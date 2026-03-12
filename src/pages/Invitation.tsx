@@ -244,6 +244,62 @@ export default function TeamMembers() {
   };
 
   const [members, setMembers] = useState<Member[]>(buildMembersFromCollaborators);
+  const [isLoadingInvites, setIsLoadingInvites] = useState(false);
+
+  // Fetch invitation list from API
+  useEffect(() => {
+    const loadInvitations = async () => {
+      setIsLoadingInvites(true);
+      try {
+        const invitations = await getInvitationList();
+        if (invitations.length > 0) {
+          const apiMembers: Member[] = invitations.map((inv: InvitationListItem) => {
+            const invUser = inv.user;
+            const firstName = invUser?.first_name || inv.email?.split("@")[0] || "User";
+            const lastName = invUser?.last_name || "";
+            const fullName = `${firstName} ${lastName}`.trim();
+            const email = invUser?.email || inv.email || "";
+
+            let roleKey: RoleKey = "viewer";
+            const roleStr = (inv.role || "").toLowerCase();
+            if (roleStr === "admin" || roleStr === "god") roleKey = "admin";
+            else if (roleStr === "editor" || roleStr === "application") roleKey = "editor";
+
+            let status: MemberStatus = "pending";
+            const statusStr = (inv.status || "").toLowerCase();
+            if (statusStr === "accepted" || statusStr === "active") status = "active";
+            else if (statusStr === "declined" || statusStr === "rejected") status = "declined";
+
+            const isCurrentUser = user && (invUser?.id === user.id || invUser?.email === user.email);
+
+            return {
+              id: inv.id || email,
+              name: fullName,
+              email,
+              role: roleKey,
+              status,
+              initials: `${firstName.charAt(0)}${lastName.charAt(0) || firstName.charAt(1) || ""}`.toUpperCase(),
+              joinedAt: inv.accepted_at ? new Date(inv.accepted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined,
+              invitedAt: inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined,
+              isYou: !!isCurrentUser,
+            };
+          });
+          // Merge: keep current user from collaborators, add API invitations
+          const currentUserMember = members.find(m => m.isYou);
+          const merged = currentUserMember
+            ? [currentUserMember, ...apiMembers.filter(m => !m.isYou)]
+            : apiMembers;
+          setMembers(merged);
+        }
+      } catch {
+        // silent - fall back to collaborators data
+      } finally {
+        setIsLoadingInvites(false);
+      }
+    };
+    loadInvitations();
+  }, []);
+
   const seatsUsed = members.filter((m) => m.status === "active" || m.status === "pending").length;
   const seatsAtLimit = seatsUsed >= maxSeats;
   const [inviteEmail, setInviteEmail] = useState("");
