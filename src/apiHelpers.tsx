@@ -805,6 +805,33 @@ export const sendInvitation = async (
   }
 };
 
+// Invitation list types
+export interface InvitationListItem {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  accepted_at?: string;
+  user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    is_active: boolean;
+  };
+}
+
+export const getInvitationList = async (): Promise<InvitationListItem[]> => {
+  try {
+    const res = await API.get(API_ENDPOINTS.getInvitationList);
+    return res?.data?.invitations || res?.data || [];
+  } catch (error) {
+    console.error("Failed to fetch invitation list:", error);
+    return [];
+  }
+};
+
 export interface AcceptInvitationRequest {
   password: string;
   first_name: string;
