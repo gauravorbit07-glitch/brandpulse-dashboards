@@ -155,7 +155,7 @@ export default function InputPage() {
   ];
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isAnalyzing) {
       interval = setInterval(() => {
         setActiveAgentIndex((prev) => (prev < AGENTS.length - 1 ? prev + 1 : prev));
