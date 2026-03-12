@@ -1032,7 +1032,6 @@ function AnalysisRunHistoryTab({
   );
 }
 
-  isLoadingHistory: boolean;
   canExport: boolean;
   pricingPlan: string;
   planLimits: (typeof PLAN_LIMITS)[PricingPlanName];
