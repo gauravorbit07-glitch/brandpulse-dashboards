@@ -54,8 +54,13 @@ export const API_ENDPOINTS = {
 
   // Invitations
   sendInvitation: `${BASE_URL}/api/v1/invitations`,
+  getInvitationList: `${BASE_URL}/api/v1/invitations`,
   acceptInvitation: (token: string) =>
     `${BASE_URL}/api/v1/users/invitations/accept/${token}`,
+
+  // Analytics History (paginated)
+  getAnalyticsHistory: (productId: string, page: number = 1) =>
+    `${BASE_URL}/api/v1/analytics/product/${productId}/history?page=${page}`,
 
   // Tools
   aiReadinessCheck: `${BASE_URL}/api/v1/tools/ai-readiness-check`,

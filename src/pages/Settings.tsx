@@ -32,7 +32,7 @@ import {
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { getAnalyticsList, getAnalyticsById, type AnalyticsListItem } from "@/apiHelpers";
+import { getAnalyticsHistory, getAnalyticsById, type AnalyticsHistoryItem } from "@/apiHelpers";
 import { PLAN_LIMITS, type PricingPlanName, checkJourneyAccess, getRoleName } from "@/lib/plans";
 import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
 import { generateReport } from "@/results/layout/downloadReport";
@@ -42,15 +42,12 @@ import {
   getBrandName,
   getBrandWebsite,
   getCompetitorNames,
-  getSearchKeywords,
   getProductId,
   getBrandInfoWithLogos,
   getAnalysisDate,
   getAnalysisKeywords,
   getModelName,
 } from "@/results/data/analyticsData";
-
-import { calculatePercentile, getTierFromPercentile } from "@/results/data/formulas";
 
 type SettingsTab = "company" | "history" | "account";
 
@@ -126,8 +123,12 @@ export default function Settings() {
   const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
   const [aiModels, setAiModels] = useState<AIModel[]>([]);
 
-  const [analyticsList, setAnalyticsList] = useState<AnalyticsListItem[]>([]);
+  const [analyticsList, setAnalyticsList] = useState<AnalyticsHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
+  const [historyTotalItems, setHistoryTotalItems] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -135,7 +136,6 @@ export default function Settings() {
 
   const canEdit = userRoleInt <= 3;
   const isAdmin = userRoleInt <= 1;
-  // ✅ FIX: canExport is the single source of truth for report access
   const canExport = checkJourneyAccess("report:export", userRoleInt, planInt, planExpiresAt).allowed;
 
   useEffect(() => {
@@ -196,9 +196,11 @@ export default function Settings() {
       if (!productId) return;
       setIsLoadingHistory(true);
       try {
-        const maxHistory = planLimits.maxAnalyticsHistory;
-        const data = await getAnalyticsList(productId, maxHistory);
+        const data = await getAnalyticsHistory(productId, 1);
         setAnalyticsList(data.analytics || []);
+        setHistoryPage(data.page);
+        setHistoryTotalPages(data.total_pages);
+        setHistoryTotalItems(data.total_items);
       } catch {
         // silent
       } finally {
@@ -557,6 +559,27 @@ export default function Settings() {
                   planLimits={planLimits}
                   navigate={navigate}
                   toast={toast}
+                  historyPage={historyPage}
+                  historyTotalPages={historyTotalPages}
+                  historyTotalItems={historyTotalItems}
+                  isLoadingMore={isLoadingMore}
+                  onLoadMore={async () => {
+                    const productId = analyticsProductId || products?.[0]?.id;
+                    if (!productId || historyPage >= historyTotalPages) return;
+                    setIsLoadingMore(true);
+                    try {
+                      const nextPage = historyPage + 1;
+                      const data = await getAnalyticsHistory(productId, nextPage);
+                      setAnalyticsList(prev => [...prev, ...(data.analytics || [])]);
+                      setHistoryPage(data.page);
+                      setHistoryTotalPages(data.total_pages);
+                      setHistoryTotalItems(data.total_items);
+                    } catch {
+                      // silent
+                    } finally {
+                      setIsLoadingMore(false);
+                    }
+                  }}
                 />
               )}
 
@@ -686,141 +709,63 @@ export default function Settings() {
 // ─── Analysis Run History Tab ─────────────────────────────────────────────
 
 interface AnalysisRunHistoryTabProps {
-  analyticsList: AnalyticsListItem[];
+  analyticsList: AnalyticsHistoryItem[];
   isLoadingHistory: boolean;
   canExport: boolean;
   pricingPlan: string;
   planLimits: (typeof PLAN_LIMITS)[PricingPlanName];
   navigate: ReturnType<typeof useNavigate>;
   toast: ReturnType<typeof useToast>["toast"];
+  historyPage: number;
+  historyTotalPages: number;
+  historyTotalItems: number;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
 }
 
-interface EnrichedAnalytics {
-  analytics_id: string;
-  created_at: string;
-  promptsCount: number;
-  aiVisibilityScore: number;
-  tier: string;
-  models: string[];
-  keywords: { name: string; runs: number; avgMentions: number; models: string[]; consistencyScore: number | null }[];
-}
+function AnalysisRunHistoryTab({
+  analyticsList,
+  isLoadingHistory,
+  canExport,
+  pricingPlan,
+  planLimits,
+  navigate,
+  toast,
+  historyPage,
+  historyTotalPages,
+  historyTotalItems,
+  isLoadingMore,
+  onLoadMore,
+}: AnalysisRunHistoryTabProps) {
+  const keywordConsistency = useMemo(() => {
+    const keywordMap: Record<string, { mentions: number[] }> = {};
 
-function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pricingPlan, planLimits, navigate, toast }: AnalysisRunHistoryTabProps) {
-  const [enrichedList, setEnrichedList] = useState<EnrichedAnalytics[]>([]);
-  const [isEnriching, setIsEnriching] = useState(false);
-  const [keywordConsistency, setKeywordConsistency] = useState<
-    { keyword: string; runs: number; avgMentions: number; models: string[]; score: number | null }[]
-  >([]);
+    analyticsList.forEach((item) => {
+      (item.keywords || []).forEach((kw) => {
+        if (!keywordMap[kw]) keywordMap[kw] = { mentions: [] };
+        keywordMap[kw].mentions.push(1);
+      });
+    });
 
-  useEffect(() => {
-    if (analyticsList.length === 0) return;
-
-    const enrichAll = async () => {
-      setIsEnriching(true);
-      const results: EnrichedAnalytics[] = [];
-      const keywordMap: Record<string, { mentions: number[]; models: Set<string> }> = {};
-
-      for (const item of analyticsList) {
-        try {
-          const resp = await getAnalyticsById(item.analytics_id);
-          const analyticsPayload =
-            resp?.analytics?.[0]?.analytics?.[0]?.analytics ??
-            resp?.analytics?.[0]?.analytics ??
-            resp?.analytics ??
-            null;
-
-          let promptsCount = 0;
-          const searchKeywords = analyticsPayload?.search_keywords || {};
-          Object.values(searchKeywords).forEach((kw: any) => {
-            if (Array.isArray(kw?.prompts)) promptsCount += kw.prompts.length;
-          });
-
-          const brands = analyticsPayload?.brands || [];
-          const reversedBrands = [...brands].reverse();
-          const brandNameForScore = analyticsPayload?.brand_name || "";
-          const mainBrand = reversedBrands.find((b: any) => b.brand === brandNameForScore) || reversedBrands[0];
-          const rawGeoScore = typeof mainBrand?.geo_score === "object"
-            ? (mainBrand?.geo_score?.Value ?? 0)
-            : (mainBrand?.geo_score ?? 0);
-          const allScores = brands.map((b: any) => {
-            const s = b?.geo_score;
-            return typeof s === "object" ? (s?.Value ?? 0) : (s ?? 0);
-          });
-          const percentile = allScores.length > 1 ? calculatePercentile(rawGeoScore, allScores) : (rawGeoScore > 0 ? 50 : 0);
-          const tier = getTierFromPercentile(percentile);
-
-          const modelsStr = analyticsPayload?.models_used || "";
-          const models = modelsStr ? modelsStr.split(",").map((s: string) => s.trim()) : [];
-
-          Object.values(searchKeywords).forEach((kw: any) => {
-            const kwName = kw?.name || "";
-            if (!kwName) return;
-            if (!keywordMap[kwName]) keywordMap[kwName] = { mentions: [], models: new Set() };
-            const mentionCount = Array.isArray(kw?.prompts) ? kw.prompts.length : 0;
-            keywordMap[kwName].mentions.push(mentionCount);
-            models.forEach((m: string) => keywordMap[kwName].models.add(m));
-          });
-
-          results.push({
-            analytics_id: item.analytics_id,
-            created_at: item.created_at,
-            promptsCount,
-            aiVisibilityScore: Math.round(rawGeoScore),
-            tier,
-            models,
-            keywords: [],
-          });
-        } catch {
-          results.push({
-            analytics_id: item.analytics_id,
-            created_at: item.created_at,
-            promptsCount: 0,
-            aiVisibilityScore: 0,
-            tier: "Low",
-            models: [],
-            keywords: [],
-          });
+    const MIN_RUNS_FOR_SCORE = 3;
+    return Object.entries(keywordMap).map(([keyword, data]) => {
+      const runs = data.mentions.length;
+      const avgMentions = runs > 0 ? data.mentions.reduce((a, b) => a + b, 0) / runs : 0;
+      let score: number | null = null;
+      if (runs >= MIN_RUNS_FOR_SCORE) {
+        const mean = avgMentions;
+        if (mean === 0) {
+          score = 0;
+        } else {
+          const variance = data.mentions.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / runs;
+          const stdDev = Math.sqrt(variance);
+          const cv = stdDev / mean;
+          score = Math.max(0, Math.min(100, Math.round((1 - cv) * 100)));
         }
       }
-
-      setEnrichedList(results);
-
-      const MIN_RUNS_FOR_SCORE = 3;
-      const kwConsistency = Object.entries(keywordMap).map(([keyword, data]) => {
-        const runs = data.mentions.length;
-        const totalMentions = data.mentions.reduce((a, b) => a + b, 0);
-        const avgMentions = runs > 0 ? totalMentions / runs : 0;
-        const models = Array.from(data.models);
-        let score: number | null = null;
-        if (runs >= MIN_RUNS_FOR_SCORE) {
-          const mean = avgMentions;
-          if (mean === 0) {
-            score = 0;
-          } else {
-            const variance = data.mentions.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / runs;
-            const stdDev = Math.sqrt(variance);
-            const cv = stdDev / mean;
-            score = Math.max(0, Math.min(100, Math.round((1 - cv) * 100)));
-          }
-        }
-        return { keyword, runs, avgMentions: Math.round(avgMentions * 10) / 10, models, score };
-      });
-      setKeywordConsistency(kwConsistency);
-      setIsEnriching(false);
-    };
-
-    enrichAll();
+      return { keyword, runs, avgMentions: Math.round(avgMentions * 10) / 10, score };
+    });
   }, [analyticsList]);
-
-  const getModelBadgeLabel = (model: string): string => {
-    const m = model.toLowerCase();
-    if (m === "openai" || m === "chatgpt") return "GPT";
-    if (m === "gemini") return "Gem";
-    if (m === "google_ai_mode" || m === "google-ai" || m === "google_ai_overview") return "GAI";
-    if (m === "anthropic" || m === "claude") return "Cld";
-    if (m === "perplexity") return "Pplx";
-    return model.slice(0, 3).toUpperCase();
-  };
 
   const getTierColor = (tier: string) => {
     switch (tier.toLowerCase()) {
@@ -842,23 +787,24 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
     return "Low confidence";
   };
 
+  const sectionHeadingClass = "text-2xl md:text-3xl font-bold text-foreground";
+  const sectionDescClass = "text-muted-foreground mt-1";
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          Analysis Run History
-        </h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className={sectionHeadingClass}>Analysis Run History</h1>
+        <p className={sectionDescClass}>
           All past analysis runs with scores and downloadable reports
         </p>
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        {isLoadingHistory || isEnriching ? (
+        {isLoadingHistory ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
-        ) : enrichedList.length === 0 ? (
+        ) : analyticsList.length === 0 ? (
           <div className="text-center py-20 px-6">
             <History className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-sm font-medium text-foreground">No analysis runs yet</p>
@@ -878,7 +824,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                   Date of Run
                 </th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Prompts
+                  Keywords
                 </th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   AI Visibility Score
@@ -892,7 +838,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
               </tr>
             </thead>
             <tbody>
-              {enrichedList.map((item, idx) => (
+              {analyticsList.map((item, idx) => (
                 <tr
                   key={item.analytics_id}
                   className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
@@ -902,10 +848,10 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                     <div className="flex items-center gap-2">
                       <div>
                         <p className="text-sm font-medium text-foreground">
-                          {formatShortDate(item.created_at)}
+                          {formatShortDate(item.generated_at)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatLocalDate(item.created_at, "h:mm a")}
+                          {formatLocalDate(item.generated_at, "h:mm a")}
                         </p>
                       </div>
                       {idx === 0 && (
@@ -918,19 +864,18 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                   <td className="px-4 py-4 text-center">
                     <Badge variant="outline" className="text-xs">
                       <Sparkles className="w-3 h-3 mr-1" />
-                      {item.promptsCount} prompts
+                      {item.keywords.length} keywords
                     </Badge>
                   </td>
                   <td className="px-4 py-4 text-center">
-                    <span className="text-2xl font-bold text-foreground">{item.aiVisibilityScore}</span>
+                    <span className="text-2xl font-bold text-foreground">{item.geo_score}</span>
                   </td>
                   <td className="px-4 py-4 text-center">
-                    <Badge variant="outline" className={`text-xs ${getTierColor(item.tier)}`}>
-                      {item.tier}
+                    <Badge variant="outline" className={`text-xs ${getTierColor(item.visibility_tier)}`}>
+                      {item.visibility_tier}
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {/* ✅ FIX: Only check canExport (plan-based). No hasReport gate. */}
                     {!canExport ? (
                       <Button
                         variant="outline"
@@ -975,13 +920,26 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
         )}
       </div>
 
-      {enrichedList.length > 0 && (
-        <p className="text-xs text-muted-foreground text-center">
-          Showing last {planLimits.maxAnalyticsHistory} runs ·{" "}
-          <button onClick={() => navigate("/billing")} className="text-primary hover:underline">
-            Upgrade for more history
-          </button>
-        </p>
+      {/* Pagination info + Load More */}
+      {analyticsList.length > 0 && (
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xs text-muted-foreground">
+            Showing {analyticsList.length} of {historyTotalItems} runs
+          </p>
+          {historyPage < historyTotalPages && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onLoadMore}
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : null}
+              Load More
+            </Button>
+          )}
+        </div>
       )}
 
       {/* ─── Keyword Consistency Scores ─── */}
@@ -989,8 +947,8 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
         <>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Keyword Consistency Scores</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <h2 className={sectionHeadingClass}>Keyword Consistency Scores</h2>
+              <p className={sectionDescClass}>
                 How consistently your brand appears across multiple runs per keyword
               </p>
             </div>
@@ -1012,9 +970,6 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                   </th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Avg. Mention Count
-                  </th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    AI Models
                   </th>
                   <th className="text-center px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Consistency Score
@@ -1038,15 +993,6 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <div className="flex items-center justify-center gap-1 flex-wrap">
-                        {kw.models.map((m) => (
-                          <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0.5">
-                            {getModelBadgeLabel(m)}
-                          </Badge>
-                        ))}
-                      </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       {kw.score !== null ? (

@@ -411,6 +411,23 @@ export interface AnalyticsListResponse {
   next_analytics_generation_time: string | null;
 }
 
+// New paginated analytics history types
+export interface AnalyticsHistoryItem {
+  analytics_id: string;
+  keywords: string[];
+  geo_score: number;
+  visibility_tier: string;
+  generated_at: string;
+}
+
+export interface AnalyticsHistoryResponse {
+  analytics: AnalyticsHistoryItem[];
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+}
+
 export const getProductAnalytics = async (
   productId: string,
   accessToken: string
@@ -449,6 +466,26 @@ export const getAnalyticsById = async (analyticsId: string): Promise<any> => {
   } catch (error) {
     console.error("Failed to fetch analytics by id:", error);
     return null;
+  }
+};
+
+export const getAnalyticsHistory = async (
+  productId: string,
+  page: number = 1
+): Promise<AnalyticsHistoryResponse> => {
+  try {
+    const res = await API.get(API_ENDPOINTS.getAnalyticsHistory(productId, page));
+    const data = res?.data || {};
+    return {
+      analytics: data.analytics || [],
+      page: data.page || 1,
+      page_size: data.page_size || 5,
+      total_items: data.total_items || 0,
+      total_pages: data.total_pages || 1,
+    };
+  } catch (error) {
+    console.error("Failed to fetch analytics history:", error);
+    return { analytics: [], page: 1, page_size: 5, total_items: 0, total_pages: 1 };
   }
 };
 
@@ -765,6 +802,33 @@ export const sendInvitation = async (
       error.message ||
       "Failed to send invitation";
     throw new Error(message);
+  }
+};
+
+// Invitation list types
+export interface InvitationListItem {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  accepted_at?: string;
+  user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    is_active: boolean;
+  };
+}
+
+export const getInvitationList = async (): Promise<InvitationListItem[]> => {
+  try {
+    const res = await API.get(API_ENDPOINTS.getInvitationList);
+    return res?.data?.invitations || res?.data || [];
+  } catch (error) {
+    console.error("Failed to fetch invitation list:", error);
+    return [];
   }
 };
 
