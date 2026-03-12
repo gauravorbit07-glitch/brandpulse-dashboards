@@ -200,9 +200,11 @@ export default function Settings() {
       if (!productId) return;
       setIsLoadingHistory(true);
       try {
-        const maxHistory = planLimits.maxAnalyticsHistory;
-        const data = await getAnalyticsList(productId, maxHistory);
+        const data = await getAnalyticsHistory(productId, 1);
         setAnalyticsList(data.analytics || []);
+        setHistoryPage(data.page);
+        setHistoryTotalPages(data.total_pages);
+        setHistoryTotalItems(data.total_items);
       } catch {
         // silent
       } finally {
