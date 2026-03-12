@@ -1032,8 +1032,6 @@ function AnalysisRunHistoryTab({
   );
 }
 
-interface AnalysisRunHistoryTabProps {
-  analyticsList: AnalyticsListItem[];
   isLoadingHistory: boolean;
   canExport: boolean;
   pricingPlan: string;
