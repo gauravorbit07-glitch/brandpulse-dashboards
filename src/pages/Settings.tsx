@@ -32,7 +32,7 @@ import {
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { getAnalyticsList, getAnalyticsById, type AnalyticsListItem } from "@/apiHelpers";
+import { getAnalyticsHistory, getAnalyticsById, type AnalyticsHistoryItem } from "@/apiHelpers";
 import { PLAN_LIMITS, type PricingPlanName, checkJourneyAccess, getRoleName } from "@/lib/plans";
 import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
 import { generateReport } from "@/results/layout/downloadReport";
