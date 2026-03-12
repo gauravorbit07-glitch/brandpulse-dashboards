@@ -231,12 +231,7 @@ export const Header = () => {
       if (!alreadyShown) {
         setAnalysisCompleted(true);
         localStorage.setItem(key, Date.now().toString());
-
-        // Auto-clear after 2 seconds
-        const timer = setTimeout(() => {
-          setAnalysisCompleted(false);
-        }, 2000);
-        return () => clearTimeout(timer);
+        // No auto-clear — pill stays visible until page is refreshed
       }
     }
     // If data is ready on mount but we were never analyzing, just clean up

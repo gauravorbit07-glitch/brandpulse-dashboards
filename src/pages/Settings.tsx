@@ -38,7 +38,6 @@ import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
 import { generateReport } from "@/results/layout/downloadReport";
 import { setAnalyticsData } from "@/results/data/analyticsData";
 
-// ─── Import all tracking data from analyticsData.ts ──────────────────────
 import {
   getBrandName,
   getBrandWebsite,
@@ -53,7 +52,6 @@ import {
 
 import { calculatePercentile, getTierFromPercentile } from "@/results/data/formulas";
 
-// ─── Types ────────────────────────────────────────────────────────────────
 type SettingsTab = "company" | "history" | "account";
 
 interface Competitor {
@@ -78,7 +76,6 @@ const fadeUp = {
   }),
 };
 
-// ─── Avatar color helper ──────────────────────────────────────────────────
 const AVATAR_COLORS = [
   "bg-destructive",
   "bg-primary",
@@ -92,7 +89,6 @@ const getAvatarColor = (name: string) => {
   return AVATAR_COLORS[idx];
 };
 
-// ─── Model definitions ────────────────────────────────────────────────────
 const ALL_MODELS: { id: string; name: string; icon: string }[] = [
   { id: "openai", name: "ChatGPT", icon: "🤖" },
   { id: "google-ai", name: "Google AI Mode", icon: "G" },
@@ -109,84 +105,59 @@ export default function Settings() {
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("company");
 
-  // ─── Seed state from analyticsData.ts ──────────────────────────────────
   const analyticsCompanyName = getBrandName();
   const analyticsWebsite = getBrandWebsite();
   const analyticsProductId = getProductId();
   const analyticsKeywords = getAnalysisKeywords();
 
-  // Company & Tracking state — pre-populated from analyticsData
   const product = products?.[0];
   const application = applications?.[0];
-  const [companyName, setCompanyName] = useState(
-    analyticsCompanyName || ""
-  );
-  const [websiteUrl, setWebsiteUrl] = useState(
-    analyticsWebsite || ""
-  );
+  const [companyName, setCompanyName] = useState(analyticsCompanyName || "");
+  const [websiteUrl, setWebsiteUrl] = useState(analyticsWebsite || "");
   const [industry, setIndustry] = useState("");
   const [aboutCompany, setAboutCompany] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Competitors — sourced entirely from analyticsData
   const [competitors, setCompetitors] = useState<Competitor[]>(() =>
     getCompetitorNames().map((name, i) => ({ id: String(i), name }))
   );
   const [newCompetitor, setNewCompetitor] = useState("");
 
-  // AI Models state
   const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
   const [aiModels, setAiModels] = useState<AIModel[]>([]);
 
-  // Analysis Run History state
   const [analyticsList, setAnalyticsList] = useState<AnalyticsListItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Account state
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Permissions
   const canEdit = userRoleInt <= 3;
   const isAdmin = userRoleInt <= 1;
+  // ✅ FIX: canExport is the single source of truth for report access
   const canExport = checkJourneyAccess("report:export", userRoleInt, planInt, planExpiresAt).allowed;
 
-  // ─── Sync company fields: analyticsData takes priority, auth context fills gaps ──
   useEffect(() => {
-    // Company name: prefer analytics data, fall back to product/application
     if (!companyName) {
-      if (analyticsCompanyName) {
-        setCompanyName(analyticsCompanyName);
-      } else if (product?.name) {
-        setCompanyName(product.name);
-      } else if (application?.company_name) {
-        setCompanyName(application.company_name);
-      }
+      if (analyticsCompanyName) setCompanyName(analyticsCompanyName);
+      else if (product?.name) setCompanyName(product.name);
+      else if (application?.company_name) setCompanyName(application.company_name);
     }
-
-    // Website: prefer analytics data
     if (!websiteUrl) {
-      if (analyticsWebsite) {
-        setWebsiteUrl(analyticsWebsite);
-      } else if (product?.website) {
-        setWebsiteUrl(product.website);
-      }
+      if (analyticsWebsite) setWebsiteUrl(analyticsWebsite);
+      else if (product?.website) setWebsiteUrl(product.website);
     }
-
-    // Industry & description only come from product (not in analyticsData)
     if (product) {
       setIndustry(product.business_domain || "");
       setAboutCompany(product.description || "");
     }
-
     if (user) {
       setFullName(`${user.first_name} ${user.last_name}`.trim());
       setEmail(user.email || "");
     }
   }, [product, application, user]);
 
-  // ─── Re-sync competitors whenever analytics data changes ──────────────
   useEffect(() => {
     const names = getCompetitorNames();
     if (names.length > 0) {
@@ -194,9 +165,7 @@ export default function Settings() {
     }
   }, []);
 
-  // Initialize AI models based on plan + actually tracked models from analytics
   useEffect(() => {
-    // Get models actually used from analytics data
     const modelsUsedStr = getModelName();
     const trackedModelIds = modelsUsedStr
       ? modelsUsedStr.split(",").map((s: string) => s.trim().toLowerCase())
@@ -204,9 +173,8 @@ export default function Settings() {
 
     const models = ALL_MODELS.map((m) => {
       const allowedByPlan = planLimits.allowedModels.includes(m.id);
-      // Model is enabled if it's tracked in analytics AND allowed by plan
-      const isTracked = trackedModelIds.some((t: string) => 
-        t === m.id || 
+      const isTracked = trackedModelIds.some((t: string) =>
+        t === m.id ||
         (m.id === "openai" && (t === "chatgpt" || t === "openai")) ||
         (m.id === "google-ai" && (t === "google_ai_mode" || t === "google-ai" || t === "google_ai_overview")) ||
         (m.id === "gemini" && t === "gemini") ||
@@ -222,10 +190,8 @@ export default function Settings() {
     setAiModels(models);
   }, [pricingPlan]);
 
-  // Load analytics history — uses analyticsProductId from analyticsData first
   useEffect(() => {
     const loadHistory = async () => {
-      // Prefer product ID from analyticsData, fall back to secure storage
       const productId = analyticsProductId || products?.[0]?.id;
       if (!productId) return;
       setIsLoadingHistory(true);
@@ -452,7 +418,7 @@ export default function Settings() {
                     )}
                   </div>
 
-                  {/* Keywords Being Tracked — sourced from analyticsData */}
+                  {/* Keywords Being Tracked */}
                   {analyticsKeywords.length > 0 && (
                     <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
                       <div>
@@ -474,7 +440,7 @@ export default function Settings() {
                     </div>
                   )}
 
-                  {/* Competitors Being Tracked — sourced from analyticsData */}
+                  {/* Competitors Being Tracked */}
                   <div className="rounded-2xl border border-border bg-card shadow-sm p-6 space-y-4">
                     <div>
                       <h2 className="text-base font-semibold text-foreground">Competitors Being Tracked</h2>
@@ -717,7 +683,7 @@ export default function Settings() {
   );
 }
 
-// ─── Analysis Run History Tab (extracted component) ──────────────────────
+// ─── Analysis Run History Tab ─────────────────────────────────────────────
 
 interface AnalysisRunHistoryTabProps {
   analyticsList: AnalyticsListItem[];
@@ -737,7 +703,6 @@ interface EnrichedAnalytics {
   tier: string;
   models: string[];
   keywords: { name: string; runs: number; avgMentions: number; models: string[]; consistencyScore: number | null }[];
-  hasReport: boolean;
 }
 
 function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pricingPlan, planLimits, navigate, toast }: AnalysisRunHistoryTabProps) {
@@ -747,7 +712,6 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
     { keyword: string; runs: number; avgMentions: number; models: string[]; score: number | null }[]
   >([]);
 
-  // Enrich analytics list items with scores from the full analytics data
   useEffect(() => {
     if (analyticsList.length === 0) return;
 
@@ -771,39 +735,27 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
             if (Array.isArray(kw?.prompts)) promptsCount += kw.prompts.length;
           });
 
-          // AI Visibility Score — use same logic as overview (getAIVisibilityMetrics)
           const brands = analyticsPayload?.brands || [];
-          // Reverse brands to match getBrandInfoWithLogos order (highest first)
           const reversedBrands = [...brands].reverse();
           const brandNameForScore = analyticsPayload?.brand_name || "";
           const mainBrand = reversedBrands.find((b: any) => b.brand === brandNameForScore) || reversedBrands[0];
-          const rawGeoScore = typeof mainBrand?.geo_score === 'object' 
-            ? (mainBrand?.geo_score?.Value ?? 0) 
+          const rawGeoScore = typeof mainBrand?.geo_score === "object"
+            ? (mainBrand?.geo_score?.Value ?? 0)
             : (mainBrand?.geo_score ?? 0);
-          const geoScore = rawGeoScore;
           const allScores = brands.map((b: any) => {
             const s = b?.geo_score;
-            return typeof s === 'object' ? (s?.Value ?? 0) : (s ?? 0);
+            return typeof s === "object" ? (s?.Value ?? 0) : (s ?? 0);
           });
-          const percentile = allScores.length > 1 ? calculatePercentile(geoScore, allScores) : (geoScore > 0 ? 50 : 0);
+          const percentile = allScores.length > 1 ? calculatePercentile(rawGeoScore, allScores) : (rawGeoScore > 0 ? 50 : 0);
           const tier = getTierFromPercentile(percentile);
 
-          // Models used
           const modelsStr = analyticsPayload?.models_used || "";
           const models = modelsStr ? modelsStr.split(",").map((s: string) => s.trim()) : [];
 
-          // Has report (completed status)
-          const status = resp?.analytics?.[0]?.status?.toLowerCase() ?? "";
-          const hasReport = status === "completed";
-
-          // Track keyword consistency
           Object.values(searchKeywords).forEach((kw: any) => {
             const kwName = kw?.name || "";
             if (!kwName) return;
-            if (!keywordMap[kwName]) {
-              keywordMap[kwName] = { mentions: [], models: new Set() };
-            }
-            // Count mentions for this keyword in this run
+            if (!keywordMap[kwName]) keywordMap[kwName] = { mentions: [], models: new Set() };
             const mentionCount = Array.isArray(kw?.prompts) ? kw.prompts.length : 0;
             keywordMap[kwName].mentions.push(mentionCount);
             models.forEach((m: string) => keywordMap[kwName].models.add(m));
@@ -813,11 +765,10 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
             analytics_id: item.analytics_id,
             created_at: item.created_at,
             promptsCount,
-            aiVisibilityScore: Math.round(geoScore),
+            aiVisibilityScore: Math.round(rawGeoScore),
             tier,
             models,
             keywords: [],
-            hasReport,
           });
         } catch {
           results.push({
@@ -828,21 +779,18 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
             tier: "Low",
             models: [],
             keywords: [],
-            hasReport: false,
           });
         }
       }
 
       setEnrichedList(results);
 
-      // Build keyword consistency data
       const MIN_RUNS_FOR_SCORE = 3;
       const kwConsistency = Object.entries(keywordMap).map(([keyword, data]) => {
         const runs = data.mentions.length;
         const totalMentions = data.mentions.reduce((a, b) => a + b, 0);
         const avgMentions = runs > 0 ? totalMentions / runs : 0;
         const models = Array.from(data.models);
-        // Simple consistency score: based on how consistent mention counts are
         let score: number | null = null;
         if (runs >= MIN_RUNS_FOR_SCORE) {
           const mean = avgMentions;
@@ -851,7 +799,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
           } else {
             const variance = data.mentions.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / runs;
             const stdDev = Math.sqrt(variance);
-            const cv = stdDev / mean; // coefficient of variation
+            const cv = stdDev / mean;
             score = Math.max(0, Math.min(100, Math.round((1 - cv) * 100)));
           }
         }
@@ -888,7 +836,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
     return <span className="text-destructive">🔴</span>;
   };
 
-  const getConfidenceLabel = (runs: number, score: number) => {
+  const getConfidenceLabel = (_runs: number, score: number) => {
     if (score >= 70) return "High confidence";
     if (score >= 40) return "Moderate confidence";
     return "Low confidence";
@@ -896,7 +844,6 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
 
   return (
     <div className="space-y-8">
-      {/* ─── Analysis Run History Table ─── */}
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Analysis Run History
@@ -983,36 +930,39 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {!item.hasReport ? (
-                      <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed" onClick={(e) => {
-                        e.stopPropagation();
-                      }}>
-                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Processing...
-                      </Button>
-                    ) : !canExport ? (
-                      <Button variant="outline" size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        navigate("/billing", { state: { from: "/settings" } });
-                      }} className="border-warning/30 text-warning hover:bg-warning/5">
+                    {/* ✅ FIX: Only check canExport (plan-based). No hasReport gate. */}
+                    {!canExport ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/billing", { state: { from: "/settings" } });
+                        }}
+                        className="text-muted-foreground"
+                      >
                         <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                         Upgrade to Grow
                       </Button>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={async (e) => {
-                        e.stopPropagation();
-                        try {
-                          const analyticsData = await getAnalyticsById(item.analytics_id);
-                          if (analyticsData) {
-                            setAnalyticsData(analyticsData);
-                            generateReport(toast);
-                          } else {
-                            toast({ title: "Error", description: "Could not load analytics data.", variant: "destructive" });
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const analyticsData = await getAnalyticsById(item.analytics_id);
+                            if (analyticsData) {
+                              setAnalyticsData(analyticsData);
+                              generateReport(toast);
+                            } else {
+                              toast({ title: "Error", description: "Could not load analytics data.", variant: "destructive" });
+                            }
+                          } catch {
+                            toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
                           }
-                        } catch {
-                          toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
-                        }
-                      }}>
+                        }}
+                      >
                         <Download className="w-3.5 h-3.5 mr-1.5" />
                         Generate Report
                       </Button>
@@ -1044,7 +994,7 @@ function AnalysisRunHistoryTab({ analyticsList, isLoadingHistory, canExport, pri
                 How consistently your brand appears across multiple runs per keyword
               </p>
             </div>
-            <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20 px-3 py-1">
+            <Badge variant="outline" className="text-xs bg-warning/30 border-warning px-3 py-1">
               <Sparkles className="w-3 h-3 mr-1" />
               Min. 3 runs needed per keyword
             </Badge>
