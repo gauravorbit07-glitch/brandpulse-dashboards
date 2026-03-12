@@ -555,7 +555,7 @@ export default function Settings() {
 
               {/* ════════════════════ ANALYSIS RUN HISTORY ════════════════════ */}
               {activeTab === "history" && (
-                <AnalysisRunHistoryTab
+              <AnalysisRunHistoryTab
                   analyticsList={analyticsList}
                   isLoadingHistory={isLoadingHistory}
                   canExport={canExport}
@@ -563,6 +563,27 @@ export default function Settings() {
                   planLimits={planLimits}
                   navigate={navigate}
                   toast={toast}
+                  historyPage={historyPage}
+                  historyTotalPages={historyTotalPages}
+                  historyTotalItems={historyTotalItems}
+                  isLoadingMore={isLoadingMore}
+                  onLoadMore={async () => {
+                    const productId = analyticsProductId || products?.[0]?.id;
+                    if (!productId || historyPage >= historyTotalPages) return;
+                    setIsLoadingMore(true);
+                    try {
+                      const nextPage = historyPage + 1;
+                      const data = await getAnalyticsHistory(productId, nextPage);
+                      setAnalyticsList(prev => [...prev, ...(data.analytics || [])]);
+                      setHistoryPage(data.page);
+                      setHistoryTotalPages(data.total_pages);
+                      setHistoryTotalItems(data.total_items);
+                    } catch {
+                      // silent
+                    } finally {
+                      setIsLoadingMore(false);
+                    }
+                  }}
                 />
               )}
 
