@@ -126,8 +126,12 @@ export default function Settings() {
   const planLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
   const [aiModels, setAiModels] = useState<AIModel[]>([]);
 
-  const [analyticsList, setAnalyticsList] = useState<AnalyticsListItem[]>([]);
+  const [analyticsList, setAnalyticsList] = useState<AnalyticsHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
+  const [historyTotalItems, setHistoryTotalItems] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
