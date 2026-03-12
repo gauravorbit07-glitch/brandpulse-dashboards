@@ -1032,8 +1032,6 @@ function AnalysisRunHistoryTab({
   );
 }
 
-  canExport: boolean;
-  pricingPlan: string;
   planLimits: (typeof PLAN_LIMITS)[PricingPlanName];
   navigate: ReturnType<typeof useNavigate>;
   toast: ReturnType<typeof useToast>["toast"];
