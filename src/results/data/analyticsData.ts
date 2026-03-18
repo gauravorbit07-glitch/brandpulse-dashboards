@@ -617,6 +617,24 @@ export const setAnalyticsData = (apiResponse: any) => {
   }
 };
 
+// Temporarily set analytics data for report generation without polluting the results page.
+// Returns a restore function that puts back the original data.
+let _savedAnalyticsData: any = undefined;
+
+export const setAnalyticsDataTemporary = (apiResponse: any): (() => void) => {
+  _savedAnalyticsData = currentAnalyticsData;
+  if (apiResponse && apiResponse.analytics && Array.isArray(apiResponse.analytics)) {
+    currentAnalyticsData = apiResponse;
+    sessionStorage.removeItem('analytics_brands_warning');
+    console.log('📦 [ANALYTICS] Temporary data set for report generation');
+  }
+  return () => {
+    currentAnalyticsData = _savedAnalyticsData;
+    _savedAnalyticsData = undefined;
+    console.log('📦 [ANALYTICS] Original data restored after report generation');
+  };
+};
+
 // Clear analytics data for current user
 export const clearAnalyticsData = () => {
   currentAnalyticsData = null;
@@ -660,4 +678,73 @@ export const getSourcesDataForTable = (): Array<{
     
     return row;
   });
+};
+
+// Get total number of prompts analyzed across all keywords
+export const getTotalPromptCount = (): number => {
+  const keywords = getSearchKeywordsWithPrompts();
+  return keywords.reduce((sum, kw) => sum + (kw.prompts?.length || 0), 0);
+};
+
+// Get prompts that contributed to a given position tier for the test brand.
+// A prompt qualifies if ANY LLM ranked the brand in that tier.
+// Returns the query and a map of all LLMs where the brand appeared (llmName → 1-based rank).
+export const getPromptsForPositionTier = (
+  tier: 'top' | 'mid' | 'low',
+  brandName: string
+): Array<{ query: string; llmRanks: Record<string, number> }> => {
+  const keywords = getSearchKeywordsWithPrompts();
+  const results: Array<{ query: string; llmRanks: Record<string, number> }> = [];
+
+  for (const keyword of keywords) {
+    for (const prompt of keyword.prompts) {
+      const brandsPerLlm = (prompt as any).brands_per_llm || {};
+      let qualifies = false;
+      const llmRanks: Record<string, number> = {};
+
+      for (const [llmName, brands] of Object.entries(brandsPerLlm)) {
+        if (!Array.isArray(brands)) continue;
+        const idx = (brands as string[]).indexOf(brandName);
+        if (idx === -1) continue;
+
+        const rank = idx + 1;
+        llmRanks[llmName] = rank;
+
+        if (tier === 'top' && rank === 1) qualifies = true;
+        if (tier === 'mid' && rank >= 2 && rank <= 4) qualifies = true;
+        if (tier === 'low' && rank >= 5) qualifies = true;
+      }
+
+      if (qualifies) {
+        results.push({ query: (prompt as any).query, llmRanks });
+      }
+    }
+  }
+  return results;
+};
+
+// ── Trend helpers ──────────────────────────────────────────────────────────────
+
+import type { TrendRunItem } from "@/apiHelpers";
+
+/**
+ * Returns a stable string ID for a keyword set — sorted names joined with "|".
+ * Two runs with the same keywords (regardless of order) produce the same ID.
+ */
+export const getKeywordSetId = (keywords: string[]): string =>
+  [...keywords].sort().join("|");
+
+/**
+ * Returns { current, previous } values for a given metric across the two most
+ * recent trend runs, or null if fewer than two runs exist.
+ */
+export const getDeltaForMetric = (
+  trendRuns: TrendRunItem[],
+  metric: "geo_score" | "mention_score" | "outlook"
+): { current: number | string; previous: number | string } | null => {
+  if (trendRuns.length < 2) return null;
+  return {
+    current: trendRuns[0][metric],
+    previous: trendRuns[1][metric],
+  };
 };

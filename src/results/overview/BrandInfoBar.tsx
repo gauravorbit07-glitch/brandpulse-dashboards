@@ -10,7 +10,7 @@ const BrandInfoBar = () => {
   const keywords = getAnalysisKeywords();
   const brandLogo = getBrandLogo();
   const analysisDate = getAnalysisDate();
-  
+
   const models = modelName
     ?.split(",")
     .map((m) => m.trim())
@@ -74,7 +74,7 @@ const BrandInfoBar = () => {
                   <span>Analyzed: {analysisDate}</span>
                 </div>
               )}
-              
+
               {/* LLM models */}
               {models.length > 0 && (
                 <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ const BrandInfoBar = () => {
               <span>Analyzed: {analysisDate}</span>
             </div>
           )}
-          
+
           {/* LLM models */}
           {models.length > 0 && (
             <div className="flex flex-col items-end gap-1">

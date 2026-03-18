@@ -246,53 +246,73 @@ export default function TeamMembers() {
   const [members, setMembers] = useState<Member[]>(buildMembersFromCollaborators);
   const [isLoadingInvites, setIsLoadingInvites] = useState(false);
 
-  // Fetch invitation list from API
+  // Build admin member from auth context
+  const buildAdminMember = (): Member | null => {
+    if (!user) return null;
+    return {
+      id: user.id,
+      name: `${user.first_name} ${user.last_name}`.trim(),
+      email: user.email,
+      role: userRoleInt <= 1 ? "admin" : userRoleInt <= 3 ? "editor" : "viewer",
+      status: "active" as MemberStatus,
+      initials: `${user.first_name.charAt(0)}${(user.last_name || "").charAt(0) || user.first_name.charAt(1) || ""}`.toUpperCase(),
+      joinedAt: "Member",
+      isYou: true,
+    };
+  };
+
+  // Fetch invitation list from API and merge with admin
   useEffect(() => {
     const loadInvitations = async () => {
       setIsLoadingInvites(true);
       try {
         const invitations = await getInvitationList();
-        if (invitations.length > 0) {
-          const apiMembers: Member[] = invitations.map((inv: InvitationListItem) => {
-            const invUser = inv.user;
-            const firstName = invUser?.first_name || inv.email?.split("@")[0] || "User";
-            const lastName = invUser?.last_name || "";
-            const fullName = `${firstName} ${lastName}`.trim();
-            const email = invUser?.email || inv.email || "";
+        const apiMembers: Member[] = invitations.map((inv: InvitationListItem) => {
+          const invUser = inv.user;
+          const firstName = invUser?.first_name || inv.email?.split("@")[0] || "User";
+          const lastName = invUser?.last_name || "";
+          const fullName = `${firstName} ${lastName}`.trim();
+          const email = invUser?.email || inv.email || "";
 
-            let roleKey: RoleKey = "viewer";
-            const roleStr = (inv.role || "").toLowerCase();
-            if (roleStr === "admin" || roleStr === "god") roleKey = "admin";
-            else if (roleStr === "editor" || roleStr === "application") roleKey = "editor";
+          let roleKey: RoleKey = "viewer";
+          const roleStr = (inv.role || "").toLowerCase();
+          if (roleStr === "admin" || roleStr === "god") roleKey = "admin";
+          else if (roleStr === "editor" || roleStr === "application") roleKey = "editor";
 
-            let status: MemberStatus = "pending";
-            const statusStr = (inv.status || "").toLowerCase();
-            if (statusStr === "accepted" || statusStr === "active") status = "active";
-            else if (statusStr === "declined" || statusStr === "rejected") status = "declined";
+          let status: MemberStatus = "pending";
+          const statusStr = (inv.status || "").toLowerCase();
+          if (statusStr === "accepted" || statusStr === "active") status = "active";
+          else if (statusStr === "declined" || statusStr === "rejected") status = "declined";
 
-            const isCurrentUser = user && (invUser?.id === user.id || invUser?.email === user.email);
+          const isCurrentUser = user && (invUser?.id === user.id || invUser?.email === user.email);
 
-            return {
-              id: inv.id || email,
-              name: fullName,
-              email,
-              role: roleKey,
-              status,
-              initials: `${firstName.charAt(0)}${lastName.charAt(0) || firstName.charAt(1) || ""}`.toUpperCase(),
-              joinedAt: inv.accepted_at ? new Date(inv.accepted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined,
-              invitedAt: inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined,
-              isYou: !!isCurrentUser,
-            };
-          });
-          // Merge: keep current user from collaborators, add API invitations
-          const currentUserMember = members.find(m => m.isYou);
-          const merged = currentUserMember
-            ? [currentUserMember, ...apiMembers.filter(m => !m.isYou)]
-            : apiMembers;
-          setMembers(merged);
-        }
+          return {
+            id: inv.id || email,
+            name: fullName,
+            email,
+            role: roleKey,
+            status,
+            initials: `${firstName.charAt(0)}${lastName.charAt(0) || firstName.charAt(1) || ""}`.toUpperCase(),
+            joinedAt: inv.accepted_at ? new Date(inv.accepted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined,
+            invitedAt: inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined,
+            isYou: !!isCurrentUser,
+          };
+        });
+
+        // Always include the current admin/user at the top
+        const adminMember = buildAdminMember();
+        // Filter out admin from API results to avoid duplicates
+        const filteredApiMembers = apiMembers.filter(m => 
+          !(user && (m.email === user.email))
+        );
+        const merged = adminMember
+          ? [adminMember, ...filteredApiMembers]
+          : filteredApiMembers;
+        setMembers(merged);
       } catch {
-        // silent - fall back to collaborators data
+        // Fall back: at least show admin
+        const adminMember = buildAdminMember();
+        if (adminMember) setMembers([adminMember]);
       } finally {
         setIsLoadingInvites(false);
       }
@@ -368,14 +388,29 @@ export default function TeamMembers() {
     }
   };
 
-  const handleAction = (id: string, action: string) => {
+  const handleAction = async (id: string, action: string) => {
     closeAll();
     if (action === "remove") {
       setMembers((p) => p.filter((m) => m.id !== id));
       showToast("Member removed");
     }
     if (action === "resend") {
-      showToast("Invite resent!");
+      const member = members.find((m) => m.id === id);
+      if (!member) return;
+      try {
+        const roleMap: Record<string, string> = {
+          admin: "admin",
+          editor: "editor",
+          viewer: "viewer",
+        };
+        await sendInvitation({
+          email: member.email,
+          role: roleMap[member.role] || "viewer",
+        });
+        showToast(`Invite resent to ${member.email}`);
+      } catch (error: any) {
+        showToast(error.message || "Failed to resend invite", "error");
+      }
     }
   };
 

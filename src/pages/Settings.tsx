@@ -36,7 +36,7 @@ import { getAnalyticsHistory, getAnalyticsById, type AnalyticsHistoryItem } from
 import { PLAN_LIMITS, type PricingPlanName, checkJourneyAccess, getRoleName } from "@/lib/plans";
 import { formatLocalDate, formatShortDate } from "@/lib/dateUtils";
 import { generateReport } from "@/results/layout/downloadReport";
-import { setAnalyticsData } from "@/results/data/analyticsData";
+import { setAnalyticsDataTemporary } from "@/results/data/analyticsData";
 
 import {
   getBrandName,
@@ -706,6 +706,161 @@ export default function Settings() {
   );
 }
 
+// ─── History Row Component ─────────────────────────────────────────────
+
+function HistoryRow({
+  item,
+  idx,
+  canExport,
+  navigate,
+  toast,
+}: {
+  item: AnalyticsHistoryItem;
+  idx: number;
+  canExport: boolean;
+  navigate: ReturnType<typeof useNavigate>;
+  toast: ReturnType<typeof useToast>["toast"];
+}) {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsGenerating(true);
+    let restore: (() => void) | null = null;
+
+    const cleanup = () => {
+      if (restore) restore();
+      setIsGenerating(false);
+      window.removeEventListener("afterprint", cleanup);
+    };
+
+    try {
+      const apiResponse = await getAnalyticsById(item.analytics_id);
+
+      if (!apiResponse) {
+        toast({ title: "Error", description: "Could not load analytics data.", variant: "destructive" });
+        setIsGenerating(false);
+        return;
+      }
+
+      // Normalize: API may return a single object or { analytics: [...] }
+      let normalized = apiResponse;
+      if (!Array.isArray(apiResponse.analytics)) {
+        if (apiResponse.id === item.analytics_id || apiResponse.product_id) {
+          normalized = {
+            analytics: [apiResponse],
+            count: 1,
+            limit: 1,
+            product_id: apiResponse.product_id,
+          };
+        }
+      }
+
+      // Validate normalized data before proceeding
+      if (
+        !normalized.analytics ||
+        !Array.isArray(normalized.analytics) ||
+        normalized.analytics.length === 0 ||
+        !normalized.analytics[0]
+      ) {
+        toast({ title: "Error", description: "Analytics data is incomplete.", variant: "destructive" });
+        setIsGenerating(false);
+        return;
+      }
+
+      restore = setAnalyticsDataTemporary(normalized);
+
+      // Wait two animation frames for the store to fully propagate
+      // before generateReport reads it — prevents the race condition
+      // that causes intermittent blank/missing reports.
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      );
+
+      const success = generateReport(toast);
+
+      if (!success) {
+        cleanup();
+        return;
+      }
+
+      // Restore after print dialog closes.
+      // Safety net at 60s in case afterprint never fires (common in Chrome).
+      window.addEventListener("afterprint", cleanup);
+      setTimeout(cleanup, 60000);
+
+    } catch {
+      toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
+      if (restore) restore();
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <tr
+      className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
+      onClick={() => navigate(`/results?analytics_id=${item.analytics_id}`)}
+    >
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-2">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              {formatShortDate(item.generated_at)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {formatLocalDate(item.generated_at, "h:mm a")}
+            </p>
+          </div>
+          {idx === 0 && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success border-success/20">
+              Latest
+            </Badge>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-4 text-center">
+        <Badge variant="outline" className="text-xs">
+          <Sparkles className="w-3 h-3 mr-1" />
+          {item.keywords.length} keywords
+        </Badge>
+      </td>
+      <td className="px-4 py-4 text-center">
+        <span className="text-2xl font-bold text-foreground">{item.geo_score}</span>
+      </td>
+      <td className="px-6 py-4 text-right">
+        {!canExport ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/billing", { state: { from: "/settings" } });
+            }}
+            className="text-muted-foreground"
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+            Upgrade to Grow
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateReport}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+            )}
+            Generate Report
+          </Button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 // ─── Analysis Run History Tab ─────────────────────────────────────────────
 
 interface AnalysisRunHistoryTabProps {
@@ -767,14 +922,6 @@ function AnalysisRunHistoryTab({
     });
   }, [analyticsList]);
 
-  const getTierColor = (tier: string) => {
-    switch (tier.toLowerCase()) {
-      case "high": return "bg-success/10 text-success border-success/20";
-      case "medium": return "bg-warning/10 text-warning border-warning/20";
-      default: return "bg-destructive/10 text-destructive border-destructive/20";
-    }
-  };
-
   const getConsistencyIcon = (score: number) => {
     if (score >= 70) return <span className="text-success">✅</span>;
     if (score >= 40) return <span className="text-warning">⚠️</span>;
@@ -829,9 +976,6 @@ function AnalysisRunHistoryTab({
                 <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   AI Visibility Score
                 </th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Tier
-                </th>
                 <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Report
                 </th>
@@ -839,81 +983,14 @@ function AnalysisRunHistoryTab({
             </thead>
             <tbody>
               {analyticsList.map((item, idx) => (
-                <tr
+                <HistoryRow
                   key={item.analytics_id}
-                  className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/results?analytics_id=${item.analytics_id}`)}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {formatShortDate(item.generated_at)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatLocalDate(item.generated_at, "h:mm a")}
-                        </p>
-                      </div>
-                      {idx === 0 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success border-success/20">
-                          Latest
-                        </Badge>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <Badge variant="outline" className="text-xs">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      {item.keywords.length} keywords
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className="text-2xl font-bold text-foreground">{item.geo_score}</span>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <Badge variant="outline" className={`text-xs ${getTierColor(item.visibility_tier)}`}>
-                      {item.visibility_tier}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    {!canExport ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate("/billing", { state: { from: "/settings" } });
-                        }}
-                        className="text-muted-foreground"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                        Upgrade to Grow
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const analyticsData = await getAnalyticsById(item.analytics_id);
-                            if (analyticsData) {
-                              setAnalyticsData(analyticsData);
-                              generateReport(toast);
-                            } else {
-                              toast({ title: "Error", description: "Could not load analytics data.", variant: "destructive" });
-                            }
-                          } catch {
-                            toast({ title: "Error", description: "Failed to generate report.", variant: "destructive" });
-                          }
-                        }}
-                      >
-                        <Download className="w-3.5 h-3.5 mr-1.5" />
-                        Generate Report
-                      </Button>
-                    )}
-                  </td>
-                </tr>
+                  item={item}
+                  idx={idx}
+                  canExport={canExport}
+                  navigate={navigate}
+                  toast={toast}
+                />
               ))}
             </tbody>
           </table>

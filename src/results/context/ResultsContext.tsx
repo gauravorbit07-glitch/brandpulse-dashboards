@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
-import { getProductAnalytics, getAnalyticsList, getAnalyticsById, AnalyticsListItem, regenerateAnalysis } from "@/apiHelpers";
+import { getProductAnalytics, getAnalyticsList, getAnalyticsById, getAnalyticsTrendSummary, AnalyticsListItem, TrendRunItem, regenerateAnalysis } from "@/apiHelpers";
 import { setAnalyticsData, clearCurrentAnalyticsData } from "@/results/data/analyticsData";
 import { clearAnalyticsDataForCurrentUser } from "@/lib/storageKeys";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +47,7 @@ interface ResultsContextType {
   refreshAnalyticsList: (limit?: number) => Promise<void>;
   switchToAnalytics: (analyticsId: string) => Promise<void>;
   analyticsVersion: number;
+  trendRuns: TrendRunItem[];
   nextAnalyticsGenerationTime: string | null;
 }
 
@@ -74,6 +75,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
   const [analyticsList, setAnalyticsList] = useState<AnalyticsListItem[]>([]);
   const [isAnalyticsListLoading, setIsAnalyticsListLoading] = useState<boolean>(false);
   const [isSwitchingAnalytics, setIsSwitchingAnalytics] = useState<boolean>(false);
+  const [trendRuns, setTrendRuns] = useState<TrendRunItem[]>([]);
   const [selectedAnalyticsId, setSelectedAnalyticsId] = useState<string | null>(null);
   const [analyticsVersion, setAnalyticsVersion] = useState<number>(0);
   const [nextAnalyticsGenerationTime, setNextAnalyticsGenerationTime] = useState<string | null>(null);
@@ -970,6 +972,17 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
     refreshAnalyticsList();
   }, [productData?.id, refreshAnalyticsList, analyticsList.length]);
 
+  // Independent trend summary fetch — not plan-capped, does not affect any existing state
+  useEffect(() => {
+    const productId = productData?.id;
+    if (!productId) return;
+    getAnalyticsTrendSummary(productId)
+      .then((runs) => {
+        if (mountedRef.current) setTrendRuns(runs);
+      })
+      .catch(() => {/* silently ignore — trend data is non-critical */});
+  }, [productData?.id, analyticsVersion]);
+
   useEffect(() => {
     mountedRef.current = true;
     console.log("[MOUNT] Component mounted");
@@ -1000,6 +1013,7 @@ export const ResultsProvider: React.FC<ResultsProviderProps> = ({ children }) =>
         refreshAnalyticsList,
         switchToAnalytics,
         analyticsVersion,
+        trendRuns,
         nextAnalyticsGenerationTime,
       }}
     >

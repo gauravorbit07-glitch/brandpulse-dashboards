@@ -1,5 +1,6 @@
 import { getTierColorVar, toOrdinal } from "@/results/data/formulas";
 import { TierBadge } from "@/results/ui/TierBadge";
+import { ProgressAcrossRuns } from "@/results/overview/ProgressAcrossRuns";
 import {
   getExecutiveSummary,
   getAnalysisDate,
@@ -92,6 +93,9 @@ const ExecutiveSummaryContent = () => {
           </p>
         </div>
       </div>
+
+      {/* Progress Across Runs */}
+      <ProgressAcrossRuns />
 
       {/* Strengths & Weaknesses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">

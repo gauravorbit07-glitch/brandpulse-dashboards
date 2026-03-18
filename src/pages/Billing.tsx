@@ -32,7 +32,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/Layout";
-import { getPlanExpiryInfo, formatShortDate, formatFullDateTime } from "@/lib/dateUtils";
+import {
+  getPlanExpiryInfo,
+  formatShortDate,
+  formatFullDateTime,
+} from "@/lib/dateUtils";
 import { PLAN_LIMITS, type PricingPlanName } from "@/lib/plans";
 
 const fadeUp = {
@@ -59,19 +63,19 @@ const plans = [
     description: "Perfect for getting started",
     icon: "🚀",
     features: [
-      { label: "Seed Prompts", value: "3" },
-      { label: "Overall AI Prompts Tracked", value: "Up to 25" },
+      { label: "Seed Prompts", value: "Up to 3" },
+      { label: "Overall AI Prompts Tracked", value: "Up to 30" },
       { label: "LLMs Tracked", value: "ChatGPT" },
       { label: "Competitors Tracked", value: "3" },
-      { label: "GEO Agent Intelligence", value: "10 conversations/day/user", sub: "Additional Conv @ $0.01/conv" },
+      {
+        label: "GEO Agent Intelligence",
+        value: "10 conversations/day/user",
+        sub: "Additional Conv @ $0.01/conv",
+      },
       { label: "Seats", value: "1" },
       { label: "Prompt Run", value: "1 Run every 48 hours" },
-      { label: "Report Export", value: "—", disabled: true },
-      { label: "Integrations", value: "Google Analytics, GSC", sub: "* Coming Soon" },
       { label: "Support", value: "Email" },
-      { label: "Dedicated Account Manager", value: "—", disabled: true },
       { label: "Analytics History", value: "Last 2 Runs" },
-      { label: "Dedicated GEO Specialist", value: "—", disabled: true },
     ],
   },
   {
@@ -84,18 +88,19 @@ const plans = [
     icon: "⚡",
     features: [
       { label: "Seed Prompts", value: "Up to 6" },
-      { label: "Overall AI Prompts Tracked", value: "Up to 50" },
+      { label: "Overall AI Prompts Tracked", value: "Up to 60" },
       { label: "LLMs Tracked", value: "ChatGPT, Google AI Mode, Perplexity*" },
       { label: "Competitors Tracked", value: "5" },
-      { label: "GEO Agent Intelligence", value: "20 conversations/day/user", sub: "Additional Conv @ $0.01/conv" },
+      {
+        label: "GEO Agent Intelligence",
+        value: "20 conversations/day/user",
+        sub: "Additional Conv @ $0.01/conv",
+      },
       { label: "Seats", value: "3" },
       { label: "Prompt Run", value: "1 Run every 24 hours" },
       { label: "Report Export", value: "Yes" },
-      { label: "Integrations", value: "Google Analytics, GSC", sub: "* Coming Soon" },
       { label: "Support", value: "Email, Slack" },
-      { label: "Dedicated Account Manager", value: "—", disabled: true },
       { label: "Analytics History", value: "Last 5 Runs" },
-      { label: "Dedicated GEO Specialist", value: "—", disabled: true },
     ],
   },
   {
@@ -114,7 +119,6 @@ const plans = [
       { label: "Seats", value: "Custom" },
       { label: "Prompt Run", value: "Custom" },
       { label: "Report Export", value: "Yes" },
-      { label: "Integrations", value: "Google Analytics, GSC", sub: "* Coming Soon" },
       { label: "Support", value: "Email, Slack" },
       { label: "Dedicated Account Manager", value: "Yes" },
       { label: "Analytics History", value: "Custom" },
@@ -157,7 +161,14 @@ const invoices = [
 const Billing = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, pricingPlan, planExpiresAt, planInt, userRoleInt, collaborators } = useAuth();
+  const {
+    products,
+    pricingPlan,
+    planExpiresAt,
+    planInt,
+    userRoleInt,
+    collaborators,
+  } = useAuth();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">(
     "monthly"
   );
@@ -187,10 +198,15 @@ const Billing = () => {
     return "active";
   }, [expiryInfo, pricingPlan]);
 
-  const currentPlan = pricingPlan === "free" ? "Free Trial" : plans.find(p => p.name.toLowerCase() === pricingPlan)?.name || pricingPlan.charAt(0).toUpperCase() + pricingPlan.slice(1);
+  const currentPlan =
+    pricingPlan === "free"
+      ? "Free Trial"
+      : plans.find((p) => p.name.toLowerCase() === pricingPlan)?.name ||
+        pricingPlan.charAt(0).toUpperCase() + pricingPlan.slice(1);
 
   // Get plan limits for display
-  const currentLimits = PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
+  const currentLimits =
+    PLAN_LIMITS[pricingPlan as PricingPlanName] || PLAN_LIMITS.free;
 
   const handleBack = () => {
     const from = location.state?.from;
@@ -223,8 +239,7 @@ const Billing = () => {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              "",
+            background: "",
           }}
         />
 
@@ -265,8 +280,7 @@ const Billing = () => {
               animate="visible"
               className="relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
               style={{
-                background:
-                  "var(--gradient-hero-reverse)",
+                background: "var(--gradient-hero-reverse)",
               }}
             >
               <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5" />
@@ -278,10 +292,12 @@ const Billing = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-white text-sm">
-                    Free trial active — {expiryInfo.daysRemaining} day{expiryInfo.daysRemaining !== 1 ? 's' : ''} remaining
+                    Free trial active — {expiryInfo.daysRemaining} day
+                    {expiryInfo.daysRemaining !== 1 ? "s" : ""} remaining
                   </p>
                   <p className="text-white/70 text-xs mt-0.5">
-                    {expiryInfo.trialDaysUsed} of {expiryInfo.trialDurationDays} days used · Expires {formatShortDate(expiryInfo.expiryDate)}
+                    {expiryInfo.trialDaysUsed} of {expiryInfo.trialDurationDays}{" "}
+                    days used · Expires {formatShortDate(expiryInfo.expiryDate)}
                   </p>
                   <div className="mt-3 flex items-center gap-3">
                     <div className="h-1.5 w-40 bg-white/20 rounded-full overflow-hidden">
@@ -316,8 +332,7 @@ const Billing = () => {
               animate="visible"
               className="relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
               style={{
-                background:
-                  "var(--gradient-hero-reverse)",
+                background: "var(--gradient-hero-reverse)",
               }}
             >
               <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5" />
@@ -329,7 +344,8 @@ const Billing = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-white text-sm">
-                    {currentPlan} plan active — {expiryInfo.daysRemaining} day{expiryInfo.daysRemaining !== 1 ? 's' : ''} remaining
+                    {currentPlan} plan active — {expiryInfo.daysRemaining} day
+                    {expiryInfo.daysRemaining !== 1 ? "s" : ""} remaining
                   </p>
                   <p className="text-white/70 text-xs mt-0.5">
                     Renews {formatShortDate(expiryInfo.expiryDate)}
@@ -364,14 +380,16 @@ const Billing = () => {
                   <p className="font-semibold text-amber-900 text-sm">
                     {expiryInfo.isExpired
                       ? `Your ${currentPlan} plan has expired`
-                      : `Your ${currentPlan} plan expires ${expiryInfo.relativeText}`
-                    }
+                      : `Your ${currentPlan} plan expires ${expiryInfo.relativeText}`}
                   </p>
                   <p className="text-amber-700 text-xs mt-0.5">
                     {expiryInfo.isExpired
-                      ? `Expired on ${formatShortDate(expiryInfo.expiryDate)}. Renew to restore access.`
-                      : `Expires on ${formatFullDateTime(expiryInfo.expiryDate)}. Renew now to avoid interruption.`
-                    }
+                      ? `Expired on ${formatShortDate(
+                          expiryInfo.expiryDate
+                        )}. Renew to restore access.`
+                      : `Expires on ${formatFullDateTime(
+                          expiryInfo.expiryDate
+                        )}. Renew now to avoid interruption.`}
                   </p>
                 </div>
               </div>
@@ -387,7 +405,11 @@ const Billing = () => {
           )}
 
           {/* ── Tabs ── */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="bg-muted/80 border border-border h-11 p-1 mb-8 rounded-xl">
               <TabsTrigger
                 value="plans"
@@ -529,9 +551,11 @@ const Billing = () => {
                         <div className="flex items-center gap-2.5 mb-4">
                           <span className="text-xl">{plan.icon}</span>
                           <div>
-                          <p
+                            <p
                               className={`text-xs font-semibold uppercase tracking-widest ${
-                                isPopular ? "text-primary" : "text-muted-foreground"
+                                isPopular
+                                  ? "text-primary"
+                                  : "text-muted-foreground"
                               }`}
                             >
                               {plan.name}
@@ -616,13 +640,17 @@ const Billing = () => {
                           {plan.features.map((f) => (
                             <li
                               key={f.label}
-                              className={`flex items-start gap-2.5 text-sm ${f.disabled ? "opacity-50" : ""}`}
+                              className={`flex items-start gap-2.5 text-sm ${
+                                f.disabled ? "opacity-50" : ""
+                              }`}
                             >
                               <span
                                 className={`flex-shrink-0 w-4 h-4 mt-0.5 rounded-full flex items-center justify-center ${
                                   f.disabled
                                     ? "bg-muted"
-                                    : isPopular ? "bg-primary/10" : "bg-success/10"
+                                    : isPopular
+                                    ? "bg-primary/10"
+                                    : "bg-success/10"
                                 }`}
                               >
                                 {f.disabled ? (
@@ -630,18 +658,24 @@ const Billing = () => {
                                 ) : (
                                   <Check
                                     className={`w-2.5 h-2.5 ${
-                                      isPopular ? "text-primary" : "text-success"
+                                      isPopular
+                                        ? "text-primary"
+                                        : "text-success"
                                     }`}
                                   />
                                 )}
                               </span>
                               <div>
                                 <span className="text-muted-foreground">
-                                  <span className="font-medium text-foreground/80">{f.label}:</span>{" "}
+                                  <span className="font-medium text-foreground/80">
+                                    {f.label}:
+                                  </span>{" "}
                                   {f.value}
                                 </span>
                                 {f.sub && (
-                                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">{f.sub}</p>
+                                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                                    {f.sub}
+                                  </p>
                                 )}
                               </div>
                             </li>
@@ -661,7 +695,7 @@ const Billing = () => {
                 animate="visible"
                 className="flex items-center gap-6 py-4 border-t border-border flex-wrap"
               >
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield className="w-3.5 h-3.5" />
                   SSL encrypted
                 </div>
@@ -674,8 +708,8 @@ const Billing = () => {
                   No setup fees
                 </div>
                 <p className="text-xs text-muted-foreground ml-auto">
-                  * Perplexity coming soon. Integrations include Google
-                  Analytics & Google Search Console.
+                  * Coming soon - Perplexity, Google Analytics, Google Search
+                  Console
                 </p>
               </motion.div>
             </TabsContent>
@@ -704,12 +738,20 @@ const Billing = () => {
                       </p>
                     </div>
                   </div>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                    expiryInfo?.isExpired 
-                      ? "bg-destructive/10 text-destructive border border-destructive/20"
-                      : "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${expiryInfo?.isExpired ? "bg-destructive" : "bg-emerald-500 animate-pulse"}`} />
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      expiryInfo?.isExpired
+                        ? "bg-destructive/10 text-destructive border border-destructive/20"
+                        : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        expiryInfo?.isExpired
+                          ? "bg-destructive"
+                          : "bg-emerald-500 animate-pulse"
+                      }`}
+                    />
                     {expiryInfo?.isExpired ? "Expired" : "Active"}
                   </span>
                 </div>
@@ -717,10 +759,29 @@ const Billing = () => {
                 <div className="p-6 space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {[
-                      { label: "Plan", value: currentPlan, highlight: true as boolean },
-                      { label: "Analytics Cooldown", value: `${currentLimits.analyticsCooldownHrs}h` },
-                      { label: "Plan Expires", value: expiryInfo ? formatShortDate(expiryInfo.expiryDate) : "—" },
-                      { label: "Days Remaining", value: expiryInfo ? `${expiryInfo.daysRemaining} day${expiryInfo.daysRemaining !== 1 ? 's' : ''}` : "—" },
+                      {
+                        label: "Plan",
+                        value: currentPlan,
+                        highlight: true as boolean,
+                      },
+                      {
+                        label: "Analytics Cooldown",
+                        value: `${currentLimits.analyticsCooldownHrs}h`,
+                      },
+                      {
+                        label: "Plan Expires",
+                        value: expiryInfo
+                          ? formatShortDate(expiryInfo.expiryDate)
+                          : "—",
+                      },
+                      {
+                        label: "Days Remaining",
+                        value: expiryInfo
+                          ? `${expiryInfo.daysRemaining} day${
+                              expiryInfo.daysRemaining !== 1 ? "s" : ""
+                            }`
+                          : "—",
+                      },
                     ].map((item) => (
                       <div key={item.label} className="space-y-1">
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
@@ -744,8 +805,11 @@ const Billing = () => {
                     </p>
                     {(() => {
                       // Dynamic seat count from collaborators
-                      const seatsUsed = collaborators && collaborators.length > 0 ? collaborators.length : 1;
-                      
+                      const seatsUsed =
+                        collaborators && collaborators.length > 0
+                          ? collaborators.length
+                          : 1;
+
                       const usageItems = [
                         {
                           label: "Seed Prompts",
@@ -766,19 +830,40 @@ const Billing = () => {
                           color: "bg-amber-500",
                         },
                       ];
-                      
+
                       return usageItems.map((usage) => {
-                        const pct = usage.max > 0 ? Math.min((usage.current / usage.max) * 100, 100) : 0;
+                        const pct =
+                          usage.max > 0
+                            ? Math.min((usage.current / usage.max) * 100, 100)
+                            : 0;
                         const atLimit = usage.current >= usage.max;
                         return (
                           <div key={usage.label} className="space-y-1.5">
                             <div className="flex justify-between text-xs">
-                              <span className={`font-medium ${atLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                              <span
+                                className={`font-medium ${
+                                  atLimit
+                                    ? "text-destructive"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
                                 {usage.label}
                               </span>
-                              <span className={`font-semibold ${atLimit ? "text-destructive" : "text-foreground"}`}>
+                              <span
+                                className={`font-semibold ${
+                                  atLimit
+                                    ? "text-destructive"
+                                    : "text-foreground"
+                                }`}
+                              >
                                 {usage.current}
-                                <span className={atLimit ? "text-destructive/70" : "text-muted-foreground"}>
+                                <span
+                                  className={
+                                    atLimit
+                                      ? "text-destructive/70"
+                                      : "text-muted-foreground"
+                                  }
+                                >
                                   {" "}
                                   / {usage.max}
                                 </span>
@@ -786,7 +871,9 @@ const Billing = () => {
                             </div>
                             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all duration-700 ${atLimit ? "bg-destructive" : usage.color}`}
+                                className={`h-full rounded-full transition-all duration-700 ${
+                                  atLimit ? "bg-destructive" : usage.color
+                                }`}
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
@@ -797,7 +884,7 @@ const Billing = () => {
                   </div>
 
                   <div className="flex gap-2 pt-1">
-                    <button 
+                    <button
                       onClick={() => setActiveTab("plans")}
                       className="px-4 py-2 rounded-xl text-sm font-semibold border border-border bg-card text-foreground hover:bg-muted transition-all"
                     >
@@ -826,7 +913,9 @@ const Billing = () => {
                     <p className="text-sm font-semibold text-foreground">
                       Payment Method
                     </p>
-                    <p className="text-xs text-muted-foreground">Your saved card</p>
+                    <p className="text-xs text-muted-foreground">
+                      Your saved card
+                    </p>
                   </div>
                 </div>
 

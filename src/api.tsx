@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
 
   // Products
   createProductWithKeywords: `${BASE_URL}/api/v1/products/with-keywords`,
+  onboardingSuggestions: `${BASE_URL}/api/v1/products/onboarding-suggestions`,
   generateWithKeywords: `${BASE_URL}/api/v1/products/generate/with-keywords`,
   regenerateAnalysis: `${BASE_URL}/api/v1/products/generate/result-and-analytics`,
   createProduct: `${BASE_URL}/api/v1/products`,
@@ -33,6 +34,9 @@ export const API_ENDPOINTS = {
 
   getAnalyticsById: (analyticsId: string) =>
     `${BASE_URL}/api/v1/analytics/${analyticsId}`,
+
+  getAnalyticsTrendSummary: (productId: string) =>
+    `${BASE_URL}/api/v1/analytics/product/${productId}/trend`,
 
   // Product by Application ID
   getProductsByApplication: (applicationId: string) =>

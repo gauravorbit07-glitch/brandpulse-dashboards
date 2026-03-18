@@ -21,6 +21,7 @@ import NewResultsContainer from "./results/pages/NewResultsContainer";
 import Billing from "./pages/Billing";
 import TeamMembers from "./pages/Invitation";
 import Settings from "./pages/Settings";
+import AcceptInvitation from "./pages/AcceptInvitation";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1 } },
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/email-verification-pending" element={<EmailVerificationPending />} />
+            <Route path="/accept-invitation" element={<AcceptInvitation />} />
             <Route path="/input" element={<ProtectedRoute><InputPage /></ProtectedRoute>} />
             {/* <Route path="/results" element={<Results />} /> */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

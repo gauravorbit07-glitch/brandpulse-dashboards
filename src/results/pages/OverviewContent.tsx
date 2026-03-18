@@ -7,12 +7,17 @@ import {
   getBrandMentionResponseRates,
   getSentiment,
   hasAnalyticsData,
+  getPromptsForPositionTier,
+  getBrandName,
+  getTotalPromptCount,
+  getKeywordSetId,
 } from "@/results/data/analyticsData";
 import { LLMVisibilityTable } from "@/results/overview/LLMVisibilityTable";
 import { SourceIntelligence } from "@/results/overview/SourceIntelligence";
 import { CompetitorComparisonChart } from "@/results/overview/CompetitorComparisonChart";
 import { BrandMentionsRadar } from "@/results/overview/BrandMentionsRadar";
 import BrandInfoBar from "@/results/overview/BrandInfoBar";
+import { LLMIcon } from "@/results/ui/LLMIcon";
 import { IntentWiseScoring } from "@/results/overview/IntentWiseScoring";
 import { TierBadge } from "@/results/ui/TierBadge";
 import { toOrdinal } from "@/results/data/formulas";
@@ -25,6 +30,7 @@ import {
   ArrowUp,
   ArrowRight,
   ArrowDown,
+  ChevronDown,
   Trophy,
   Medal,
   Award,
@@ -39,17 +45,22 @@ import { useNavigate } from "react-router-dom";
 // Parse summary string with ● delimiters into individual points
 const parseSummaryToPoints = (summary: string): string[] => {
   if (!summary) return [];
-  const parts = summary
-    .split(/[•.]/)
+  return summary
+    .replace(/\n+/g, " ")
+    .split(/\s+[•●]\s+|\s-\s(?=[A-Z])/g)
     .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-  return parts;
+    .filter(Boolean);
 };
 
 const OverviewContent = () => {
   const { dataReady, analyticsVersion } = useResults();
   const [animatedBars, setAnimatedBars] = useState(false);
   const navigate = useNavigate();
+
+  // Position tier accordion state
+  const [openTier, setOpenTier] = useState<'top' | 'mid' | 'low' | null>(null);
+  const [expandedTierFull, setExpandedTierFull] = useState<'top' | 'mid' | 'low' | null>(null);
+
   // FIX 1: Check if analytics data is available first
   const analyticsAvailable = hasAnalyticsData();
 
@@ -70,6 +81,43 @@ const OverviewContent = () => {
       };
     }
     return getAIVisibilityMetrics();
+  }, [analyticsAvailable, analyticsVersion]);
+
+  const tierPrompts = useMemo(() => {
+    if (!analyticsAvailable) return { top: [], mid: [], low: [] };
+    const brandName = getBrandName();
+
+    const computeGrouped = (tier: 'top' | 'mid' | 'low') => {
+      const raw = getPromptsForPositionTier(tier, brandName);
+      const tierFiltered = raw
+        .map(p => {
+          const filtered: Record<string, number> = {};
+          for (const [llm, rank] of Object.entries(p.llmRanks)) {
+            if (tier === 'top' && rank === 1) filtered[llm] = rank;
+            if (tier === 'mid' && rank >= 2 && rank <= 4) filtered[llm] = rank;
+            if (tier === 'low' && rank >= 5) filtered[llm] = rank;
+          }
+          return { query: p.query, llmRanks: filtered };
+        })
+        .filter(p => Object.keys(p.llmRanks).length > 0);
+
+      const seen = new Map<string, Record<string, number>>();
+      for (const p of tierFiltered) {
+        if (seen.has(p.query)) {
+          Object.assign(seen.get(p.query)!, p.llmRanks);
+        } else {
+          seen.set(p.query, { ...p.llmRanks });
+        }
+      }
+      return Array.from(seen.entries()).map(([query, llmRanks]) => ({ query, llmRanks }));
+    };
+
+    return { top: computeGrouped('top'), mid: computeGrouped('mid'), low: computeGrouped('low') };
+  }, [analyticsAvailable, analyticsVersion]);
+
+  const totalPromptCount = useMemo(() => {
+    if (!analyticsAvailable) return 0;
+    return getTotalPromptCount();
   }, [analyticsAvailable, analyticsVersion]);
 
   const mentionsData = useMemo(() => {
@@ -147,15 +195,12 @@ const OverviewContent = () => {
 
     if (!brandPosition || brandPosition <= 0 || totalBrands <= 0) return null;
 
-    const percentileRank = Math.round(
-      ((totalBrands - brandPosition) / totalBrands) * 100
-    );
-
-    if (brandPosition === 1) {
-      return `Your visibility score is higher than ${percentileRank} percent of brands tested for these queries.`;
+    if (brandPosition === totalBrands) {
+      return `Your brand has the lowest AI Visibility score among the ${totalBrands} brands compared.`;
     }
 
-    return `Your visibility score is higher than ${percentileRank} percent of brands tested for these queries.`;
+    const pct = Math.round(((totalBrands - brandPosition) / totalBrands) * 100);
+    return `Your visibility score is higher than ${pct}% of brands tested for these queries.`;
   }, [visibilityData]);
 
   // FIX 3: Show loading state properly
@@ -247,69 +292,151 @@ const OverviewContent = () => {
               </div>
             </div>
 
-            {/* Position Breakdown */}
-            <div className="space-y-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center justify-between text-sm cursor-help hover:bg-muted/50 rounded-md px-2 py-1 -mx-2 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <ArrowUp className="w-4 h-4 text-emerald-500" />
-                      <span className="text-foreground">Top Position</span>
-                    </div>
-                    <span className="font-semibold text-foreground">
-                      {visibilityData.positionBreakdown.topPosition}%
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs">
-                  <p className="text-sm">
-                    Percentage of queries where your brand ranked 1 across
-                    Gemini and OpenAI.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+            {/* Position Breakdown — Accordion */}
+            <div className="space-y-1">
+              {(
+                [
+                  {
+                    tier: 'top' as const,
+                    label: 'Top Position',
+                    icon: <ArrowUp className="w-4 h-4 text-emerald-500" />,
+                    tooltip: '% of queries where your brand ranked #1.',
+                    badgeColor: (c: number) => c > 0
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      : 'bg-muted text-muted-foreground',
+                  },
+                  {
+                    tier: 'mid' as const,
+                    label: 'Mid Position (2–4)',
+                    icon: <ArrowRight className="w-4 h-4 text-amber-500" />,
+                    tooltip: '% of queries where your brand ranked 2nd to 4th.',
+                    badgeColor: (c: number) => c > 0
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-muted text-muted-foreground',
+                  },
+                  {
+                    tier: 'low' as const,
+                    label: 'Low Position',
+                    icon: <ArrowDown className="w-4 h-4 text-red-500" />,
+                    tooltip: '% of queries where your brand ranked 5th or lower.',
+                    badgeColor: (_c: number) => 'bg-muted text-muted-foreground',
+                  },
+                ] as const
+              ).map(({ tier, label, icon, tooltip, badgeColor }) => {
+                const count = tierPrompts[tier].length;
+                const pct = totalPromptCount > 0 ? Math.round((count / totalPromptCount) * 100) : 0;
+                const isOpen = openTier === tier;
+                const PREVIEW = 3;
+                const isFullyExpanded = expandedTierFull === tier;
+                const visiblePrompts = isFullyExpanded
+                  ? tierPrompts[tier]
+                  : tierPrompts[tier].slice(0, PREVIEW);
+                const hasMore = count > PREVIEW;
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center justify-between text-sm cursor-help hover:bg-muted/50 rounded-md px-2 py-1 -mx-2 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <ArrowRight className="w-4 h-4 text-amber-500" />
-                      <span className="text-foreground">
-                        Mid Position (2-4)
-                      </span>
+                return (
+                  <div key={tier} className="rounded-md border border-transparent hover:border-border/50 transition-colors">
+                    {/* Row header */}
+                    <div
+                      className="flex items-center justify-between text-sm cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1.5 -mx-2 transition-colors"
+                      onClick={() => {
+                        setOpenTier(prev => prev === tier ? null : tier);
+                        setExpandedTierFull(null);
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {icon}
+                        <span className="text-foreground">{label}</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-3 h-3 text-muted-foreground cursor-help" onClick={(e) => e.stopPropagation()} />
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-xs">
+                            <p className="text-sm">{tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${badgeColor(count)}`}>
+                          {count} prompt{count !== 1 ? 's' : ''}
+                        </span>
+                        <span className="font-semibold text-foreground w-8 text-right">{pct}%</span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                        />
+                      </div>
                     </div>
-                    <span className="font-semibold text-foreground">
-                      {visibilityData.positionBreakdown.midPosition}%
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs">
-                  <p className="text-sm">
-                    Percentage of queries where your brand ranked 2nd to 4th
-                    across Gemini and OpenAI.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center justify-between text-sm cursor-help hover:bg-muted/50 rounded-md px-2 py-1 -mx-2 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <ArrowDown className="w-4 h-4 text-red-500" />
-                      <span className="text-foreground">Low Position</span>
-                    </div>
-                    <span className="font-semibold text-foreground">
-                      {visibilityData.positionBreakdown.lowPosition}%
-                    </span>
+                    {/* Expanded prompt list */}
+                    {isOpen && (
+                      <div className="mt-2 mb-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+                        {count === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2">No prompts found for this tier.</p>
+                        ) : (
+                          <>
+                            {visiblePrompts.map((p, i) => {
+                              const llmEntries = Object.entries(p.llmRanks);
+                              return (
+                                <div key={i} className="bg-muted/60 rounded-lg border border-border p-3 flex flex-col gap-2">
+                                  <div className="flex items-start gap-2">
+                                    <span className="mt-0.5 w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                                    <p className="text-xs text-foreground leading-relaxed">{p.query}</p>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-1 pl-4">
+                                    {llmEntries.map(([llm]) => {
+                                      const llmLower = llm.toLowerCase();
+                                      const chipStyle =
+                                        llmLower.includes('gemini')   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
+                                        llmLower.includes('chatgpt') || llmLower.includes('openai') ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' :
+                                        llmLower.includes('perplexity') ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300' :
+                                        llmLower.includes('claude')   ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' :
+                                        llmLower.includes('grok')     ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' :
+                                        'bg-muted text-muted-foreground';
+                                      const displayName =
+                                        llmLower.includes('gemini')   ? 'Gemini' :
+                                        llmLower.includes('chatgpt') || llmLower.includes('openai') ? 'ChatGPT' :
+                                        llmLower.includes('perplexity') ? 'Perplexity' :
+                                        llmLower.includes('claude')   ? 'Claude' :
+                                        llmLower.includes('grok')     ? 'Grok' :
+                                        llm;
+                                      return (
+                                        <span key={llm} className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${chipStyle}`}>
+                                          {displayName}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {hasMore && !isFullyExpanded && (
+                              <button
+                                className="text-xs text-primary underline hover:opacity-80 transition-opacity"
+                                onClick={() => setExpandedTierFull(tier)}
+                              >
+                                Show all {count} prompts ↓
+                              </button>
+                            )}
+                            {isFullyExpanded && hasMore && (
+                              <button
+                                className="text-xs text-muted-foreground underline hover:opacity-80 transition-opacity"
+                                onClick={() => setExpandedTierFull(null)}
+                              >
+                                Show less ↑
+                              </button>
+                            )}
+                            <button
+                              className="text-xs text-muted-foreground hover:text-primary transition-colors block pt-1"
+                              onClick={() => navigate('/results/prompts')}
+                            >
+                              View All Prompts →
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs">
-                  <p className="text-sm">
-                    Percentage of queries where your brand ranked 5th or lower
-                    across Gemini and OpenAI.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+                );
+              })}
             </div>
 
             {visibilityData.brandPosition > 0 && visibilityInsight && (
@@ -399,6 +526,7 @@ const OverviewContent = () => {
                 {mentionsInsight}
               </p>
             )}
+
           </div>
 
           {/* Sentiment Card */}
@@ -437,6 +565,7 @@ const OverviewContent = () => {
                 )}
               </div>
             </div>
+
           </div>
         </div>
 
@@ -456,6 +585,7 @@ const OverviewContent = () => {
           <IntentWiseScoring />
         </div>
       </div>
+
     </div>
   );
 };
